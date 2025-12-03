@@ -15,7 +15,9 @@ namespace MyApp.API.Services
 
         public async Task<IEnumerable<BrandDto>> GetAllAsync()
         {
-            return await _context.Brands.ProjectTo<BrandDto>(_mapper.ConfigurationProvider).ToListAsync();
+            return await _context.Brands
+                .ProjectTo<BrandDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
 
         public async Task<BrandDto?> GetByIdAsync(int id)
@@ -27,10 +29,10 @@ namespace MyApp.API.Services
 
         public async Task<BrandDto> CreateAsync(CreateBrandDto dto)
         {
-            var brand = _mapper.Map<Brand>(dto);
-            _context.Brands.Add(brand);
+            var brandToAdd = _mapper.Map<Brand>(dto);
+            _context.Brands.Add(brandToAdd);
             await _context.SaveChangesAsync();
-            return _mapper.Map<BrandDto>(brand);
+            return _mapper.Map<BrandDto>(brandToAdd);
 
         }
 

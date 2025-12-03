@@ -26,14 +26,14 @@ namespace MyApp.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBrand([FromBody] CreateBrandDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateBrandDto dto)
         {
             var createdBrand = await _brands.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = createdBrand.Id }, createdBrand);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateBrand([FromRoute] int id, [FromBody] UpdateBrandDto dto)
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateBrandDto dto)
         {
             var updatedBrand = await _brands.UpdateAsync(id, dto);
 
@@ -43,7 +43,7 @@ namespace MyApp.API.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteBrand([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
             var isDeleted = await _brands.DeleteAsync(id);
             if (!isDeleted)
