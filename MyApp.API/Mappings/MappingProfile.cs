@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using MyApp.API.DTOs.Brands;
 using MyApp.API.DTOs.Categories;
+using MyApp.API.DTOs.OrderItems;
+using MyApp.API.DTOs.Orders;
 using MyApp.API.DTOs.ProductImages;
 using MyApp.API.DTOs.Products;
 using MyApp.API.Entities;
@@ -32,6 +34,10 @@ namespace MyApp.API.Mappings
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
                 .ForMember(dest => dest.IsMain, opt => opt.MapFrom(src => false));
 
+            //Order Mapping
+            CreateMap<Order, OrderDto>();
+            //OrderItem Mapping
+            CreateMap<OrderItem, OrderItemDto>();
 
         }
     }

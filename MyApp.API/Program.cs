@@ -3,6 +3,8 @@ using MyApp.API.Data;
 using MyApp.API.Interfaces;
 using MyApp.API.Mappings;
 using MyApp.API.Services;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MyApp.API
 {
@@ -29,8 +31,16 @@ namespace MyApp.API
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IProductImageService, ProductImageService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // accept enums as strings, case insensitive
+                    options.JsonSerializerOptions.Converters.Add(
+                        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                    );
+                });
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
