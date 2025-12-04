@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MyApp.API.DTOs.Brands;
 using MyApp.API.DTOs.Categories;
+using MyApp.API.DTOs.ProductImages;
 using MyApp.API.DTOs.Products;
 using MyApp.API.Entities;
 
@@ -24,6 +25,13 @@ namespace MyApp.API.Mappings
             CreateMap<Product, ProductDto>();
             CreateMap<CreateProductDto, Product>();
             CreateMap<UpdateProductDto, Product>();
+
+            //ProductImage Mapping
+            CreateMap<ProductImage, ProductImageDto>();
+            CreateMap<AddProductImageDto, ProductImage>()
+                .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+                .ForMember(dest => dest.IsMain, opt => opt.MapFrom(src => false));
+
 
         }
     }
