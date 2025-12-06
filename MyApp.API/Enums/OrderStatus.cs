@@ -4,7 +4,7 @@
     public enum OrderStatus : byte
     {
         Pending,
-        PROCESSING,
+        Processing,
         Shipped,
         Delivered,
         Canceled
