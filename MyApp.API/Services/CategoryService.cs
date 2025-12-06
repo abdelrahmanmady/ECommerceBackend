@@ -17,6 +17,7 @@ namespace MyApp.API.Services
         public async Task<IEnumerable<CategoryDto>> GetAllAsync()
         {
             var categories = await _context.Categories
+                .AsNoTracking()
                 .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
             return categories;
@@ -25,6 +26,7 @@ namespace MyApp.API.Services
         public async Task<CategoryDto> GetByIdAsync(int id)
         {
             var category = await _context.Categories.Where(x => x.Id == id)
+                .AsNoTracking()
                 .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Category does not exist.");

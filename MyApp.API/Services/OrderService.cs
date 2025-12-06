@@ -16,16 +16,17 @@ namespace MyApp.API.Services
         private readonly IMapper _mapper = mapper;
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
         {
-            var order = await _context.Orders
-                .Include(o => o.Items)
+            var orders = await _context.Orders
+                .AsNoTracking()
                 .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
-            return order;
+            return orders;
         }
 
         public async Task<OrderDto> GetByIdAsync(int id)
         {
             var order = await _context.Orders.Where(o => o.Id == id)
+                .AsNoTracking()
                  .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
                  .FirstOrDefaultAsync()
                  ?? throw new NotFoundException("Order does not exist.");

@@ -20,6 +20,7 @@ namespace MyApp.API.Services
             if (!productExists)
                 throw new NotFoundException("Product does not exist.");
             return await _context.ProductImages
+                .AsNoTracking()
                 .Where(pi => pi.ProductId == productId)
                 .ProjectTo<ProductImageDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();

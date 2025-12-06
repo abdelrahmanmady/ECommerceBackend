@@ -17,6 +17,7 @@ namespace MyApp.API.Services
         public async Task<IEnumerable<BrandDto>> GetAllAsync()
         {
             var brands = await _context.Brands
+                .AsNoTracking()
                 .ProjectTo<BrandDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
             return brands;
@@ -25,6 +26,7 @@ namespace MyApp.API.Services
         public async Task<BrandDto> GetByIdAsync(int id)
         {
             var brand = await _context.Brands.Where(x => x.Id == id)
+                .AsNoTracking()
                 .ProjectTo<BrandDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Brand does not exist.");

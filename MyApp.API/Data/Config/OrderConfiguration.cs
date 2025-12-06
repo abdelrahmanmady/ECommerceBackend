@@ -33,7 +33,7 @@ namespace MyApp.API.Data.Config
                 {
                     Id = 2,
                     Created = new DateTime(2024, 12, 2, 14, 30, 00),
-                    Status = OrderStatus.PROCESSING,
+                    Status = OrderStatus.Processing,
                     TotalAmount = 349.99m
                 },
                 new Order

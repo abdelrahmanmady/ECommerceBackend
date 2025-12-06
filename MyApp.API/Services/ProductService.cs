@@ -16,15 +16,21 @@ namespace MyApp.API.Services
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync()
         {
-            return await _context.Products.ProjectTo<ProductDto>(_mapper.ConfigurationProvider).ToListAsync();
+            var products = await _context.Products
+                .AsNoTracking()
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+            return products;
         }
 
         public async Task<ProductDto> GetByIdAsync(int id)
         {
-            return await _context.Products.Where(p => p.Id == id)
+            var product = await _context.Products.Where(p => p.Id == id)
+                .AsNoTracking()
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");
+            return product;
         }
 
         public async Task<ProductDto> CreateAsync(CreateProductDto dto)
