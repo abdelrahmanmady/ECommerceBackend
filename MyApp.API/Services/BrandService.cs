@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
 using MyApp.API.DTOs.Brands;
 using MyApp.API.Entities;
+using MyApp.API.Exceptions;
 using MyApp.API.Interfaces;
 
 namespace MyApp.API.Services
@@ -15,16 +16,19 @@ namespace MyApp.API.Services
 
         public async Task<IEnumerable<BrandDto>> GetAllAsync()
         {
-            return await _context.Brands
+            var brands = await _context.Brands
                 .ProjectTo<BrandDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+            return brands;
         }
 
-        public async Task<BrandDto?> GetByIdAsync(int id)
+        public async Task<BrandDto> GetByIdAsync(int id)
         {
-            return await _context.Brands.Where(x => x.Id == id)
+            var brand = await _context.Brands.Where(x => x.Id == id)
                 .ProjectTo<BrandDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Brand does not exist.");
+            return brand;
         }
 
         public async Task<BrandDto> CreateAsync(CreateBrandDto dto)
@@ -36,24 +40,23 @@ namespace MyApp.API.Services
 
         }
 
-        public async Task<BrandDto?> UpdateAsync(int id, UpdateBrandDto dto)
+        public async Task<BrandDto> UpdateAsync(int id, UpdateBrandDto dto)
         {
-            var brandToUpdate = await _context.Brands.FindAsync(id);
-            if (brandToUpdate is null)
-                return null;
+            var brandToUpdate = await _context.Brands.FindAsync(id)
+                ?? throw new NotFoundException("Brand does not exist");
             _mapper.Map(dto, brandToUpdate);
             await _context.SaveChangesAsync();
             return _mapper.Map<BrandDto>(brandToUpdate);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            var brandToDelete = await _context.Brands.FindAsync(id);
-            if (brandToDelete is null)
-                return false;
+            var brandToDelete = await _context.Brands.FindAsync(id)
+                ?? throw new NotFoundException("Brand does not exist");
+            if (await _context.Products.AnyAsync(p => p.BrandId == id))
+                throw new ConflictException("Cannot delete a brand with existing products.");
             _context.Brands.Remove(brandToDelete);
             await _context.SaveChangesAsync();
-            return true;
         }
     }
 }

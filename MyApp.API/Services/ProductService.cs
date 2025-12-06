@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
 using MyApp.API.DTOs.Products;
 using MyApp.API.Entities;
+using MyApp.API.Exceptions;
 using MyApp.API.Interfaces;
 
 namespace MyApp.API.Services
@@ -18,11 +19,12 @@ namespace MyApp.API.Services
             return await _context.Products.ProjectTo<ProductDto>(_mapper.ConfigurationProvider).ToListAsync();
         }
 
-        public async Task<ProductDto?> GetByIdAsync(int id)
+        public async Task<ProductDto> GetByIdAsync(int id)
         {
             return await _context.Products.Where(p => p.Id == id)
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Product does not exist.");
         }
 
         public async Task<ProductDto> CreateAsync(CreateProductDto dto)
@@ -30,12 +32,12 @@ namespace MyApp.API.Services
             //Validate Category
             var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
             if (!categoryExists)
-                throw new Exception("Invalid CategoryId");
+                throw new NotFoundException("Category does not exist.");
 
             //Validate Brand
             var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
             if (!brandExists)
-                throw new Exception("Invalid BrandId");
+                throw new NotFoundException("Brand does not exist");
 
             var productToAdd = _mapper.Map<Product>(dto);
             _context.Products.Add(productToAdd);
@@ -43,37 +45,33 @@ namespace MyApp.API.Services
             return _mapper.Map<ProductDto>(productToAdd);
         }
 
-        public async Task<ProductDto?> UpdateAsync(int id, UpdateProductDto dto)
+        public async Task<ProductDto> UpdateAsync(int id, UpdateProductDto dto)
         {
 
-            var productToUpdate = await _context.Products.FindAsync(id);
-            if (productToUpdate is null)
-                return null;
+            var productToUpdate = await _context.Products.FindAsync(id)
+                ?? throw new NotFoundException("Product does not exist.");
 
             //Validate Category
             var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
             if (!categoryExists)
-                throw new Exception("Invalid CategoryId");
+                throw new NotFoundException("Category does not exist.");
 
             //Validate Brand
             var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
             if (!brandExists)
-                throw new Exception("Invalid BrandId");
+                throw new NotFoundException("Brand does not exist");
 
             _mapper.Map(dto, productToUpdate);
             await _context.SaveChangesAsync();
             return _mapper.Map<ProductDto>(productToUpdate);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            var productToDelete = await _context.Products.FindAsync(id);
-            if (productToDelete is null)
-                return false;
+            var productToDelete = await _context.Products.FindAsync(id)
+                ?? throw new NotFoundException("Product does not exist.");
             _context.Products.Remove(productToDelete);
             await _context.SaveChangesAsync();
-            return true;
-
         }
 
 

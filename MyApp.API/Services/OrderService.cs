@@ -5,6 +5,7 @@ using MyApp.API.Data;
 using MyApp.API.DTOs.Orders;
 using MyApp.API.Entities;
 using MyApp.API.Enums;
+using MyApp.API.Exceptions;
 using MyApp.API.Interfaces;
 
 namespace MyApp.API.Services
@@ -15,18 +16,19 @@ namespace MyApp.API.Services
         private readonly IMapper _mapper = mapper;
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
         {
-            return await _context.Orders
+            var order = await _context.Orders
                 .Include(o => o.Items)
                 .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+            return order;
         }
 
-        public async Task<OrderDto?> GetByIdAsync(int id)
+        public async Task<OrderDto> GetByIdAsync(int id)
         {
             var order = await _context.Orders.Where(o => o.Id == id)
                  .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
                  .FirstOrDefaultAsync()
-                 ?? throw new Exception("Invalid OrderId");
+                 ?? throw new NotFoundException("Order does not exist.");
             return order;
 
         }
@@ -34,26 +36,26 @@ namespace MyApp.API.Services
         public async Task<OrderDto> CreateAsync(CreateOrderDto dto)
         {
             if (dto.Items == null || dto.Items.Count == 0)
-                throw new Exception("Order is empty.");
+                throw new BadRequestException("Order must contain at least one item.");
 
-            var order = new Order
+            var orderToCreate = new Order
             {
                 Created = DateTime.UtcNow,
                 Status = OrderStatus.Pending,
                 TotalAmount = 0,
-                Items = new List<OrderItem>()
+                Items = []
             };
 
             foreach (var dtoItem in dto.Items)
             {
                 var product = await _context.Products.FindAsync(dtoItem.ProductId)
-                    ?? throw new Exception("Invalid ProductId");
+                    ?? throw new NotFoundException($"Product does not exist.");
 
                 if (dtoItem.Quantity <= 0)
-                    throw new Exception($"Invalid quantity for product {product.Name}");
+                    throw new BadRequestException($"Invalid quantity for product {product.Name}");
 
                 if (product.StockQuantity < dtoItem.Quantity)
-                    throw new Exception($"Not enough stock for product {product.Name}");
+                    throw new BadRequestException($"Not enough stock for product {product.Name}");
 
                 // Reduce stock
                 product.StockQuantity -= dtoItem.Quantity;
@@ -67,37 +69,37 @@ namespace MyApp.API.Services
                 };
 
                 // Use computed TotalPrice
-                order.TotalAmount += item.TotalPrice;
+                orderToCreate.TotalAmount += item.TotalPrice;
 
-                order.Items.Add(item);
+                orderToCreate.Items.Add(item);
             }
 
             // EF will generate OrderId and apply it to children automatically
-            _context.Orders.Add(order);
+            _context.Orders.Add(orderToCreate);
 
             // Save everything at once → atomic transaction
             await _context.SaveChangesAsync();
 
-            return _mapper.Map<OrderDto>(order);
+            return _mapper.Map<OrderDto>(orderToCreate);
         }
 
         public async Task<OrderDto> UpdateStatusAsync(int id, UpdateOrderStatusDto dto)
         {
-            var order = await _context.Orders
+            var orderToUpdate = await _context.Orders
                 .Include(o => o.Items)
                 .FirstOrDefaultAsync(o => o.Id == id)
-                ?? throw new Exception("Invalid OrderId");
+                ?? throw new NotFoundException("Order does not exist.");
 
-            order.Status = dto.Status;
+            orderToUpdate.Status = dto.Status;
             await _context.SaveChangesAsync();
-            return _mapper.Map<OrderDto>(order);
+            return _mapper.Map<OrderDto>(orderToUpdate);
         }
 
         public async Task DeleteAsync(int id)
         {
-            var order = await _context.Orders.FindAsync(id)
-                ?? throw new Exception("Invalid OrderId");
-            _context.Orders.Remove(order);
+            var orderToDelete = await _context.Orders.FindAsync(id)
+                ?? throw new NotFoundException("Invalid OrderId");
+            _context.Orders.Remove(orderToDelete);
             await _context.SaveChangesAsync();
         }
     }

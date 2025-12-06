@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
 using MyApp.API.DTOs.Categories;
 using MyApp.API.Entities;
+using MyApp.API.Exceptions;
 using MyApp.API.Interfaces;
 
 namespace MyApp.API.Services
@@ -15,16 +16,19 @@ namespace MyApp.API.Services
 
         public async Task<IEnumerable<CategoryDto>> GetAllAsync()
         {
-            return await _context.Categories
+            var categories = await _context.Categories
                 .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+            return categories;
         }
 
-        public async Task<CategoryDto?> GetByIdAsync(int id)
+        public async Task<CategoryDto> GetByIdAsync(int id)
         {
-            return await _context.Categories.Where(x => x.Id == id)
+            var category = await _context.Categories.Where(x => x.Id == id)
                 .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Category does not exist.");
+            return category;
         }
 
         public async Task<CategoryDto> CreateAsync(CreateCategoryDto dto)
@@ -35,24 +39,23 @@ namespace MyApp.API.Services
             return _mapper.Map<CategoryDto>(categoryToAdd);
         }
 
-        public async Task<CategoryDto?> UpdateAsync(int id, UpdateCategoryDto dto)
+        public async Task<CategoryDto> UpdateAsync(int id, UpdateCategoryDto dto)
         {
-            var categoryToUpdate = await _context.Categories.FindAsync(id);
-            if (categoryToUpdate is null)
-                return null;
+            var categoryToUpdate = await _context.Categories.FindAsync(id)
+                ?? throw new NotFoundException("Category does not exist.");
             _mapper.Map(dto, categoryToUpdate);
             await _context.SaveChangesAsync();
             return _mapper.Map<CategoryDto>(categoryToUpdate);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            var categoryToDelete = await _context.Categories.FindAsync(id);
-            if (categoryToDelete is null)
-                return false;
+            var categoryToDelete = await _context.Categories.FindAsync(id)
+                ?? throw new NotFoundException("Category does not exist.");
+            if (await _context.Products.AnyAsync(p => p.CategoryId == id))
+                throw new ConflictException("Cannot delete a Category with existing products.");
             _context.Categories.Remove(categoryToDelete);
             await _context.SaveChangesAsync();
-            return true;
 
         }
     }

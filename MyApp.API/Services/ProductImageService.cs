@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
 using MyApp.API.DTOs.ProductImages;
 using MyApp.API.Entities;
+using MyApp.API.Exceptions;
 using MyApp.API.Interfaces;
 
 namespace MyApp.API.Services
@@ -17,7 +18,7 @@ namespace MyApp.API.Services
         {
             var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
             if (!productExists)
-                throw new Exception("Invalid ProductId");
+                throw new NotFoundException("Product does not exist.");
             return await _context.ProductImages
                 .Where(pi => pi.ProductId == productId)
                 .ProjectTo<ProductImageDto>(_mapper.ConfigurationProvider)
@@ -28,7 +29,8 @@ namespace MyApp.API.Services
         {
             var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
             if (!productExists)
-                throw new Exception("Invalid ProductId");
+                throw new NotFoundException("Product does not exist.");
+
             var productImageToAdd = _mapper.Map<ProductImage>(dto);
             productImageToAdd.ProductId = productId;
             _context.ProductImages.Add(productImageToAdd);
@@ -40,13 +42,13 @@ namespace MyApp.API.Services
         public async Task SetMainImageAsync(int productIdFromRoute, int imageId)
         {
             var image = await _context.ProductImages.FindAsync(imageId)
-                ?? throw new Exception("Invalid ImageId");
+                ?? throw new NotFoundException("Image does not exist.");
 
             if (image.ProductId != productIdFromRoute)
-                throw new Exception("Image does not belong to this product.");
+                throw new BadRequestException("Image does not belong to this product.");
 
             var product = await _context.Products.FindAsync(image.ProductId)
-                ?? throw new Exception("Product not found.");
+                ?? throw new NotFoundException("Product does not exist.");
 
             var currentMainImage = await _context.ProductImages
                 .FirstOrDefaultAsync(pi => pi.ProductId == product.Id && pi.IsMain);
@@ -70,9 +72,17 @@ namespace MyApp.API.Services
         public async Task DeleteImageAsync(int productIdFromRoute, int imageId)
         {
             var image = await _context.ProductImages.FindAsync(imageId)
-                ?? throw new Exception("Invalid ImageId");
+                ?? throw new NotFoundException("Image does not exist.");
+
             if (image.ProductId != productIdFromRoute)
-                throw new Exception("Image does not belong to this product.");
+                throw new BadRequestException("Image does not belong to this product.");
+
+            var product = await _context.Products.FindAsync(image.ProductId)
+                ?? throw new NotFoundException("Product does not exist.");
+
+            //Throw ConflictException
+            if (image.IsMain)
+                throw new ConflictException("Cannot delete the main image. Set another image as main first.");
 
             _context.ProductImages.Remove(image);
             await _context.SaveChangesAsync();

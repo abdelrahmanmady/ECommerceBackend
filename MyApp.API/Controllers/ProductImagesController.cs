@@ -12,22 +12,19 @@ namespace MyApp.API.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAll([FromRoute] int productId)
-        {
-            return Ok(await _productImages.GetAllAsync(productId));
-        }
+            => Ok(await _productImages.GetAllAsync(productId));
 
         [HttpPost]
         public async Task<IActionResult> Add([FromRoute] int productId, [FromBody] AddProductImageDto dto)
-        {
-            return Ok(await _productImages.AddImageAsync(productId, dto));
+            => CreatedAtAction(nameof(GetAll), new { productId }, await _productImages.AddImageAsync(productId, dto));
 
-        }
+
 
         [HttpPut("{imageId:int}/set-main")]
         public async Task<IActionResult> SetMainImage([FromRoute] int productId, [FromRoute] int imageId)
         {
             await _productImages.SetMainImageAsync(productId, imageId);
-            return Ok();
+            return NoContent();
         }
 
         [HttpDelete("{imageId:int}")]

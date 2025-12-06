@@ -12,15 +12,13 @@ namespace MyApp.API.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
-        {
-            return Ok(await _orders.GetAllAsync());
-        }
+            => Ok(await _orders.GetAllAsync());
+
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById([FromRoute] int id)
-        {
-            return Ok(await _orders.GetByIdAsync(id));
-        }
+            => Ok(await _orders.GetByIdAsync(id));
+
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)

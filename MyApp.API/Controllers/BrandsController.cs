@@ -11,19 +11,12 @@ namespace MyApp.API.Controllers
         private readonly IBrandService _brands = brands;
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            return Ok(await _brands.GetAllAsync());
-        }
+        public async Task<IActionResult> GetAll() => Ok(await _brands.GetAllAsync());
+
 
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById([FromRoute] int id)
-        {
-            var brand = await _brands.GetByIdAsync(id);
-            if (brand is null)
-                return NotFound();
-            return Ok(brand);
-        }
+        public async Task<IActionResult> GetById([FromRoute] int id) => Ok(await _brands.GetByIdAsync(id));
+
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBrandDto dto)
@@ -36,18 +29,13 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateBrandDto dto)
         {
             var updatedBrand = await _brands.UpdateAsync(id, dto);
-
-            if (updatedBrand is null)
-                return NotFound();
             return Ok(updatedBrand);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var isDeleted = await _brands.DeleteAsync(id);
-            if (!isDeleted)
-                return NotFound();
+            await _brands.DeleteAsync(id);
             return NoContent();
         }
 
