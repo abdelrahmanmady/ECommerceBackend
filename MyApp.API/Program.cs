@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
 using MyApp.API.Interfaces;
 using MyApp.API.Mappings;
+using MyApp.API.Middleware;
 using MyApp.API.Services;
+using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -12,55 +14,84 @@ namespace MyApp.API
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
-            //Register DbConext
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("constr"))
-            );
-
-            //Register Automapper
-            builder.Services.AddAutoMapper(cfg =>
-                cfg.AddProfile<MappingProfile>()
-            );
-
-            //Register Service Layer
-            builder.Services.AddScoped<IBrandService, BrandService>();
-            builder.Services.AddScoped<ICategoryService, CategoryService>();
-            builder.Services.AddScoped<IProductService, ProductService>();
-            builder.Services.AddScoped<IProductImageService, ProductImageService>();
-            builder.Services.AddScoped<IOrderService, OrderService>();
-
-            builder.Services.AddControllers()
-                .AddJsonOptions(options =>
-                {
-                    // accept enums as strings, case insensitive
-                    options.JsonSerializerOptions.Converters.Add(
-                        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-                    );
-                });
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            try
             {
-                app.MapOpenApi();
-                app.UseSwaggerUI(options =>
-                    options.SwaggerEndpoint("/openapi/v1.json", "My Api v1"));
+                Log.Logger = new LoggerConfiguration()
+                    .WriteTo.Console()
+                    .CreateLogger();
+
+                Log.Information("Starting Server...");
+                var builder = WebApplication.CreateBuilder(args);
+
+                // Add services to the container.
+
+                //Register SeriLog
+                builder.Host.UseSerilog((context, loggerConfiguration) =>
+                {
+                    loggerConfiguration.WriteTo.Console();
+                    loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+                });
+                //Add GlobalExceptionHandler
+                builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+                builder.Services.AddProblemDetails();
+
+                //Register DbConext
+                builder.Services.AddDbContext<AppDbContext>(options =>
+                    options.UseSqlServer(builder.Configuration.GetConnectionString("constr"))
+                );
+
+                //Register Automapper
+                builder.Services.AddAutoMapper(cfg =>
+                    cfg.AddProfile<MappingProfile>()
+                );
+
+                //Register Service Layer
+                builder.Services.AddScoped<IBrandService, BrandService>();
+                builder.Services.AddScoped<ICategoryService, CategoryService>();
+                builder.Services.AddScoped<IProductService, ProductService>();
+                builder.Services.AddScoped<IProductImageService, ProductImageService>();
+                builder.Services.AddScoped<IOrderService, OrderService>();
+
+                builder.Services.AddControllers()
+                    .AddJsonOptions(options =>
+                    {
+                        // accept enums as strings, case insensitive
+                        options.JsonSerializerOptions.Converters.Add(
+                            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                        );
+                    });
+                // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+                builder.Services.AddOpenApi();
+
+
+                var app = builder.Build();
+                // Configure the HTTP request pipeline.
+                if (app.Environment.IsDevelopment())
+                {
+                    app.MapOpenApi();
+                    app.UseSwaggerUI(options =>
+                        options.SwaggerEndpoint("/openapi/v1.json", "My Api v1"));
+                }
+
+                app.UseHttpsRedirection();
+
+                app.UseAuthorization();
+
+                app.UseExceptionHandler();
+
+                app.MapControllers();
+
+                app.Run();
             }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-            app.MapControllers();
-
-            app.Run();
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "server terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
     }
 }
