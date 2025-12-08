@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
+using MyApp.API.Entities;
 using MyApp.API.Interfaces;
 using MyApp.API.Mappings;
 using MyApp.API.Middleware;
@@ -32,9 +34,21 @@ namespace MyApp.API
                     loggerConfiguration.WriteTo.Console();
                     loggerConfiguration.ReadFrom.Configuration(context.Configuration);
                 });
+
                 //Add GlobalExceptionHandler
                 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
                 builder.Services.AddProblemDetails();
+
+                //Add Identity
+                builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    options.Password.RequireDigit = true;
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.User.RequireUniqueEmail = true;
+                })
+                    .AddEntityFrameworkStores<AppDbContext>()
+                    .AddDefaultTokenProviders();
 
                 //Register DbConext
                 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -52,6 +66,7 @@ namespace MyApp.API
                 builder.Services.AddScoped<IProductService, ProductService>();
                 builder.Services.AddScoped<IProductImageService, ProductImageService>();
                 builder.Services.AddScoped<IOrderService, OrderService>();
+                builder.Services.AddScoped<IAuthService, AuthService>();
 
                 builder.Services.AddControllers()
                     .AddJsonOptions(options =>
@@ -75,6 +90,8 @@ namespace MyApp.API
                 }
 
                 app.UseHttpsRedirection();
+
+                app.UseAuthentication();
 
                 app.UseAuthorization();
 

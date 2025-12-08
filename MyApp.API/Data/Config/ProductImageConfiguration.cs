@@ -8,6 +8,8 @@ namespace MyApp.API.Data.Config
     {
         public void Configure(EntityTypeBuilder<ProductImage> builder)
         {
+            builder.HasKey(pi => pi.Id);
+
             builder.Property(pi => pi.ImageUrl)
                 .HasColumnType("VARCHAR")
                 .HasMaxLength(500);

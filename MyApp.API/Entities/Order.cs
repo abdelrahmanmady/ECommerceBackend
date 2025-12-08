@@ -5,7 +5,7 @@ namespace MyApp.API.Entities
     public class Order
     {
         public int Id { get; set; }
-        //many to one relation with User
+
         //public int UserId { get; set; }
         //public virtual User User { get; set; }
         public DateTime Created { get; set; }
@@ -15,9 +15,8 @@ namespace MyApp.API.Entities
         //one to many relation with OrderItems
         public virtual ICollection<OrderItem> Items { get; set; } = null!;
 
-        public Order()
-        {
-            Created = DateTime.UtcNow;
-        }
+        //many to one relation with User
+        public string? UserId { get; set; }
+        public virtual ApplicationUser? User { get; set; }
     }
 }

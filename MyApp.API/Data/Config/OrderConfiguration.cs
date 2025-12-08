@@ -27,21 +27,25 @@ namespace MyApp.API.Data.Config
                     Id = 1,
                     Created = new DateTime(2024, 12, 1, 10, 00, 00),
                     Status = OrderStatus.Pending,
-                    TotalAmount = 999.99m
+                    TotalAmount = 999.99m,
+                    UserId = "user-1"
                 },
                 new Order
                 {
                     Id = 2,
                     Created = new DateTime(2024, 12, 2, 14, 30, 00),
                     Status = OrderStatus.Processing,
-                    TotalAmount = 349.99m
+                    TotalAmount = 349.99m,
+                    UserId = "user-2"
+
                 },
                 new Order
                 {
                     Id = 3,
                     Created = new DateTime(2024, 12, 3, 18, 45, 00),
                     Status = OrderStatus.Delivered,
-                    TotalAmount = 129.99m
+                    TotalAmount = 129.99m,
+                    UserId = null
                 }
             );
         }
