@@ -71,6 +71,11 @@ namespace MyApp.API.Services
                 throw new BadRequestException("Order must contain at least one item.");
 
             var currentUserId = GetCurrentUserId();
+            var productIds = dto.Items.Select(i => i.ProductId).Distinct().ToList();
+            var products = await _context.Products
+                .Where(p => productIds.Contains(p.Id))
+                .ToListAsync();
+            var productMap = products.ToDictionary(p => p.Id);
             var orderToCreate = new Order
             {
                 UserId = currentUserId,
@@ -82,8 +87,9 @@ namespace MyApp.API.Services
 
             foreach (var dtoItem in dto.Items)
             {
-                var product = await _context.Products.FindAsync(dtoItem.ProductId)
-                    ?? throw new NotFoundException($"Product does not exist.");
+                if (!productMap.TryGetValue(dtoItem.ProductId, out var product))
+                    throw new NotFoundException($"Product with Id {dtoItem.ProductId} does not exist.");
+
 
                 if (dtoItem.Quantity <= 0)
                     throw new BadRequestException($"Invalid quantity for product {product.Name}");

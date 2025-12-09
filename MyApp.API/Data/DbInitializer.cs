@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using MyApp.API.Entities;
 
 namespace MyApp.API.Data
@@ -9,9 +10,12 @@ namespace MyApp.API.Data
         {
             using var scope = applicationBuilder.ApplicationServices.CreateScope();
             var services = scope.ServiceProvider;
+            var context = services.GetRequiredService<AppDbContext>();
 
             try
             {
+                await context.Database.MigrateAsync();
+
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
