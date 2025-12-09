@@ -33,16 +33,14 @@ namespace MyApp.API.Services
             return userId;
         }
 
+        private bool IsAdmin() => _httpContext?.HttpContext?.User.IsInRole("Admin") ?? false;
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
         {
-            var user = _httpContext?.HttpContext?.User;
             var currentUserId = GetCurrentUserId();
-
-            var isAdmin = user?.IsInRole("Admin") ?? false;
 
             var query = _context.Orders.AsNoTracking();
 
-            if (!isAdmin)
+            if (!IsAdmin())
             {
                 query = query.Where(o => o.UserId == currentUserId);
             }
@@ -55,14 +53,11 @@ namespace MyApp.API.Services
 
         public async Task<OrderDto> GetByIdAsync(int id)
         {
-            var user = _httpContext?.HttpContext?.User;
             var currentUserId = GetCurrentUserId();
-
-            var isAdmin = user?.IsInRole("Admin") ?? false;
 
             var order = await _context.Orders
                 .AsNoTracking()
-                .Where(o => (isAdmin || o.UserId == currentUserId) && o.Id == id)
+                .Where(o => (IsAdmin() || o.UserId == currentUserId) && o.Id == id)
                 .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Order does not exist.");
@@ -133,9 +128,13 @@ namespace MyApp.API.Services
 
         public async Task<OrderDto> UpdateStatusAsync(int id, UpdateOrderStatusDto dto)
         {
+            var user = _httpContext?.HttpContext?.User;
             var currentUserId = GetCurrentUserId();
+
+            var isAdmin = user?.IsInRole("Admin") ?? false;
+
             var orderToUpdate = await _context.Orders
-                .Where(o => o.Id == id && o.UserId == currentUserId)
+                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
                 .Include(o => o.Items)
                 .FirstOrDefaultAsync(o => o.Id == id)
                 ?? throw new NotFoundException("Order does not exist.");
@@ -153,7 +152,7 @@ namespace MyApp.API.Services
         {
             var currentUserId = GetCurrentUserId();
             var orderToDelete = await _context.Orders
-                .Where(o => o.Id == id && o.UserId == currentUserId)
+                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Order does not exist.");
 
