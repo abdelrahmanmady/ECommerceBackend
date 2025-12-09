@@ -20,8 +20,8 @@ namespace MyApp.API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var isLogged = await _authService.LoginAsync(dto);
-            return Ok(isLogged);
+            var token = await _authService.LoginAsync(dto);
+            return Ok(token);
         }
     }
 }

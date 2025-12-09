@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MyApp.API.Data;
 using MyApp.API.Entities;
 using MyApp.API.Interfaces;
@@ -7,6 +9,7 @@ using MyApp.API.Mappings;
 using MyApp.API.Middleware;
 using MyApp.API.Services;
 using Serilog;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -24,9 +27,28 @@ namespace MyApp.API
                     .CreateLogger();
 
                 Log.Information("Starting Server...");
+
                 var builder = WebApplication.CreateBuilder(args);
 
                 // Add services to the container.
+
+                //Jwt Authentication Configuration
+                builder.Services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                    .AddJwtBearer(options =>
+                    {
+                        options.TokenValidationParameters = new()
+                        {
+                            ValidateIssuer = true,
+                            ValidateLifetime = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
+                        };
+                    });
 
                 //Register SeriLog
                 builder.Host.UseSerilog((context, loggerConfiguration) =>
@@ -60,13 +82,14 @@ namespace MyApp.API
                     cfg.AddProfile<MappingProfile>()
                 );
 
-                //Register Service Layer
+                //Register Services in IOC Container
                 builder.Services.AddScoped<IBrandService, BrandService>();
                 builder.Services.AddScoped<ICategoryService, CategoryService>();
                 builder.Services.AddScoped<IProductService, ProductService>();
                 builder.Services.AddScoped<IProductImageService, ProductImageService>();
                 builder.Services.AddScoped<IOrderService, OrderService>();
                 builder.Services.AddScoped<IAuthService, AuthService>();
+                builder.Services.AddScoped<ITokenService, TokenService>();
 
                 builder.Services.AddControllers()
                     .AddJsonOptions(options =>
@@ -76,11 +99,13 @@ namespace MyApp.API
                             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
                         );
                     });
+
                 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
                 builder.Services.AddOpenApi();
 
 
                 var app = builder.Build();
+
                 // Configure the HTTP request pipeline.
                 if (app.Environment.IsDevelopment())
                 {

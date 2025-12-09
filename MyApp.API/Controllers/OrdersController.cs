@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MyApp.API.DTOs.Orders;
 using MyApp.API.Interfaces;
 
@@ -6,6 +7,7 @@ namespace MyApp.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OrdersController(IOrderService orders) : ControllerBase
     {
         private readonly IOrderService _orders = orders;

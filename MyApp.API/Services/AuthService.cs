@@ -7,11 +7,12 @@ using MyApp.API.Interfaces;
 
 namespace MyApp.API.Services
 {
-    public class AuthService(UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<AuthService> logger) : IAuthService
+    public class AuthService(UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<AuthService> logger, ITokenService tokenService) : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<AuthService> _logger = logger;
+        private readonly ITokenService _tokenService = tokenService;
 
         public async Task<UserDto> RegisterAsync(RegisterDto dto)
         {
@@ -31,7 +32,7 @@ namespace MyApp.API.Services
 
         }
 
-        public async Task<bool> LoginAsync(LoginDto dto)
+        public async Task<string> LoginAsync(LoginDto dto)
         {
             ApplicationUser? user = null;
             if (!string.IsNullOrWhiteSpace(dto.Email))
@@ -50,9 +51,13 @@ namespace MyApp.API.Services
 
             if (!isValidPassword)
                 throw new BadRequestException("Invalid password.");
+
+            var token = _tokenService.CreateToken(user);
+
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {Identifier} logged in.", dto.Email ?? dto.UserName);
-            return true;
+
+            return token;
         }
     }
 }
