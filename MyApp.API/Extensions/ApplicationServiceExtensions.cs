@@ -58,6 +58,9 @@ namespace MyApp.API.Extensions
                             .Select(e => $"{e.Key}: {e.Value?.Errors.First().ErrorMessage}")
                             .ToList();
 
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                        logger.LogWarning("400 Validation Error: {Error}", errors);
+
                         var errorResponse = new MyApp.API.DTOs.Errors.ApiErrorResponseDto
                         {
                             StatusCode = 400,
