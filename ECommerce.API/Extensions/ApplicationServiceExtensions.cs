@@ -40,6 +40,8 @@ namespace ECommerce.API.Extensions
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAddressService, AddressService>();
+            services.AddScoped<ICartService, CartService>();
 
             //Controllers Configuration
             services.AddControllers()

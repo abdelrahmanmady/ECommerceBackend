@@ -7,6 +7,7 @@ using ECommerce.Business.DTOs.OrderItems;
 using ECommerce.Business.DTOs.Orders;
 using ECommerce.Business.DTOs.ProductImages;
 using ECommerce.Business.DTOs.Products;
+using ECommerce.Business.DTOs.ShoppingCart;
 using ECommerce.Core.Entities;
 
 namespace ECommerce.Business.Mappings
@@ -57,6 +58,24 @@ namespace ECommerce.Business.Mappings
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email));
             CreateMap<CreateAddressDto, Address>();
             CreateMap<UpdateAddressDto, Address>();
+
+            //ShoppingCart Mapping
+            CreateMap<ShoppingCart, ShoppingCartDto>();
+            CreateMap<CartItem, CartItemDto>()
+                .ForMember(dest => dest.ProductName, opt
+                    => opt.MapFrom(src
+                        => src.Product.Name))
+                .ForMember(dest => dest.ProductImageUrl, opt
+                    => opt.MapFrom(src
+                        => src.Product.Images
+                        .Where(i => i.IsMain)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.Price, opt
+                    => opt.MapFrom(src
+                        => src.Product.Price));
+
+
         }
     }
 }

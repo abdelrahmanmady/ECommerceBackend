@@ -170,7 +170,7 @@ namespace ECommerce.Business.Services
                 _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
         }
 
-        public string GetCurrentUserId()
+        private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 

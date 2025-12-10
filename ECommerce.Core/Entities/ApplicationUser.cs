@@ -12,5 +12,8 @@ namespace ECommerce.Core.Entities
         //one to many relation with Addresses
         public virtual ICollection<Address> Addresses { get; set; } = [];
 
+        //one to one relation with ShoppingCart
+        public virtual ShoppingCart ShoppingCart { get; set; } = null!;
+
     }
 }

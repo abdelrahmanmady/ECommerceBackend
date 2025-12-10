@@ -34,6 +34,12 @@ namespace ECommerce.Data.Config
                 .HasForeignKey(oi => oi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            //one to many relation with CartItems
+            builder.HasMany(p => p.CartItems)
+                .WithOne(ci => ci.Product)
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.HasData(
                 new Product
                 {

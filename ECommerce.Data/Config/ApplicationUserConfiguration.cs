@@ -20,6 +20,12 @@ namespace ECommerce.Data.Config
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            //one to one relation with ShoppingCart
+            builder.HasOne(u => u.ShoppingCart)
+                .WithOne(sc => sc.User)
+                .HasForeignKey<ShoppingCart>(sc => sc.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

@@ -28,7 +28,7 @@ namespace ECommerce.Data.Config
                 a.Property(x => x.Street).HasColumnName("ShippingStreet").HasMaxLength(100);
                 a.Property(x => x.City).HasColumnName("ShippingCity").HasMaxLength(50);
                 a.Property(x => x.State).HasColumnName("ShippingState").HasMaxLength(50);
-                a.Property(x => x.PostalCode).HasColumnName("ShippingZipCode").HasMaxLength(20);
+                a.Property(x => x.PostalCode).HasColumnName("ShippingPostalCode").HasMaxLength(20);
                 a.Property(x => x.Country).HasColumnName("ShippingCountry").HasMaxLength(50);
             });
         }
