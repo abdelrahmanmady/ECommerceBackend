@@ -20,7 +20,12 @@ namespace ECommerce.Business.Services
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
         public async Task<ShoppingCartDto> GetAsync()
-            => _mapper.Map<ShoppingCartDto>(await GetCartEntityAsync(GetCurrentUserId()));
+        {
+            var currentUserId = GetCurrentUserId();
+            var cart = await GetCartEntityAsync(currentUserId);
+            return _mapper.Map<ShoppingCartDto>(cart);
+        }
+
 
 
         public async Task<ShoppingCartDto> AddItemAsync(int productId)
@@ -100,20 +105,16 @@ namespace ECommerce.Business.Services
         private async Task<ShoppingCart> GetCartEntityAsync(string userId)
         {
             var cart = await _context.ShoppingCarts
-                .AsNoTracking()
-                .Include(sc => sc.Items)
+                .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
-                .ThenInclude(p => p.Images)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (cart is null)
+            if (cart == null)
             {
-                var shoppingCart = new ShoppingCart { UserId = userId };
-                _context.ShoppingCarts.Add(shoppingCart);
+                cart = new ShoppingCart { UserId = userId };
+                _context.ShoppingCarts.Add(cart);
                 await _context.SaveChangesAsync();
-
             }
-
             return cart;
         }
     }
