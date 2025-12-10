@@ -35,27 +35,66 @@ namespace ECommerce.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)] // Wrong Password/User not found
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var token = await _authService.LoginAsync(dto);
-            return Ok(token);
+            var authResponse = await _authService.LoginAsync(dto);
+            SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);
+            return Ok(new { authResponse.AccessToken });
         }
 
         [HttpPost("refresh-token")]
         [EndpointSummary("Refresh Access Token")]
         [EndpointDescription("Exchanges a valid Refresh Token for a new pair of Access/Refresh tokens.")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
+        public async Task<IActionResult> RefreshToken()
         {
-            var result = await _authService.RefreshTokenAsync(dto.RefreshToken);
-            return Ok(result);
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(refreshToken))
+                return Unauthorized(new ApiErrorResponseDto
+                {
+                    StatusCode = 401,
+                    Message = "No refresh token provided."
+                });
+
+            var authResponse = await _authService.RefreshTokenAsync(refreshToken);
+
+            SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);
+
+            return Ok(new { authResponse.AccessToken });
         }
 
         [HttpPost("revoke-token")]
         [Authorize]
         [EndpointSummary("Revoke Token (Logout)")]
-        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequestDto dto)
+        public async Task<IActionResult> RevokeToken()
         {
-            // Revoke the specific token sent by client
-            await _authService.RevokeTokenAsync(dto.RefreshToken);
+            var token = Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(token))
+                return BadRequest(new ApiErrorResponseDto { StatusCode = 400, Message = "Token is required" });
+
+            // 1. Revoke in DB
+            await _authService.RevokeTokenAsync(token);
+
+            // 2. Delete the Cookie from the browser
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+
             return NoContent();
+        }
+
+        private void SetRefreshTokenCookie(string token, DateTime expires)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true, // JS cannot read this
+                Secure = true,   // HTTPS only
+                Expires = expires,
+                SameSite = SameSiteMode.Strict
+            };
+            Response.Cookies.Append("refreshToken", token, cookieOptions);
         }
     }
 }

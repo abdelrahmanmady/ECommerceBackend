@@ -67,6 +67,7 @@ namespace ECommerce.Business.Services
             }
 
             await _userManager.ResetAccessFailedCountAsync(user);
+
             //1.Generate JWT Token (Access Token)
             var roles = await _userManager.GetRolesAsync(user);
             var accessToken = _tokenService.CreateAccessToken(user, roles);
@@ -82,7 +83,7 @@ namespace ECommerce.Business.Services
             }
 
             _context.RefreshTokens.Add(refreshToken);
-            await _userManager.UpdateAsync(user);
+            await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {Identifier} logged in.", dto.Identifier);
