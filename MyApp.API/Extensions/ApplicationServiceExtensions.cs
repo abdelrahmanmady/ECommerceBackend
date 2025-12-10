@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyApp.API.Data;
 using MyApp.API.Interfaces;
 using MyApp.API.Mappings;
@@ -47,7 +48,28 @@ namespace MyApp.API.Extensions
                     options.JsonSerializerOptions.Converters.Add(
                         new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
                     );
+                })
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var errors = context.ModelState
+                            .Where(e => e.Value?.Errors.Count > 0)
+                            .Select(e => $"{e.Key}: {e.Value?.Errors.First().ErrorMessage}")
+                            .ToList();
+
+                        var errorResponse = new MyApp.API.DTOs.Errors.ApiErrorResponseDto
+                        {
+                            StatusCode = 400,
+                            Message = "Validation failed",
+                            Detail = string.Join("; ", errors),
+                            TimeStamp = DateTime.UtcNow
+                        };
+
+                        return new BadRequestObjectResult(errorResponse);
+                    };
                 });
+
 
             //OpenApi
             services.AddOpenApi();

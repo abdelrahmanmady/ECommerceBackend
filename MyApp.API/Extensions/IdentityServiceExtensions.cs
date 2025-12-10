@@ -82,6 +82,24 @@ namespace MyApp.API.Extensions
                             TimeStamp = DateTime.UtcNow
                         };
                         await context.Response.WriteAsJsonAsync(errorResponse);
+                    },
+                    OnForbidden = async context =>
+                    {
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                        logger.LogWarning("403 Forbidden triggered for user: {User}", context.HttpContext.User.Identity?.Name);
+
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+
+                        var errorResponse = new MyApp.API.DTOs.Errors.ApiErrorResponseDto
+                        {
+                            StatusCode = 403,
+                            Message = "You are not authorized to access this resource.",
+                            Detail = "You do not have the required permissions (Role) to perform this action.",
+                            TimeStamp = DateTime.UtcNow
+                        };
+
+                        await context.Response.WriteAsJsonAsync(errorResponse);
                     }
                 };
             });

@@ -22,7 +22,7 @@ namespace MyApp.API.Services
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new BadRequestException($"Could not register the user ,Errors : {errors}");
+                throw new ConflictException($"Could not register the user ,Errors : {errors}");
             }
             await _userManager.AddToRoleAsync(userToCreate, "Customer");
 
@@ -35,14 +35,14 @@ namespace MyApp.API.Services
 
         public async Task<string> LoginAsync(LoginDto dto)
         {
-            ApplicationUser? user = null;
-            if (!string.IsNullOrWhiteSpace(dto.Email))
-                user = await _userManager.FindByEmailAsync(dto.Email);
-            else if (!string.IsNullOrWhiteSpace(dto.UserName))
-                user = await _userManager.FindByNameAsync(dto.UserName);
+            ApplicationUser? user;
+            if (dto.Identifier.Contains('@'))
+            {
+                user = await _userManager.FindByEmailAsync(dto.Identifier);
+            }
             else
             {
-                throw new BadRequestException("Either username or email must be provided.");
+                user = await _userManager.FindByNameAsync(dto.Identifier);
             }
 
             if (user is null)
@@ -57,7 +57,7 @@ namespace MyApp.API.Services
             var token = _tokenService.CreateToken(user, roles);
 
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("User {Identifier} logged in.", dto.Email ?? dto.UserName);
+                _logger.LogInformation("User {Identifier} logged in.", dto.Identifier);
 
             return token;
         }

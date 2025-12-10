@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyApp.API.DTOs.Errors;
 using MyApp.API.DTOs.Products;
 using MyApp.API.Interfaces;
 
@@ -7,18 +8,32 @@ namespace MyApp.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Tags("Products Management")]
     public class ProductsController(IProductService products) : ControllerBase
     {
         private readonly IProductService _products = products;
 
         [HttpGet]
+        [EndpointSummary("Get all products")]
+        [EndpointDescription("Retrieves a list of all products.")]
+        [ProducesResponseType(typeof(IEnumerable<ProductDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll() => Ok(await _products.GetAllAsync());
 
         [HttpGet("{id:int}")]
+        [EndpointSummary("Get product details")]
+        [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] int id) => Ok(await _products.GetByIdAsync(id));
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
+        [EndpointSummary("Create product")]
+        [EndpointDescription("Creates a new product. Validates Brand and Category existence.")]
+        [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)] // Validation
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)] // Brand/Category not found (Service throws NotFound)
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
         {
             var createdProduct = await _products.CreateAsync(dto);
@@ -27,6 +42,13 @@ namespace MyApp.API.Controllers
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Admin")]
+        [EndpointSummary("Update product")]
+        [EndpointDescription("Updates product details. Concurrency safe.")]
+        [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateProductDto dto)
         {
             var updatedProduct = await _products.UpdateAsync(id, dto);
@@ -35,6 +57,11 @@ namespace MyApp.API.Controllers
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin")]
+        [EndpointSummary("Delete product")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             await _products.DeleteAsync(id);
