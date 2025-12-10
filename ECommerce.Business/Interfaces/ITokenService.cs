@@ -4,6 +4,7 @@ namespace ECommerce.Business.Interfaces
 {
     public interface ITokenService
     {
-        string CreateToken(ApplicationUser user, ICollection<string> roles);
+        string CreateAccessToken(ApplicationUser user, ICollection<string> roles);
+        RefreshToken GenerateRefreshToken(string userId, bool rememberMe);
     }
 }

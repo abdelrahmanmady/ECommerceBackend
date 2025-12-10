@@ -26,6 +26,13 @@ namespace ECommerce.Data.Config
                 .HasForeignKey<ShoppingCart>(sc => sc.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            //one to many relation with RefreshTokens
+            builder.HasMany(u => u.RefreshTokens)
+                .WithOne(rt => rt.User)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
         }
     }
 }

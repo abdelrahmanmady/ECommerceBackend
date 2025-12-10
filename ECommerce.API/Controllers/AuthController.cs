@@ -1,6 +1,7 @@
 ﻿using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers
@@ -36,6 +37,25 @@ namespace ECommerce.API.Controllers
         {
             var token = await _authService.LoginAsync(dto);
             return Ok(token);
+        }
+
+        [HttpPost("refresh-token")]
+        [EndpointSummary("Refresh Access Token")]
+        [EndpointDescription("Exchanges a valid Refresh Token for a new pair of Access/Refresh tokens.")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
+        {
+            var result = await _authService.RefreshTokenAsync(dto.RefreshToken);
+            return Ok(result);
+        }
+
+        [HttpPost("revoke-token")]
+        [Authorize]
+        [EndpointSummary("Revoke Token (Logout)")]
+        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequestDto dto)
+        {
+            // Revoke the specific token sent by client
+            await _authService.RevokeTokenAsync(dto.RefreshToken);
+            return NoContent();
         }
     }
 }

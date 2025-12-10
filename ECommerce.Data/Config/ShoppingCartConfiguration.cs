@@ -8,8 +8,6 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<ShoppingCart> builder)
         {
-            builder.HasIndex(c => c.UserId).IsUnique();
-
             //one to many relation with CartItems
             builder.HasMany(sc => sc.Items)
                 .WithOne(i => i.ShoppingCart)

@@ -15,5 +15,8 @@ namespace ECommerce.Core.Entities
         //one to one relation with ShoppingCart
         public virtual ShoppingCart ShoppingCart { get; set; } = null!;
 
+        //one to many relation with RefreshTokens
+        public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+
     }
 }

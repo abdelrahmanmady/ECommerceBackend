@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace ECommerce.Business.Services
@@ -12,7 +13,7 @@ namespace ECommerce.Business.Services
     public class TokenService(IConfiguration config) : ITokenService
     {
         private readonly IConfiguration _config = config;
-        public string CreateToken(ApplicationUser user, ICollection<string> roles)
+        public string CreateAccessToken(ApplicationUser user, ICollection<string> roles)
         {
             //Retrieve Secretkey from configuration and Check its length
             var tokenKey = _config["Jwt:SecretKey"]
@@ -52,6 +53,23 @@ namespace ECommerce.Business.Services
 
             return tokenHandler.WriteToken(token);
 
+        }
+
+        public RefreshToken GenerateRefreshToken(string userId, bool rememberMe)
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+
+            var daysToExpire = rememberMe ? 30 : 1;
+
+            return new RefreshToken
+            {
+                Token = Convert.ToBase64String(randomNumber),
+                ExpiresOn = DateTime.UtcNow.AddDays(daysToExpire),
+                CreatedOn = DateTime.UtcNow,
+                UserId = userId
+            };
         }
     }
 }
