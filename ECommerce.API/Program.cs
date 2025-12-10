@@ -39,12 +39,10 @@ namespace ECommerce.API
                 }
 
                 app.UseHttpsRedirection();
-
-                app.UseAuthentication();
-
-                app.UseAuthorization();
                 //app.useCors
                 app.UseRateLimiter();
+                app.UseAuthentication();
+                app.UseAuthorization();
                 app.MapControllers()
                     .RequireRateLimiting("standard");
 
