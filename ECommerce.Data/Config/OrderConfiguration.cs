@@ -1,5 +1,4 @@
 ﻿using ECommerce.Core.Entities;
-using ECommerce.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,30 +20,17 @@ namespace ECommerce.Data.Config
                 .WithOne(oi => oi.Order)
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
-            builder.HasData(
-                new Order
-                {
-                    Id = 1,
-                    Created = new DateTime(2024, 12, 1, 10, 00, 00),
-                    Status = OrderStatus.Pending,
-                    TotalAmount = 999.99m
-                },
-                new Order
-                {
-                    Id = 2,
-                    Created = new DateTime(2024, 12, 2, 14, 30, 00),
-                    Status = OrderStatus.Processing,
-                    TotalAmount = 349.99m
 
-                },
-                new Order
-                {
-                    Id = 3,
-                    Created = new DateTime(2024, 12, 3, 18, 45, 00),
-                    Status = OrderStatus.Delivered,
-                    TotalAmount = 129.99m
-                }
-            );
+            //configure owned type (snapshot)
+            builder.OwnsOne(o => o.ShippingAddress, a =>
+            {
+                a.WithOwner();
+                a.Property(x => x.Street).HasColumnName("ShippingStreet").HasMaxLength(100);
+                a.Property(x => x.City).HasColumnName("ShippingCity").HasMaxLength(50);
+                a.Property(x => x.State).HasColumnName("ShippingState").HasMaxLength(50);
+                a.Property(x => x.PostalCode).HasColumnName("ShippingZipCode").HasMaxLength(20);
+                a.Property(x => x.Country).HasColumnName("ShippingCountry").HasMaxLength(50);
+            });
         }
     }
 }

@@ -25,17 +25,7 @@ namespace ECommerce.Business.Services
         private readonly ILogger<OrderService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-        private string GetCurrentUserId()
-        {
-            var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(userId))
-                throw new UnauthorizedException("User is not authenticated.");
-
-            return userId;
-        }
-
-        private bool IsAdmin() => _httpContext?.HttpContext?.User.IsInRole("Admin") ?? false;
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
         {
             var currentUserId = GetCurrentUserId();
@@ -73,18 +63,30 @@ namespace ECommerce.Business.Services
                 throw new BadRequestException("Order must contain at least one item.");
 
             var currentUserId = GetCurrentUserId();
+
+            var savedAddress = await _context.Addresses
+                .AsNoTracking()
+                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
+                .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Shipping Address not found.");
+
             var productIds = dto.Items.Select(i => i.ProductId).Distinct().ToList();
+
             var products = await _context.Products
                 .Where(p => productIds.Contains(p.Id))
                 .ToListAsync();
+
             var productMap = products.ToDictionary(p => p.Id);
+
             var orderToCreate = new Order
             {
                 UserId = currentUserId,
                 Created = DateTime.UtcNow,
                 Status = OrderStatus.Pending,
                 TotalAmount = 0,
-                Items = []
+                Items = [],
+                ShippingAddress = savedAddress
             };
 
             foreach (var dtoItem in dto.Items)
@@ -136,10 +138,7 @@ namespace ECommerce.Business.Services
 
         public async Task<OrderDto> UpdateStatusAsync(int id, UpdateOrderStatusDto dto)
         {
-            var user = _httpContext?.HttpContext?.User;
             var currentUserId = GetCurrentUserId();
-
-            var isAdmin = user?.IsInRole("Admin") ?? false;
 
             var orderToUpdate = await _context.Orders
                 .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
@@ -170,6 +169,18 @@ namespace ECommerce.Business.Services
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
         }
+
+        public string GetCurrentUserId()
+        {
+            var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedException("User is not authenticated.");
+
+            return userId;
+        }
+
+        private bool IsAdmin() => _httpContext?.HttpContext?.User.IsInRole("Admin") ?? false;
 
     }
 }

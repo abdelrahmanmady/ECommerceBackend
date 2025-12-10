@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ECommerce.Business.DTOs.Addresses;
 using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Brands;
 using ECommerce.Business.DTOs.Categories;
@@ -25,7 +26,12 @@ namespace ECommerce.Business.Mappings
             CreateMap<UpdateCategoryDto, Category>();
 
             //Product Mapping
-            CreateMap<Product, ProductDto>();
+            CreateMap<Product, ProductDto>()
+                .ForMember(dest => dest.ImageUrl, opt
+                    => opt.MapFrom(src
+                        => src.Images.Where(i => i.IsMain)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault()));
             CreateMap<CreateProductDto, Product>();
             CreateMap<UpdateProductDto, Product>();
 
@@ -44,7 +50,13 @@ namespace ECommerce.Business.Mappings
             CreateMap<RegisterDto, ApplicationUser>();
             CreateMap<ApplicationUser, UserDto>();
 
-
+            //Address Mapping
+            CreateMap<Address, AddressDto>();
+            CreateMap<Address, AddressWithUserDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email));
+            CreateMap<CreateAddressDto, Address>();
+            CreateMap<UpdateAddressDto, Address>();
         }
     }
 }

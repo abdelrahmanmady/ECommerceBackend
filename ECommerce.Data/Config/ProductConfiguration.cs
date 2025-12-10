@@ -18,10 +18,6 @@ namespace ECommerce.Data.Config
             builder.Property(p => p.Price)
                 .HasColumnType("DECIMAL(18,2)");
 
-            builder.Property(p => p.ImageUrl)
-                .HasColumnType("VARCHAR")
-                .HasMaxLength(500);
-
             builder.Property(p => p.Version)
                 .IsRowVersion();
 
@@ -46,7 +42,6 @@ namespace ECommerce.Data.Config
                     Description = "Latest Apple smartphone",
                     Price = 999.99m,
                     StockQuantity = 50,
-                    ImageUrl = "https://picsum.photos/seed/iphone14-main/200", // MAIN IMAGE
                     CategoryId = 1,
                     BrandId = 1
                 },
@@ -57,7 +52,6 @@ namespace ECommerce.Data.Config
                     Description = "Flagship Samsung smartphone",
                     Price = 899.99m,
                     StockQuantity = 40,
-                    ImageUrl = "https://picsum.photos/seed/galaxys23-main/200",
                     CategoryId = 1,
                     BrandId = 2
                 },
@@ -68,7 +62,6 @@ namespace ECommerce.Data.Config
                     Description = "Noise-cancelling wireless headphones",
                     Price = 349.99m,
                     StockQuantity = 30,
-                    ImageUrl = "https://picsum.photos/seed/sonyxm5-main/200",
                     CategoryId = 1,
                     BrandId = 3
                 },
@@ -79,7 +72,6 @@ namespace ECommerce.Data.Config
                     Description = "Popular athletic sneakers",
                     Price = 129.99m,
                     StockQuantity = 100,
-                    ImageUrl = "https://picsum.photos/seed/nikeairmax-main/200",
                     CategoryId = 2,
                     BrandId = 4
                 },
@@ -90,7 +82,6 @@ namespace ECommerce.Data.Config
                     Description = "Lightweight running T-shirt",
                     Price = 29.99m,
                     StockQuantity = 200,
-                    ImageUrl = "https://picsum.photos/seed/adidastee-main/200",
                     CategoryId = 2,
                     BrandId = 5
                 }

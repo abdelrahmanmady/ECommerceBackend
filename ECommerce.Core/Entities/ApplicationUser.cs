@@ -9,5 +9,8 @@ namespace ECommerce.Core.Entities
         //one to many relation with Orders
         public virtual ICollection<Order> Orders { get; set; } = [];
 
+        //one to many relation with Addresses
+        public virtual ICollection<Address> Addresses { get; set; } = [];
+
     }
 }

@@ -20,6 +20,7 @@ namespace ECommerce.Business.Services
         {
             var products = await _context.Products
                 .AsNoTracking()
+                .Include(p => p.Images)
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
             return products;
@@ -29,6 +30,7 @@ namespace ECommerce.Business.Services
         {
             var product = await _context.Products.Where(p => p.Id == id)
                 .AsNoTracking()
+                .Include(p => p.Images)
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");

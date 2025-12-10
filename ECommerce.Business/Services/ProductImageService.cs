@@ -68,8 +68,6 @@ namespace ECommerce.Business.Services
             }
             image.IsMain = true;
 
-            product.ImageUrl = image.ImageUrl;
-
             await _context.SaveChangesAsync();
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Image with id = {imageId} for product = {productId} is set as main.", image.Id, image.ProductId);

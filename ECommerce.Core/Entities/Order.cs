@@ -5,12 +5,10 @@ namespace ECommerce.Core.Entities
     public class Order
     {
         public int Id { get; set; }
-
-        //public int UserId { get; set; }
-        //public virtual User User { get; set; }
         public DateTime Created { get; set; }
         public OrderStatus Status { get; set; }
         public decimal TotalAmount { get; set; }
+        public OrderAddress ShippingAddress { get; set; } = null!;
 
         //one to many relation with OrderItems
         public virtual ICollection<OrderItem> Items { get; set; } = null!;
