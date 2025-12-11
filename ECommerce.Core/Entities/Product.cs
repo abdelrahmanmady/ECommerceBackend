@@ -7,6 +7,8 @@
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public bool IsFeatured { get; set; } = false;
         public byte[] Version { get; set; } = null!;
 
         //one to many Relationship with ProductImage

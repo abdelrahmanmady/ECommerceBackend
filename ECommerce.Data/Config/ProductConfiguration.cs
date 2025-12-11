@@ -40,59 +40,6 @@ namespace ECommerce.Data.Config
                 .HasForeignKey(ci => ci.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasData(
-                new Product
-                {
-                    Id = 1,
-                    Name = "iPhone 14",
-                    Description = "Latest Apple smartphone",
-                    Price = 999.99m,
-                    StockQuantity = 50,
-                    CategoryId = 1,
-                    BrandId = 1
-                },
-                new Product
-                {
-                    Id = 2,
-                    Name = "Samsung Galaxy S23",
-                    Description = "Flagship Samsung smartphone",
-                    Price = 899.99m,
-                    StockQuantity = 40,
-                    CategoryId = 1,
-                    BrandId = 2
-                },
-                new Product
-                {
-                    Id = 3,
-                    Name = "Sony WH-1000XM5",
-                    Description = "Noise-cancelling wireless headphones",
-                    Price = 349.99m,
-                    StockQuantity = 30,
-                    CategoryId = 1,
-                    BrandId = 3
-                },
-                new Product
-                {
-                    Id = 4,
-                    Name = "Nike Air Max",
-                    Description = "Popular athletic sneakers",
-                    Price = 129.99m,
-                    StockQuantity = 100,
-                    CategoryId = 2,
-                    BrandId = 4
-                },
-                new Product
-                {
-                    Id = 5,
-                    Name = "Adidas Running Tee",
-                    Description = "Lightweight running T-shirt",
-                    Price = 29.99m,
-                    StockQuantity = 200,
-                    CategoryId = 2,
-                    BrandId = 5
-                }
-            );
-
         }
     }
 }

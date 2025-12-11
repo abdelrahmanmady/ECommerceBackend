@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
-
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
 namespace ECommerce.Data.Migrations
 {
@@ -289,6 +288,8 @@ namespace ECommerce.Data.Migrations
                     Description = table.Column<string>(type: "VARCHAR(MAX)", nullable: true),
                     Price = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     StockQuantity = table.Column<int>(type: "int", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsFeatured = table.Column<bool>(type: "bit", nullable: false),
                     Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     BrandId = table.Column<int>(type: "int", nullable: false)
@@ -384,58 +385,6 @@ namespace ECommerce.Data.Migrations
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.InsertData(
-                table: "Brands",
-                columns: new[] { "Id", "Description", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Consumer electronics and software", "Apple" },
-                    { 2, "Electronics, appliances, and mobile devices", "Samsung" },
-                    { 3, "Entertainment and consumer electronics", "Sony" },
-                    { 4, "Sportswear and footwear", "Nike" },
-                    { 5, "Sportswear, apparel and accessories", "Adidas" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Categories",
-                columns: new[] { "Id", "Description", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Devices and gadgets", "Electronics" },
-                    { 2, "Men and women clothing", "Clothing" },
-                    { 3, "Fiction, non-fiction, academic", "Books" },
-                    { 4, "Furniture & home accessories", "Home" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Products",
-                columns: new[] { "Id", "BrandId", "CategoryId", "Description", "Name", "Price", "StockQuantity" },
-                values: new object[,]
-                {
-                    { 1, 1, 1, "Latest Apple smartphone", "iPhone 14", 999.99m, 50 },
-                    { 2, 2, 1, "Flagship Samsung smartphone", "Samsung Galaxy S23", 899.99m, 40 },
-                    { 3, 3, 1, "Noise-cancelling wireless headphones", "Sony WH-1000XM5", 349.99m, 30 },
-                    { 4, 4, 2, "Popular athletic sneakers", "Nike Air Max", 129.99m, 100 },
-                    { 5, 5, 2, "Lightweight running T-shirt", "Adidas Running Tee", 29.99m, 200 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "ProductImages",
-                columns: new[] { "Id", "ImageUrl", "IsMain", "ProductId" },
-                values: new object[,]
-                {
-                    { 1, "https://picsum.photos/seed/iphone14-main/200", true, 1 },
-                    { 2, "https://picsum.photos/seed/iphone14-2/200", false, 1 },
-                    { 3, "https://picsum.photos/seed/galaxys23-main/200", true, 2 },
-                    { 4, "https://picsum.photos/seed/galaxys23-2/200", false, 2 },
-                    { 5, "https://picsum.photos/seed/sonyxm5-main/200", true, 3 },
-                    { 6, "https://picsum.photos/seed/sonyxm5-2/200", false, 3 },
-                    { 7, "https://picsum.photos/seed/nikeairmax-main/200", true, 4 },
-                    { 8, "https://picsum.photos/seed/nikeairmax-2/200", false, 4 },
-                    { 9, "https://picsum.photos/seed/adidastee-main/200", true, 5 },
-                    { 10, "https://picsum.photos/seed/adidastee-2/200", false, 5 }
                 });
 
             migrationBuilder.CreateIndex(

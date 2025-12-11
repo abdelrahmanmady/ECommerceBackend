@@ -46,20 +46,7 @@ namespace ECommerce.API
                 app.MapControllers()
                     .RequireRateLimiting("standard");
 
-                using (var scope = app.Services.CreateScope())
-                {
-                    var services = scope.ServiceProvider;
-
-                    try
-                    {
-                        await DbInitializer.SeedRolesAndAdminAsync(services);
-                    }
-                    catch (Exception ex)
-                    {
-                        var logger = services.GetRequiredService<ILogger<Program>>();
-                        logger.LogError(ex, "An error occurred during database migration/seeding.");
-                    }
-                }
+                await DbInitializer.SeedDataAsync(app.Services);
 
                 app.Run();
             }

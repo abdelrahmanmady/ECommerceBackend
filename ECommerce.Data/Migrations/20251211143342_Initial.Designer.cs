@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251211071745_Initial")]
+    [Migration("20251211143342_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -152,38 +152,6 @@ namespace ECommerce.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Brands");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "Consumer electronics and software",
-                            Name = "Apple"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Electronics, appliances, and mobile devices",
-                            Name = "Samsung"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "Entertainment and consumer electronics",
-                            Name = "Sony"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Sportswear and footwear",
-                            Name = "Nike"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Description = "Sportswear, apparel and accessories",
-                            Name = "Adidas"
-                        });
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.CartItem", b =>
@@ -231,32 +199,6 @@ namespace ECommerce.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "Devices and gadgets",
-                            Name = "Electronics"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Men and women clothing",
-                            Name = "Clothing"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "Fiction, non-fiction, academic",
-                            Name = "Books"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Furniture & home accessories",
-                            Name = "Home"
-                        });
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.Order", b =>
@@ -332,8 +274,14 @@ namespace ECommerce.Data.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("VARCHAR(MAX)");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -359,58 +307,6 @@ namespace ECommerce.Data.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BrandId = 1,
-                            CategoryId = 1,
-                            Description = "Latest Apple smartphone",
-                            Name = "iPhone 14",
-                            Price = 999.99m,
-                            StockQuantity = 50
-                        },
-                        new
-                        {
-                            Id = 2,
-                            BrandId = 2,
-                            CategoryId = 1,
-                            Description = "Flagship Samsung smartphone",
-                            Name = "Samsung Galaxy S23",
-                            Price = 899.99m,
-                            StockQuantity = 40
-                        },
-                        new
-                        {
-                            Id = 3,
-                            BrandId = 3,
-                            CategoryId = 1,
-                            Description = "Noise-cancelling wireless headphones",
-                            Name = "Sony WH-1000XM5",
-                            Price = 349.99m,
-                            StockQuantity = 30
-                        },
-                        new
-                        {
-                            Id = 4,
-                            BrandId = 4,
-                            CategoryId = 2,
-                            Description = "Popular athletic sneakers",
-                            Name = "Nike Air Max",
-                            Price = 129.99m,
-                            StockQuantity = 100
-                        },
-                        new
-                        {
-                            Id = 5,
-                            BrandId = 5,
-                            CategoryId = 2,
-                            Description = "Lightweight running T-shirt",
-                            Name = "Adidas Running Tee",
-                            Price = 29.99m,
-                            StockQuantity = 200
-                        });
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.ProductImage", b =>
@@ -439,78 +335,6 @@ namespace ECommerce.Data.Migrations
                         .HasFilter("[IsMain] = 1");
 
                     b.ToTable("ProductImages");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ImageUrl = "https://picsum.photos/seed/iphone14-main/200",
-                            IsMain = true,
-                            ProductId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            ImageUrl = "https://picsum.photos/seed/iphone14-2/200",
-                            IsMain = false,
-                            ProductId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ImageUrl = "https://picsum.photos/seed/galaxys23-main/200",
-                            IsMain = true,
-                            ProductId = 2
-                        },
-                        new
-                        {
-                            Id = 4,
-                            ImageUrl = "https://picsum.photos/seed/galaxys23-2/200",
-                            IsMain = false,
-                            ProductId = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            ImageUrl = "https://picsum.photos/seed/sonyxm5-main/200",
-                            IsMain = true,
-                            ProductId = 3
-                        },
-                        new
-                        {
-                            Id = 6,
-                            ImageUrl = "https://picsum.photos/seed/sonyxm5-2/200",
-                            IsMain = false,
-                            ProductId = 3
-                        },
-                        new
-                        {
-                            Id = 7,
-                            ImageUrl = "https://picsum.photos/seed/nikeairmax-main/200",
-                            IsMain = true,
-                            ProductId = 4
-                        },
-                        new
-                        {
-                            Id = 8,
-                            ImageUrl = "https://picsum.photos/seed/nikeairmax-2/200",
-                            IsMain = false,
-                            ProductId = 4
-                        },
-                        new
-                        {
-                            Id = 9,
-                            ImageUrl = "https://picsum.photos/seed/adidastee-main/200",
-                            IsMain = true,
-                            ProductId = 5
-                        },
-                        new
-                        {
-                            Id = 10,
-                            ImageUrl = "https://picsum.photos/seed/adidastee-2/200",
-                            IsMain = false,
-                            ProductId = 5
-                        });
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.RefreshToken", b =>

@@ -22,14 +22,6 @@ namespace ECommerce.Data.Config
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            //Seed Data
-            builder.HasData(
-                new Category { Id = 1, Name = "Electronics", Description = "Devices and gadgets" },
-                new Category { Id = 2, Name = "Clothing", Description = "Men and women clothing" },
-                new Category { Id = 3, Name = "Books", Description = "Fiction, non-fiction, academic" },
-                new Category { Id = 4, Name = "Home", Description = "Furniture & home accessories" }
-            );
         }
     }
 }
