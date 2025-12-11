@@ -57,122 +57,6 @@ namespace ECommerce.Business.Services
 
         }
 
-        public async Task<OrderDto> CreateAsync(CreateOrderDto dto)
-        {
-            if (dto.Items == null || dto.Items.Count == 0)
-                throw new BadRequestException("Order must contain at least one item.");
-
-            var currentUserId = GetCurrentUserId();
-
-            var savedAddress = await _context.Addresses
-                .AsNoTracking()
-                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
-                .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync()
-                ?? throw new NotFoundException("Shipping Address not found.");
-
-            var productIds = dto.Items
-                .Select(i => i.ProductId)
-                .Distinct()
-                .ToList();
-
-            var products = await _context.Products
-                .Where(p => productIds.Contains(p.Id))
-                .ToListAsync();
-
-            var productMap = products.ToDictionary(p => p.Id);
-
-            var orderToCreate = new Order
-            {
-                UserId = currentUserId,
-                Created = DateTime.UtcNow,
-                Status = OrderStatus.Pending,
-                TotalAmount = 0,
-                Items = [],
-                ShippingAddress = savedAddress
-            };
-
-            foreach (var dtoItem in dto.Items)
-            {
-                if (!productMap.TryGetValue(dtoItem.ProductId, out var product))
-                    throw new NotFoundException($"Product with Id {dtoItem.ProductId} does not exist.");
-
-
-                if (dtoItem.Quantity <= 0)
-                    throw new BadRequestException($"Invalid quantity for product {product.Name}");
-
-                if (product.StockQuantity < dtoItem.Quantity)
-                    throw new BadRequestException($"Not enough stock for product {product.Name}");
-
-                product.StockQuantity -= dtoItem.Quantity;
-
-                var item = new OrderItem
-                {
-                    ProductId = product.Id,
-                    Quantity = dtoItem.Quantity,
-                    UnitPrice = product.Price
-                };
-
-                orderToCreate.TotalAmount += item.TotalPrice;
-
-                orderToCreate.Items.Add(item);
-            }
-
-            // EF will generate OrderId and apply it to children automatically
-            _context.Orders.Add(orderToCreate);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw new ConflictException("The product price or stock changed while you were ordering. Please try again.");
-            }
-
-
-
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Order added with id = {orderId} associated with user with id = {userId}.",
-                    orderToCreate.Id,
-                    orderToCreate.UserId);
-
-            return _mapper.Map<OrderDto>(orderToCreate);
-        }
-
-        public async Task<OrderDto> UpdateStatusAsync(int id, UpdateOrderStatusDto dto)
-        {
-            var currentUserId = GetCurrentUserId();
-
-            var orderToUpdate = await _context.Orders
-                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
-                .Include(o => o.Items)
-                .FirstOrDefaultAsync(o => o.Id == id)
-                ?? throw new NotFoundException("Order does not exist.");
-
-            orderToUpdate.Status = dto.Status;
-            await _context.SaveChangesAsync();
-
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Order updated with id = {orderId}.", orderToUpdate.Id);
-
-            return _mapper.Map<OrderDto>(orderToUpdate);
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var currentUserId = GetCurrentUserId();
-            var orderToDelete = await _context.Orders
-                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
-                .FirstOrDefaultAsync()
-                ?? throw new NotFoundException("Order does not exist.");
-
-            _context.Orders.Remove(orderToDelete);
-            await _context.SaveChangesAsync();
-
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
-        }
-
         public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
         {
             //get current user
@@ -229,6 +113,40 @@ namespace ECommerce.Business.Services
 
             return _mapper.Map<OrderDto>(orderToCreate);
 
+        }
+
+        public async Task<OrderDto> UpdateStatusAsync(int id, UpdateOrderStatusDto dto)
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var orderToUpdate = await _context.Orders
+                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.Id == id)
+                ?? throw new NotFoundException("Order does not exist.");
+
+            orderToUpdate.Status = dto.Status;
+            await _context.SaveChangesAsync();
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Order updated with id = {orderId}.", orderToUpdate.Id);
+
+            return _mapper.Map<OrderDto>(orderToUpdate);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var currentUserId = GetCurrentUserId();
+            var orderToDelete = await _context.Orders
+                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Order does not exist.");
+
+            _context.Orders.Remove(orderToDelete);
+            await _context.SaveChangesAsync();
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
         }
 
         private string GetCurrentUserId()
