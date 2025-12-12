@@ -1,24 +1,25 @@
 ﻿using ECommerce.Business.Interfaces;
 using ECommerce.Core.Exceptions;
+using ECommerce.Core.Settings;
+using Microsoft.Extensions.Options;
 
 namespace ECommerce.API.Infrastructure
 {
-    public class LocalFileStorageService(IWebHostEnvironment webHostEnvironment) : IFileStorageService
+    public class LocalFileStorageService(IWebHostEnvironment webHostEnvironment, IOptions<FileUploadSettings> options) : IFileStorageService
     {
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
+        private readonly FileUploadSettings _settings = options.Value;
 
         public async Task<string> SaveFileAsync(IFormFile file, string folderName)
         {
             //Validate file
             if (file == null || file.Length == 0)
                 throw new BadRequestException("No file uploaded.");
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(extension))
-                throw new BadRequestException("Invalid image format. Only JPG, PNG, and WebP are allowed.");
-            if (file.Length > 5 * 1024 * 1024) // 5MB limit
-                throw new BadRequestException("File size cannot exceed 5MB.");
-
+            if (!_settings.AllowedExtensions.Contains(extension))
+                throw new BadRequestException($"Invalid image format. Allowed: {string.Join(", ", _settings.AllowedExtensions)}"); long maxBytes = _settings.MaxFileSizeInMB * 1024 * 1024;
+            if (file.Length > maxBytes) // 5MB limit
+                throw new BadRequestException($"File size cannot exceed {_settings.MaxFileSizeInMB}MB.");
 
             //create path of save in wwwroot wwwroot/images/folderName
             var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", folderName);

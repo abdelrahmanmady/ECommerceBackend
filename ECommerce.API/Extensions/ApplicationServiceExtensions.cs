@@ -4,6 +4,7 @@ using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.Interfaces;
 using ECommerce.Business.Mappings;
 using ECommerce.Business.Services;
+using ECommerce.Core.Settings;
 using ECommerce.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -35,6 +36,9 @@ namespace ECommerce.API.Extensions
 
             //Register HttpContextAccessor to access User Claims in Services
             services.AddHttpContextAccessor();
+
+            //JSON Settings
+            services.Configure<FileUploadSettings>(config.GetSection("FileUpload"));
 
             //Register Custom Services in IOC Container
             services.AddScoped<IBrandService, BrandService>();

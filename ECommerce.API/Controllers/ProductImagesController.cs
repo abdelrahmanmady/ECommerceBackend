@@ -22,7 +22,7 @@ namespace ECommerce.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [EndpointSummary("Upload product image")]
+        [EndpointSummary("Upload product images")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(IEnumerable<ProductImageDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
