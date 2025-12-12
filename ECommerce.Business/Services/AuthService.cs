@@ -51,7 +51,7 @@ namespace ECommerce.Business.Services
             }
 
             if (user is null)
-                throw new UnauthorizedException("Incorrect email or password.");
+                throw new UnauthorizedException("User not found, please register.");
 
             if (await _userManager.IsLockedOutAsync(user))
                 throw new UnauthorizedException("Account is locked. Try again in 15 minutes.");
