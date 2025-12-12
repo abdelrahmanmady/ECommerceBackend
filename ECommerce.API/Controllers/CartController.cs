@@ -19,7 +19,7 @@ namespace ECommerce.API.Controllers
         [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> Get() => Ok(await _cart.GetAsync());
 
-        [HttpPost("/items/{productId:int}")]
+        [HttpPost("items/{productId:int}")]
         [EndpointSummary("Add item to cart")]
         [EndpointDescription("Adds a product to the cart. If it exists, increments quantity by 1. Checks stock.")]
         [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status200OK)]
@@ -27,7 +27,7 @@ namespace ECommerce.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddItem([FromRoute] int productId) => Ok(await _cart.AddItemAsync(productId));
 
-        [HttpDelete("/items/{productId:int}")]
+        [HttpDelete("items/{productId:int}")]
         [EndpointSummary("Remove item")]
         [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status200OK)] // Returns updated cart
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
