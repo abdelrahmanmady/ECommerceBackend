@@ -47,14 +47,14 @@ namespace ECommerce.Business.Mappings
 
             //User Mapping
             CreateMap<RegisterDto, ApplicationUser>();
-            CreateMap<ApplicationUser, RegisterResponseDto>()
+            CreateMap<ApplicationUser, UserDto>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName));
-            CreateMap<ApplicationUser, UserDetailsDto>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName))
-                .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
-            CreateMap<ApplicationUser, UserManagementDto>()
-                .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
-            CreateMap<UpdateUserDto, ApplicationUser>();
+            //CreateMap<ApplicationUser, UserDetailsDto>()
+            //    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName))
+            //    .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
+            //CreateMap<ApplicationUser, UserManagementDto>()
+            //    .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
+            //CreateMap<UpdateUserDto, ApplicationUser>();
 
 
             CreateMap<ApplicationUser, UserManagementDto>();

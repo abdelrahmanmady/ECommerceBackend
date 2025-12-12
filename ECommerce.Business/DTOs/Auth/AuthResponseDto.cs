@@ -1,12 +1,10 @@
-﻿using ECommerce.Business.DTOs.Users;
-
-namespace ECommerce.Business.DTOs.Auth
+﻿namespace ECommerce.Business.DTOs.Auth
 {
     public class AuthResponseDto
     {
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime RefreshTokenExpiration { get; set; }
-        public UserDetailsDto User { get; set; } = null!;
+        public UserDto User { get; set; } = null!;
     }
 }
