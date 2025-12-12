@@ -22,15 +22,15 @@ namespace ECommerce.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [EndpointSummary("Add image")]
-        [EndpointDescription("Adds an image URL to a product.")]
-        [ProducesResponseType(typeof(ProductImageDto), StatusCodes.Status201Created)]
+        [EndpointSummary("Upload product image")]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(IEnumerable<ProductImageDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Add([FromRoute] int productId, [FromBody] AddProductImageDto dto)
-            => CreatedAtAction(nameof(GetAll), new { productId }, await _productImages.AddImageAsync(productId, dto));
+        public async Task<IActionResult> Add([FromRoute] int productId, [FromForm] AddProductImageDto dto)
+            => Ok(await _productImages.AddImagesAsync(productId, dto));
 
 
 

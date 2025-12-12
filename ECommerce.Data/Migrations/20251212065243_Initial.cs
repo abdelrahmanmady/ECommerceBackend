@@ -372,7 +372,7 @@ namespace ECommerce.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ImageUrl = table.Column<string>(type: "VARCHAR(500)", maxLength: 500, nullable: false),
+                    ImageUrl = table.Column<string>(type: "VARCHAR(2000)", maxLength: 2000, nullable: false),
                     IsMain = table.Column<bool>(type: "bit", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false)
                 },

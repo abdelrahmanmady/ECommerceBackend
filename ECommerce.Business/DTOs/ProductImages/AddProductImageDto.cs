@@ -1,7 +1,9 @@
-﻿namespace ECommerce.Business.DTOs.ProductImages
+﻿using Microsoft.AspNetCore.Http;
+
+namespace ECommerce.Business.DTOs.ProductImages
 {
     public class AddProductImageDto
     {
-        public string ImageUrl { get; set; } = null!;
+        public List<IFormFile> Images { get; set; } = [];
     }
 }

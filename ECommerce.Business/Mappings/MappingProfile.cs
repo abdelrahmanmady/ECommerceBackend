@@ -37,9 +37,9 @@ namespace ECommerce.Business.Mappings
 
             //ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
-            CreateMap<AddProductImageDto, ProductImage>()
-                .ForMember(dest => dest.ProductId, opt => opt.Ignore())
-                .ForMember(dest => dest.IsMain, opt => opt.MapFrom(src => false));
+            //CreateMap<AddProductImageDto, ProductImage>()
+            //    .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+            //    .ForMember(dest => dest.IsMain, opt => opt.MapFrom(src => false));
 
             //Order Mapping
             CreateMap<Order, OrderDto>();

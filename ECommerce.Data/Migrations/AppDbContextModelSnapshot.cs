@@ -316,7 +316,7 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasMaxLength(500)
+                        .HasMaxLength(2000)
                         .HasColumnType("VARCHAR");
 
                     b.Property<bool>("IsMain")

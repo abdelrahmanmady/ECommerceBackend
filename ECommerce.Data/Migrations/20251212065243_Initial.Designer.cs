@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251211143342_Initial")]
+    [Migration("20251212065243_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -319,7 +319,7 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasMaxLength(500)
+                        .HasMaxLength(2000)
                         .HasColumnType("VARCHAR");
 
                     b.Property<bool>("IsMain")

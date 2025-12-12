@@ -1,4 +1,5 @@
-﻿using ECommerce.API.Middleware;
+﻿using ECommerce.API.Infrastructure;
+using ECommerce.API.Middleware;
 using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.Interfaces;
 using ECommerce.Business.Mappings;
@@ -45,6 +46,7 @@ namespace ECommerce.API.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAddressService, AddressService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
             // Add CORS
             services.AddCors(options =>
