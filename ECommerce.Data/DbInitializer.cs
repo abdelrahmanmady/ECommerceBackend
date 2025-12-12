@@ -47,6 +47,8 @@ namespace ECommerce.Data
             {
                 var adminUser = new ApplicationUser
                 {
+                    FirstName = "Abdelrhman",
+                    LastName = "Mady",
                     UserName = "admin",
                     Email = "admin@myapp.com",
                     EmailConfirmed = true

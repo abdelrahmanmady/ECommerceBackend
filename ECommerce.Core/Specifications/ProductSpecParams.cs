@@ -21,7 +21,7 @@ namespace ECommerce.Core.Specifications
         public decimal? MaxPrice { get; set; }
 
         //Sort Params
-        public string? Sort { get; set; } // "priceAsc", "priceDesc", "name"
+        public string? Sort { get; set; } // "priceAsc", "priceDesc", "name" , "newest arrivals", featured
 
         //Pagination Params
         public int PageIndex { get; set; } = 1;

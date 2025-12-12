@@ -8,6 +8,7 @@ using ECommerce.Business.DTOs.Orders;
 using ECommerce.Business.DTOs.ProductImages;
 using ECommerce.Business.DTOs.Products;
 using ECommerce.Business.DTOs.ShoppingCart;
+using ECommerce.Business.DTOs.Users;
 using ECommerce.Core.Entities;
 
 namespace ECommerce.Business.Mappings
@@ -37,19 +38,27 @@ namespace ECommerce.Business.Mappings
 
             //ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
-            //CreateMap<AddProductImageDto, ProductImage>()
-            //    .ForMember(dest => dest.ProductId, opt => opt.Ignore())
-            //    .ForMember(dest => dest.IsMain, opt => opt.MapFrom(src => false));
 
             //Order Mapping
             CreateMap<Order, OrderDto>();
+
             //OrderItem Mapping
             CreateMap<OrderItem, OrderItemDto>();
 
             //User Mapping
             CreateMap<RegisterDto, ApplicationUser>();
-            CreateMap<ApplicationUser, UserDto>();
+            CreateMap<ApplicationUser, RegisterResponseDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName));
+            CreateMap<ApplicationUser, UserDetailsDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName))
+                .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
+            CreateMap<ApplicationUser, UserManagementDto>()
+                .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
+            CreateMap<UpdateUserDto, ApplicationUser>();
 
+
+            CreateMap<ApplicationUser, UserManagementDto>();
+            CreateMap<UpdateUserDto, ApplicationUser>();
             //Address Mapping
             CreateMap<Address, AddressDto>();
             CreateMap<Address, AddressWithUserDto>()

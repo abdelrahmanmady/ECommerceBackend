@@ -6,6 +6,10 @@ namespace ECommerce.Core.Entities
 {
     public class ApplicationUser : IdentityUser
     {
+        public string FirstName { get; set; } = null!;
+        public string LastName { get; set; } = null!;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
         //one to many relation with Orders
         public virtual ICollection<Order> Orders { get; set; } = [];
 

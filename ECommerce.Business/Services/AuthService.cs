@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.Business.DTOs.Auth;
+using ECommerce.Business.DTOs.Users;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -18,7 +19,7 @@ namespace ECommerce.Business.Services
         private readonly ITokenService _tokenService = tokenService;
         private readonly AppDbContext _context = context;
 
-        public async Task<UserDto> RegisterAsync(RegisterDto dto)
+        public async Task<RegisterResponseDto> RegisterAsync(RegisterDto dto)
         {
             var userToCreate = _mapper.Map<ApplicationUser>(dto);
             var result = await _userManager.CreateAsync(userToCreate, dto.Password);
@@ -32,9 +33,7 @@ namespace ECommerce.Business.Services
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User created with id = {id}.", userToCreate.Id);
-
-            return _mapper.Map<UserDto>(userToCreate);
-
+            return _mapper.Map<RegisterResponseDto>(userToCreate);
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -92,12 +91,14 @@ namespace ECommerce.Business.Services
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {Identifier} logged in.", dto.Identifier);
-
+            var userDetails = _mapper.Map<UserDetailsDto>(user);
+            userDetails.Roles = [.. roles];
             return new AuthResponseDto
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken.Token,
-                RefreshTokenExpiration = refreshToken.ExpiresOn
+                RefreshTokenExpiration = refreshToken.ExpiresOn,
+                User = userDetails
             };
         }
 
@@ -130,11 +131,15 @@ namespace ECommerce.Business.Services
             _context.RefreshTokens.Add(newRefreshToken);
             await _context.SaveChangesAsync();
 
+            var userDetails = _mapper.Map<UserDetailsDto>(newRefreshToken.User);
+            userDetails.Roles = [.. roles];
+
             return new AuthResponseDto
             {
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken.Token,
-                RefreshTokenExpiration = newRefreshToken.ExpiresOn
+                RefreshTokenExpiration = newRefreshToken.ExpiresOn,
+                User = userDetails
             };
         }
 

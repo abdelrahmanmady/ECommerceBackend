@@ -17,32 +17,39 @@ namespace ECommerce.API.Controllers
         [EndpointName("RegisterUser")]
         [EndpointSummary("Register a new user")]
         [EndpointDescription("Creates a new user account with the default 'Customer' role. Requires a unique email and username.")]
-        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(RegisterResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)] // Input Validation (Missing fields)
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)] // Logic Error (User already exists - if you add this logic later)
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var userCreated = await _authService.RegisterAsync(dto);
-            return Ok(userCreated);
+            return StatusCode(StatusCodes.Status201Created, userCreated);
         }
 
         [HttpPost("[action]")]
         [EndpointName("LoginUser")]
         [EndpointSummary("Authenticate user")]
         [EndpointDescription("Validates credentials (username/email + password) and returns a JWT Access Token.")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)] // Input Validation
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)] // Wrong Password/User not found
+        [ProducesResponseType(typeof(ApiErrorResponseDto), statusCode: StatusCodes.Status401Unauthorized)] // Wrong Password/User not found
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             var authResponse = await _authService.LoginAsync(dto);
             SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);
-            return Ok(new { authResponse.AccessToken });
+            return Ok(new LoginResponseDto
+            {
+                AccessToken = authResponse.AccessToken,
+                User = authResponse.User
+            });
         }
 
         [HttpPost("refresh-token")]
         [EndpointSummary("Refresh Access Token")]
         [EndpointDescription("Exchanges a valid Refresh Token for a new pair of Access/Refresh tokens.")]
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), statusCode: StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
@@ -58,12 +65,19 @@ namespace ECommerce.API.Controllers
 
             SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);
 
-            return Ok(new { authResponse.AccessToken });
+            return Ok(new LoginResponseDto
+            {
+                AccessToken = authResponse.AccessToken,
+                User = authResponse.User
+            });
         }
 
         [HttpPost("revoke-token")]
         [Authorize]
         [EndpointSummary("Revoke Token (Logout)")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RevokeToken()
         {
             var token = Request.Cookies["refreshToken"];
