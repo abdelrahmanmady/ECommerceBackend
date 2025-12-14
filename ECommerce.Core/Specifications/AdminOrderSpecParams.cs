@@ -1,6 +1,8 @@
-﻿namespace ECommerce.Core.Specifications
+﻿using ECommerce.Core.Enums;
+
+namespace ECommerce.Core.Specifications
 {
-    public class ProductSpecParams
+    public class AdminOrderSpecParams
     {
         //Pagination Params
         public int PageIndex { get; set; } = 1;
@@ -15,10 +17,7 @@
         public string? Search { get; set; }
 
         //Filter Params
-        public int? BrandId { get; set; }
-        public int? CategoryId { get; set; }
-        public decimal? MinPrice { get; set; }
-        public decimal? MaxPrice { get; set; }
+        public OrderStatus? Status { get; set; }
 
         //Sort Params
         public string? Sort { get; set; }

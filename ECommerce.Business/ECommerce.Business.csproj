@@ -17,4 +17,8 @@
     <ProjectReference Include="..\ECommerce.Data\ECommerce.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\Orders\Profile\" />
+  </ItemGroup>
+
 </Project>

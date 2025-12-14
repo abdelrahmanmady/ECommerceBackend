@@ -1,5 +1,6 @@
 ﻿using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Errors;
+using ECommerce.Business.DTOs.Users.Auth;
 using ECommerce.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ namespace ECommerce.API.Controllers
         [EndpointName("RegisterUser")]
         [EndpointSummary("Register a new user")]
         [EndpointDescription("Creates a new user account with the default 'Customer' role. Requires a unique email and username.")]
-        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserSessionDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)] // Input Validation (Missing fields)
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)] // Logic Error (User already exists - if you add this logic later)
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)

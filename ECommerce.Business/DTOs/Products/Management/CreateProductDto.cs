@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ECommerce.Business.DTOs.Products
+namespace ECommerce.Business.DTOs.Products.Management
 {
-    public class UpdateProductDto
+    public class CreateProductDto
     {
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
-        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to zero.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Price Must be a positive value")]
         public decimal Price { get; set; }
-        [Range(0, int.MaxValue, ErrorMessage = "Stock must be greater than or equal to zero.")]
+        [Range(0, int.MaxValue, ErrorMessage = "Stock must be a positive value")]
         public int StockQuantity { get; set; }
         public bool IsFeatured { get; set; }
         public int CategoryId { get; set; }

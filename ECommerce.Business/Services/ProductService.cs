@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ECommerce.Business.DTOs.Pagination;
-using ECommerce.Business.DTOs.Products;
+using ECommerce.Business.DTOs.Products.Admin;
+using ECommerce.Business.DTOs.Products.Management;
+using ECommerce.Business.DTOs.Products.Store;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -18,16 +20,15 @@ namespace ECommerce.Business.Services
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<ProductService> _logger = logger;
 
-        public async Task<PagedResponseDto<ProductDto>> GetAllAsync(ProductSpecParams specParams)
+        public async Task<PagedResponseDto<ProductDto>> GetProductsForCustomerAsync(ProductSpecParams specParams)
         {
             //Create basic query
             var query = _context.Products.AsNoTracking().AsQueryable();
-            var response = new PagedResponseDto<ProductDto>();
+
             //1.Search
             if (!string.IsNullOrEmpty(specParams.Search))
             {
-                query = query.Where(p => p.Name.ToLower().Contains(specParams.Search));
-                response.Search = specParams.Search;
+                query = query.Where(p => p.Name.ToLower().Contains(specParams.Search.ToLower()));
 
             }
 
@@ -36,51 +37,33 @@ namespace ECommerce.Business.Services
             if (specParams.CategoryId.HasValue)
             {
                 query = query.Where(p => p.CategoryId == specParams.CategoryId.Value);
-                response.CategoryId = specParams.CategoryId.Value;
             }
 
             if (specParams.BrandId.HasValue)
             {
                 query = query.Where(p => p.BrandId == specParams.BrandId.Value);
-                response.BrandId = specParams.BrandId.Value;
             }
 
             if (specParams.MinPrice.HasValue)
             {
                 query = query.Where(p => p.Price >= specParams.MinPrice.Value);
-                response.MinPrice = specParams.MinPrice.Value;
             }
 
             if (specParams.MaxPrice.HasValue)
             {
                 query = query.Where(p => p.Price <= specParams.MaxPrice.Value);
-                response.MaxPrice = specParams.MaxPrice.Value;
             }
 
             //3.Sorting
 
-            switch (specParams.Sort)
+            query = specParams.Sort switch
             {
-                case "priceAsc":
-                    query = query.OrderBy(p => p.Price);
-                    response.Sort = "Price : Low to High";
-                    break;
-                case "priceDesc":
-                    query = query.OrderByDescending(p => p.Price);
-                    response.Sort = "Price : High to Low";
-                    break;
-                case "newest":
-                    query = query.OrderByDescending(p => p.Created);
-                    response.Sort = "Newest Arrivals";
-                    break;
-                case "featured":
-                    query = query.OrderByDescending(p => p.IsFeatured).ThenBy(p => p.Name);
-                    response.Sort = "Featured";
-                    break;
-                default:
-                    query = query.OrderBy(p => p.Name);
-                    break;
-            }
+                "priceAsc" => query.OrderBy(p => p.Price),
+                "priceDesc" => query.OrderByDescending(p => p.Price),
+                "newest" => query.OrderByDescending(p => p.Created),
+                "featured" => query.OrderByDescending(p => p.IsFeatured).ThenBy(p => p.Name),
+                _ => query.OrderBy(p => p.Name)
+            };
 
             //4.Pagination
 
@@ -91,12 +74,50 @@ namespace ECommerce.Business.Services
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
-            response.PageIndex = specParams.PageIndex;
-            response.PageSize = specParams.PageSize;
-            response.TotalCount = totalCount;
-            response.Items = items;
+            return new PagedResponseDto<ProductDto>
+            {
+                PageIndex = specParams.PageIndex,
+                PageSize = specParams.PageSize,
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
 
-            return response;
+        public async Task<PagedResponseDto<AdminProductDto>> GetProductsForAdminAsync(AdminProductSpecParams specParams)
+        {
+            var query = _context.Products.AsNoTracking().AsQueryable();
+
+            //Search
+            if (!string.IsNullOrEmpty(specParams.Search))
+            {
+                var term = specParams.Search.ToLower();
+                bool isNumeric = int.TryParse(term, out int searchId);
+
+
+                query = query.Where(p =>
+                    (isNumeric && p.Id == searchId) ||
+                    p.Name.ToLower().Contains(term) ||
+                    (p.Description != null && p.Description.ToLower().Contains(term)) ||
+                    p.Category.Name.ToLower().Contains(term)
+                );
+            }
+
+            //Pagination
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((specParams.PageIndex - 1) * specParams.PageSize)
+                .Take(specParams.PageSize)
+                .ProjectTo<AdminProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return new PagedResponseDto<AdminProductDto>
+            {
+                PageIndex = specParams.PageIndex,
+                PageSize = specParams.PageSize,
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public async Task<ProductDto> GetByIdAsync(int id)

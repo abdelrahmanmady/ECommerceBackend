@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ECommerce.Business.DTOs.Users
+namespace ECommerce.Business.DTOs.Users.Profile
 {
-    public class UpdateUserDto // User Updates his account details
+    public class UpdateUserProfileDto // User Updates his account details
     {
         public string UserName { get; set; } = null!;
 

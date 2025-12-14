@@ -1,6 +1,8 @@
 ﻿using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.DTOs.Pagination;
-using ECommerce.Business.DTOs.Products;
+using ECommerce.Business.DTOs.Products.Admin;
+using ECommerce.Business.DTOs.Products.Management;
+using ECommerce.Business.DTOs.Products.Store;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Specifications;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +21,15 @@ namespace ECommerce.API.Controllers
         [EndpointSummary("Get all products")]
         [EndpointDescription("Retrieves a list of all products.")]
         [ProducesResponseType(typeof(PagedResponseDto<ProductDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAll([FromQuery] ProductSpecParams specParams) => Ok(await _products.GetAllAsync(specParams));
+        public async Task<IActionResult> GetAll([FromQuery] ProductSpecParams specParams) => Ok(await _products.GetProductsForCustomerAsync(specParams));
+
+        [HttpGet("admin-dashboard")]
+        [Authorize(Roles = "Admin")]
+        [EndpointSummary("Get all products for admin dashboard")]
+        [EndpointDescription("Retrieves a list of all products for admin dashboard.")]
+        [ProducesResponseType(typeof(PagedResponseDto<AdminProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllAdmin([FromQuery] AdminProductSpecParams specParams) => Ok(await _products.GetProductsForAdminAsync(specParams));
 
         [HttpGet("{id:int}")]
         [EndpointSummary("Get product details")]
