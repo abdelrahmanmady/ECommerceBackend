@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251214152107_Initial")]
+    [Migration("20251215083137_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -226,10 +226,24 @@ namespace ECommerce.Data.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("ShippingFees")
+                        .HasColumnType("DECIMAL(18,2)");
+
+                    b.Property<string>("ShippingMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("DECIMAL(18,2)");
+
+                    b.Property<decimal>("Taxes")
+                        .HasColumnType("DECIMAL(18,2)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("DECIMAL(18,2)");
@@ -275,6 +289,30 @@ namespace ECommerce.Data.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("ECommerce.Core.Entities.OrderTrackingMilestone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderTrackingMilestone");
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>
@@ -647,6 +685,17 @@ namespace ECommerce.Data.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("ECommerce.Core.Entities.OrderTrackingMilestone", b =>
+                {
+                    b.HasOne("ECommerce.Core.Entities.Order", "Order")
+                        .WithMany("OrderTrackingMilestones")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>
                 {
                     b.HasOne("ECommerce.Core.Entities.Brand", "Brand")
@@ -775,6 +824,8 @@ namespace ECommerce.Data.Migrations
             modelBuilder.Entity("ECommerce.Core.Entities.Order", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("OrderTrackingMilestones");
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>

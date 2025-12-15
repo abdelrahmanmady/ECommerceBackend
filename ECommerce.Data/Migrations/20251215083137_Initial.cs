@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -220,7 +221,11 @@ namespace ECommerce.Data.Migrations
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Subtotal = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
+                    ShippingFees = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
+                    Taxes = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
+                    ShippingMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ShippingStreet = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ShippingCity = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ShippingState = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -313,6 +318,27 @@ namespace ECommerce.Data.Migrations
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderTrackingMilestone",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderTrackingMilestone", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderTrackingMilestone_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -461,6 +487,11 @@ namespace ECommerce.Data.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderTrackingMilestone_OrderId",
+                table: "OrderTrackingMilestone",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductImages_ProductId",
                 table: "ProductImages",
                 column: "ProductId",
@@ -515,6 +546,9 @@ namespace ECommerce.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "OrderItems");
+
+            migrationBuilder.DropTable(
+                name: "OrderTrackingMilestone");
 
             migrationBuilder.DropTable(
                 name: "ProductImages");
