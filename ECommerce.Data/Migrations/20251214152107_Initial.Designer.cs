@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251214045815_Initial")]
+    [Migration("20251214152107_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -233,6 +233,9 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("DECIMAL(18,2)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()

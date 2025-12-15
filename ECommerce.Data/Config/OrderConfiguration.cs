@@ -21,6 +21,12 @@ namespace ECommerce.Data.Config
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            //one to many relation with OrderTrackingMilestones
+            builder.HasMany(o => o.OrderTrackingMilestones)
+                .WithOne(otm => otm.Order)
+                .HasForeignKey(otm => otm.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             //configure owned type (snapshot)
             builder.OwnsOne(o => o.ShippingAddress, a =>
             {
@@ -31,6 +37,8 @@ namespace ECommerce.Data.Config
                 a.Property(x => x.PostalCode).HasColumnName("ShippingPostalCode").HasMaxLength(20);
                 a.Property(x => x.Country).HasColumnName("ShippingCountry").HasMaxLength(50);
             });
+
+
         }
     }
 }

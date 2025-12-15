@@ -4,7 +4,6 @@ using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Brands;
 using ECommerce.Business.DTOs.Categories;
 using ECommerce.Business.DTOs.OrderItems;
-using ECommerce.Business.DTOs.Orders;
 using ECommerce.Business.DTOs.Orders.Admin;
 using ECommerce.Business.DTOs.ProductImages;
 using ECommerce.Business.DTOs.Products.Admin;
@@ -47,13 +46,22 @@ namespace ECommerce.Business.Mappings
             CreateMap<ProductImage, ProductImageDto>();
 
             //Order Mapping
-            CreateMap<Order, OrderDto>();
             CreateMap<Order, AdminOrderDto>()
-                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName))
                 .ForMember(dest => dest.ItemsCount, opt => opt.MapFrom(src => src.Items.Count));
+            CreateMap<Order, AdminOrderDetailsDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName));
+
 
             //OrderItem Mapping
-            CreateMap<OrderItem, OrderItemDto>();
+            CreateMap<OrderItem, OrderItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+                .ForMember(dest => dest.ProductThumbnailUrl, opt
+                => opt.MapFrom(src
+                => src.Product.Images.Where(pi
+                => pi.IsMain).Select(pi
+                => pi.ImageUrl).FirstOrDefault()));
+
 
             //User Mapping
             CreateMap<RegisterDto, ApplicationUser>();

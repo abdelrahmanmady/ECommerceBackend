@@ -231,6 +231,9 @@ namespace ECommerce.Data.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("DECIMAL(18,2)");
 
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");

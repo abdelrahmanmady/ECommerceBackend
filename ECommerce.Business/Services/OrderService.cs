@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using ECommerce.Business.DTOs.Orders;
 using ECommerce.Business.DTOs.Orders.Admin;
-using ECommerce.Business.DTOs.Orders.Management;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
@@ -29,27 +27,10 @@ namespace ECommerce.Business.Services
         private readonly ILogger<OrderService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-
-        public async Task<IEnumerable<OrderDto>> GetOrdersForCustomerAsync()
+        #region Admin Dashboard
+        public async Task<PagedResponseDto<AdminOrderDto>> GetAllAdminAsync(AdminOrderSpecParams specParams)
         {
-            var currentUserId = GetCurrentUserId();
-
-            var query = _context.Orders.AsNoTracking();
-
-            if (!IsAdmin())
-            {
-                query = query.Where(o => o.UserId == currentUserId);
-            }
-
-            var orders = await query
-                .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-            return orders;
-        }
-
-        public async Task<PagedResponseDto<AdminOrderDto>> GetOrdersForAdminAsync(AdminOrderSpecParams specParams)
-        {
-            var query = _context.Orders.AsNoTracking().AsQueryable();
+            var query = _context.Orders.AsNoTracking().Include(o => o.User).AsQueryable();
 
             //Search
             if (!string.IsNullOrEmpty(specParams.Search))
@@ -91,25 +72,11 @@ namespace ECommerce.Business.Services
             };
         }
 
-        public async Task<OrderDto> GetByIdCustomerAsync(int id)
-        {
-            var currentUserId = GetCurrentUserId();
-
-            var order = await _context.Orders
-                .AsNoTracking()
-                .Where(o => o.UserId == currentUserId && o.Id == id)
-                .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync()
-                ?? throw new NotFoundException("Order does not exist.");
-            return order;
-
-        }
-
-        public async Task<AdminOrderDetailsDto> GetByIdAdminAsync(int id)
+        public async Task<AdminOrderDetailsDto> GetByIdAdminAsync(int orderId)
         {
             var order = await _context.Orders
                 .AsNoTracking()
-                .Where(o => o.Id == id)
+                .Where(o => o.Id == orderId)
                 .ProjectTo<AdminOrderDetailsDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Order does not exist.");
@@ -118,58 +85,86 @@ namespace ECommerce.Business.Services
 
 
 
-        public async Task<AdminOrderDetailsDto> UpdateStatusAsync(int id, AdminUpdateOrderDto dto)
+        public async Task<AdminOrderDetailsDto> UpdateAdminAsync(int orderId, AdminUpdateOrderDto dto)
         {
 
 
             var orderToUpdate = await _context.Orders
-                .FindAsync(id)
+                .Include(o => o.User)
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId)
                 ?? throw new NotFoundException("Order does not exist.");
 
-            if (dto.Status == OrderStatus.Canceled && orderToUpdate.Status != OrderStatus.Canceled)
-            {
-                foreach (var item in orderToUpdate.Items)
-                {
-                    item.Product.StockQuantity += item.Quantity;
-                }
-            }
-            orderToUpdate.Status = dto.Status;
+            var changes = new List<string>();
+            var oldStatus = orderToUpdate.Status;
 
-            if (orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing)
+            //FastExit if status is same and no addressId sent
+            if (orderToUpdate.Status == dto.Status && dto.AddressId is null)
             {
-                var address = await _context.Addresses.AsNoTracking().FirstOrDefaultAsync(a => a.Id == dto.AddressId);
-                if (address?.UserId == orderToUpdate.UserId)
+                return _mapper.Map<AdminOrderDetailsDto>(orderToUpdate);
+            }
+
+            //update status if not same
+            if (orderToUpdate.Status != dto.Status)
+            {
+                //block terminal status updates
+                if (orderToUpdate.Status == OrderStatus.Delivered || orderToUpdate.Status == OrderStatus.Canceled)
+                    throw new BadRequestException($"Order is {orderToUpdate.Status}. No further changes allowed.");
+
+                //Shipped Orders can only be updated to Delivered
+                if (orderToUpdate.Status == OrderStatus.Shipped && dto.Status != OrderStatus.Delivered)
+                    throw new BadRequestException($"Order is {orderToUpdate.Status}. Can only be updated to delivered.");
+
+                // Prevent Teleporting: Must be Shipped before Delivered
+                if (dto.Status == OrderStatus.Delivered && orderToUpdate.Status != OrderStatus.Shipped)
+                    throw new BadRequestException("Order must be marked as Shipped before it can be Delivered.");
+
+                //if order is pending or processing and new status is canceled => retrieve stock
+                if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.Status == OrderStatus.Canceled)
                 {
-                    orderToUpdate.ShippingAddress = new OrderAddress()
+                    foreach (var item in orderToUpdate.Items)
                     {
-                        Street = address.Street,
-                        City = address.City,
-                        State = address.State,
-                        PostalCode = address.PostalCode,
-                        Country = address.Country
-                    };
-                }
-                else
-                {
-                    throw new NotFoundException("Address does not exist.");
+                        item.Product.StockQuantity += item.Quantity;
+                    }
+                    changes.Add("Inventory restocked");
                 }
 
+                orderToUpdate.Status = dto.Status;
+                changes.Add($"Status: {oldStatus} -> {dto.Status}");
             }
 
-            await _context.SaveChangesAsync();
-
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Order updated with id = {orderId}.", orderToUpdate.Id);
-
+            //update address if order status is pending or processing & new addressid is not null
+            if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.AddressId is not null)
+            {
+                var address = await _context.Addresses
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == dto.AddressId && a.UserId == orderToUpdate.UserId)
+                    ?? throw new NotFoundException("Address does not exist or belongs to another user.");
+                orderToUpdate.ShippingAddress = new OrderAddress
+                {
+                    Street = address.Street,
+                    City = address.City,
+                    State = address.State,
+                    PostalCode = address.PostalCode,
+                    Country = address.Country
+                };
+                changes.Add($"Shipping Address updated (Source ID: {dto.AddressId})");
+            }
+            var changesWrittenToDB = await _context.SaveChangesAsync();
+            if (_logger.IsEnabled(LogLevel.Information) && changes.Count > 0 && changesWrittenToDB > 0)
+            {
+                var changeSummary = string.Join(", ", changes);
+                _logger.LogInformation("Order {OrderId} updated by Admin. Changes: {ChangeSummary}", orderToUpdate.Id, changeSummary);
+            }
             return _mapper.Map<AdminOrderDetailsDto>(orderToUpdate);
+
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAdminAsync(int orderId)
         {
-            var currentUserId = GetCurrentUserId();
-            var orderToDelete = await _context.Orders
-                .Where(o => o.Id == id && (IsAdmin() || o.UserId == currentUserId))
-                .FirstOrDefaultAsync()
+
+            var orderToDelete = await _context.Orders.FindAsync(orderId)
                 ?? throw new NotFoundException("Order does not exist.");
 
             _context.Orders.Remove(orderToDelete);
@@ -179,62 +174,96 @@ namespace ECommerce.Business.Services
                 _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
         }
 
-        public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
-        {
-            //get current user
-            var currentUserId = GetCurrentUserId();
+        #endregion
 
-            // get User's Cart (Include Product info for Price/Stock validation)
-            var cart = await _context.ShoppingCarts
-                .Include(c => c.Items)
-                .ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
 
-            if (cart == null || cart.Items.Count == 0)
-                throw new BadRequestException("Cannot checkout. Your cart is empty.");
+        //public async Task<IEnumerable<OrderDto>> GetOrdersForCustomerAsync()
+        //{
+        //    var currentUserId = GetCurrentUserId();
 
-            //get shipping address of user
-            var shippingAddress = await _context.Addresses
-                .AsNoTracking()
-                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
-                .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync()
-                ?? throw new NotFoundException("Shipping Address not found.");
-            //create order
-            var orderToCreate = new Order
-            {
-                UserId = currentUserId,
-                Status = OrderStatus.Pending,
-                ShippingAddress = shippingAddress,
-                Items = []
-            };
-            //Loop over the cart items => validate stock => add them to order
-            foreach (var cartItem in cart.Items)
-            {
-                //product stock check
-                if (cartItem.Quantity > cartItem.Product.StockQuantity)
-                    throw new BadRequestException($"Not enough stock for {cartItem.Product.Name}. Available: {cartItem.Product.StockQuantity}");
-                cartItem.Product.StockQuantity -= cartItem.Quantity;
-                orderToCreate.Items.Add(_mapper.Map<OrderItem>(cartItem));
-            }
+        //    var query = _context.Orders.AsNoTracking();
 
-            orderToCreate.TotalAmount = orderToCreate.Items.Sum(i => i.TotalPrice);
-            _context.Orders.Add(orderToCreate);
-            _context.CartItems.RemoveRange(cart.Items);
-            cart.LastUpdated = DateTime.UtcNow;
+        //    if (!IsAdmin())
+        //    {
+        //        query = query.Where(o => o.UserId == currentUserId);
+        //    }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw new ConflictException("Stock changed during checkout. Please try again.");
-            }
+        //    var orders = await query
+        //        .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
+        //        .ToListAsync();
+        //    return orders;
+        //}
 
-            return _mapper.Map<OrderDto>(orderToCreate);
+        //public async Task<OrderDto> GetByIdCustomerAsync(int id)
+        //{
+        //    var currentUserId = GetCurrentUserId();
 
-        }
+        //    var order = await _context.Orders
+        //        .AsNoTracking()
+        //        .Where(o => o.UserId == currentUserId && o.Id == id)
+        //        .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
+        //        .FirstOrDefaultAsync()
+        //        ?? throw new NotFoundException("Order does not exist.");
+        //    return order;
+
+        //}
+
+        //public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
+        //{
+        //    //get current user
+        //    var currentUserId = GetCurrentUserId();
+
+        //    // get User's Cart (Include Product info for Price/Stock validation)
+        //    var cart = await _context.ShoppingCarts
+        //        .Include(c => c.Items)
+        //        .ThenInclude(i => i.Product)
+        //        .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
+
+        //    if (cart == null || cart.Items.Count == 0)
+        //        throw new BadRequestException("Cannot checkout. Your cart is empty.");
+
+        //    //get shipping address of user
+        //    var shippingAddress = await _context.Addresses
+        //        .AsNoTracking()
+        //        .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
+        //        .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
+        //        .FirstOrDefaultAsync()
+        //        ?? throw new NotFoundException("Shipping Address not found.");
+        //    //create order
+        //    var orderToCreate = new Order
+        //    {
+        //        UserId = currentUserId,
+        //        Status = OrderStatus.Pending,
+        //        ShippingAddress = shippingAddress,
+        //        Items = []
+        //    };
+        //    //Loop over the cart items => validate stock => add them to order
+        //    foreach (var cartItem in cart.Items)
+        //    {
+        //        //product stock check
+        //        if (cartItem.Quantity > cartItem.Product.StockQuantity)
+        //            throw new BadRequestException($"Not enough stock for {cartItem.Product.Name}. Available: {cartItem.Product.StockQuantity}");
+        //        cartItem.Product.StockQuantity -= cartItem.Quantity;
+        //        orderToCreate.Items.Add(_mapper.Map<OrderItem>(cartItem));
+        //    }
+
+        //    orderToCreate.TotalAmount = orderToCreate.Items.Sum(i => i.TotalPrice);
+        //    _context.Orders.Add(orderToCreate);
+        //    _context.CartItems.RemoveRange(cart.Items);
+        //    cart.LastUpdated = DateTime.UtcNow;
+
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        throw new ConflictException("Stock changed during checkout. Please try again.");
+        //    }
+
+        //    return _mapper.Map<OrderDto>(orderToCreate);
+
+        //}
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);

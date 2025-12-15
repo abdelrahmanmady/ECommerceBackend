@@ -33,7 +33,7 @@ namespace ECommerce.Business.Services
             await _userManager.AddToRoleAsync(userToCreate, "Customer");
             var currentRole = (await _userManager.GetRolesAsync(userToCreate))[0];
             var userDetails = _mapper.Map<UserSessionDto>(userToCreate);
-            userDetails.Role = currentRole;
+            userDetails.Role = currentRole ?? string.Empty;
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User created with id = {id}.", userToCreate.Id);
@@ -96,7 +96,7 @@ namespace ECommerce.Business.Services
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {Identifier} logged in.", dto.Identifier);
             var userDetails = _mapper.Map<UserSessionDto>(user);
-            userDetails.Role = roles[0];
+            userDetails.Role = roles.FirstOrDefault() ?? string.Empty;
             return new AuthResponseDto
             {
                 AccessToken = accessToken,
@@ -136,7 +136,7 @@ namespace ECommerce.Business.Services
             await _context.SaveChangesAsync();
 
             var userDetails = _mapper.Map<UserSessionDto>(newRefreshToken.User);
-            userDetails.Role = roles[0];
+            userDetails.Role = roles.FirstOrDefault() ?? string.Empty;
 
             return new AuthResponseDto
             {
