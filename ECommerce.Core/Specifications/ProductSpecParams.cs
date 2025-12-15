@@ -2,6 +2,19 @@
 {
     public class ProductSpecParams
     {
+
+        //Filter Params
+        public int? BrandId { get; set; }
+        public int? CategoryId { get; set; }
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+
+        //Search Params
+        public string? Search { get; set; }
+
+        //Sort Params
+        public string? Sort { get; set; }
+
         //Pagination Params
         public int PageIndex { get; set; } = 1;
         private int _pageSize = 10;
@@ -10,18 +23,5 @@
             get => _pageSize;
             set => _pageSize = (value > 50) ? 50 : value;
         }
-
-        //Search Params
-        public string? Search { get; set; }
-
-        //Filter Params
-        public int? BrandId { get; set; }
-        public int? CategoryId { get; set; }
-        public decimal? MinPrice { get; set; }
-        public decimal? MaxPrice { get; set; }
-
-        //Sort Params
-        public string? Sort { get; set; }
-
     }
 }

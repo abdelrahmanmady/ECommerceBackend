@@ -1,8 +1,10 @@
 ﻿using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.DTOs.Orders.Admin;
+using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.Orders.Store;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
-using ECommerce.Core.Specifications;
+using ECommerce.Core.Specifications.Orders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -70,15 +72,26 @@ namespace ECommerce.API.Controllers
             return NoContent();
         }
 
-        //[HttpPost("checkout")]
-        //[EndpointSummary("Checkout Cart")]
-        //[ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        //public async Task<IActionResult> Checkout([FromBody] CheckoutDto dto)
-        //{
-        //    var createdOrder = await _orders.CheckoutAsync(dto);
-        //    return CreatedAtAction(nameof(GetById), new { id = createdOrder.Id }, createdOrder);
-        //}
+        [HttpGet]
+        [EndpointSummary("Get all orders.")]
+        [EndpointDescription("Retrieves all placed orders for a logged in customer.")]
+        [ProducesResponseType(typeof(PagedResponseDto<OrderDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetAll([FromQuery] OrderSpecParams specParams)
+            => Ok(await _orders.GetAllAsync(specParams));
+
+        [HttpPost("checkout")]
+        [EndpointSummary("Checkout Cart")]
+        [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
+
+        public async Task<IActionResult> Checkout([FromBody] CheckoutDto dto)
+        {
+            var createdOrder = await _orders.CheckoutAsync(dto);
+            return StatusCode(StatusCodes.Status201Created, createdOrder);
+        }
     }
 }

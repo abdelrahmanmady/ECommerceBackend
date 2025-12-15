@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ECommerce.Business.DTOs.Orders.Admin;
+using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.Orders.Store;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Enums;
 using ECommerce.Core.Exceptions;
-using ECommerce.Core.Specifications;
+using ECommerce.Core.Specifications.Orders;
 using ECommerce.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -176,94 +178,119 @@ namespace ECommerce.Business.Services
 
         #endregion
 
+        #region Customer
 
-        //public async Task<IEnumerable<OrderDto>> GetOrdersForCustomerAsync()
-        //{
-        //    var currentUserId = GetCurrentUserId();
+        public async Task<PagedResponseDto<OrderDto>> GetAllAsync(OrderSpecParams specParams)
+        {
+            var currentUserId = GetCurrentUserId();
 
-        //    var query = _context.Orders.AsNoTracking();
+            var query = _context.Orders.AsNoTracking().Where(o => o.UserId == currentUserId).AsQueryable();
 
-        //    if (!IsAdmin())
-        //    {
-        //        query = query.Where(o => o.UserId == currentUserId);
-        //    }
+            //Filter
+            if (specParams.Status is not null)
+            {
+                query = query.Where(o => o.Status == specParams.Status);
+            }
 
-        //    var orders = await query
-        //        .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
-        //        .ToListAsync();
-        //    return orders;
-        //}
+            //Sort (oldest,totalAsc,totalDesc)
+            query = specParams.Sort switch
+            {
+                "oldest" => query.OrderBy(o => o.Created),
+                "totalAsc" => query.OrderBy(o => o.TotalAmount),
+                "totalDesc" => query.OrderByDescending(o => o.TotalAmount),
+                _ => query.OrderByDescending(o => o.Created)
+            };
 
-        //public async Task<OrderDto> GetByIdCustomerAsync(int id)
-        //{
-        //    var currentUserId = GetCurrentUserId();
+            //Paginate
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((specParams.PageIndex - 1) * specParams.PageSize)
+                .Take(specParams.PageSize)
+                .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
 
-        //    var order = await _context.Orders
-        //        .AsNoTracking()
-        //        .Where(o => o.UserId == currentUserId && o.Id == id)
-        //        .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
-        //        .FirstOrDefaultAsync()
-        //        ?? throw new NotFoundException("Order does not exist.");
-        //    return order;
+            return new PagedResponseDto<OrderDto>
+            {
+                PageIndex = specParams.PageIndex,
+                PageSize = specParams.PageSize,
+                TotalCount = totalCount,
+                Items = items
+            };
 
-        //}
+        }
 
-        //public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
-        //{
-        //    //get current user
-        //    var currentUserId = GetCurrentUserId();
 
-        //    // get User's Cart (Include Product info for Price/Stock validation)
-        //    var cart = await _context.ShoppingCarts
-        //        .Include(c => c.Items)
-        //        .ThenInclude(i => i.Product)
-        //        .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
+        public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
+        {
+            //get current user
+            var currentUserId = GetCurrentUserId();
 
-        //    if (cart == null || cart.Items.Count == 0)
-        //        throw new BadRequestException("Cannot checkout. Your cart is empty.");
+            // get User's Cart (Include Product info for Price/Stock validation)
+            var cart = await _context.ShoppingCarts
+                .Include(c => c.Items)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
 
-        //    //get shipping address of user
-        //    var shippingAddress = await _context.Addresses
-        //        .AsNoTracking()
-        //        .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
-        //        .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
-        //        .FirstOrDefaultAsync()
-        //        ?? throw new NotFoundException("Shipping Address not found.");
-        //    //create order
-        //    var orderToCreate = new Order
-        //    {
-        //        UserId = currentUserId,
-        //        Status = OrderStatus.Pending,
-        //        ShippingAddress = shippingAddress,
-        //        Items = []
-        //    };
-        //    //Loop over the cart items => validate stock => add them to order
-        //    foreach (var cartItem in cart.Items)
-        //    {
-        //        //product stock check
-        //        if (cartItem.Quantity > cartItem.Product.StockQuantity)
-        //            throw new BadRequestException($"Not enough stock for {cartItem.Product.Name}. Available: {cartItem.Product.StockQuantity}");
-        //        cartItem.Product.StockQuantity -= cartItem.Quantity;
-        //        orderToCreate.Items.Add(_mapper.Map<OrderItem>(cartItem));
-        //    }
+            if (cart == null || cart.Items.Count == 0)
+                throw new BadRequestException("Cannot checkout. Your cart is empty.");
 
-        //    orderToCreate.TotalAmount = orderToCreate.Items.Sum(i => i.TotalPrice);
-        //    _context.Orders.Add(orderToCreate);
-        //    _context.CartItems.RemoveRange(cart.Items);
-        //    cart.LastUpdated = DateTime.UtcNow;
+            //get shipping address of user
+            var shippingAddress = await _context.Addresses
+                .AsNoTracking()
+                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
+                .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Shipping Address not found.");
 
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        throw new ConflictException("Stock changed during checkout. Please try again.");
-        //    }
+            //create order
+            var orderToCreate = new Order
+            {
+                UserId = currentUserId,
+                Status = OrderStatus.Pending,
+                ShippingFees = dto.ShippingMethod switch
+                {
+                    ShippingMethod.Standard => 150,
+                    ShippingMethod.Express => 250,
+                    _ => 150
+                },
+                ShippingMethod = dto.ShippingMethod,
+                ShippingAddress = shippingAddress,
+                Items = [],
+                OrderTrackingMilestones = []
+            };
+            //Loop over the cart items => validate stock => add them to order
+            foreach (var cartItem in cart.Items)
+            {
+                //product stock check
+                if (cartItem.Quantity > cartItem.Product.StockQuantity)
+                    throw new BadRequestException($"Not enough stock for {cartItem.Product.Name}. Available: {cartItem.Product.StockQuantity}");
+                cartItem.Product.StockQuantity -= cartItem.Quantity;
+                orderToCreate.Items.Add(_mapper.Map<OrderItem>(cartItem));
+            }
+            orderToCreate.OrderTrackingMilestones.Add(new OrderTrackingMilestone
+            {
+                Status = OrderStatus.Pending,
+            });
+            orderToCreate.Subtotal = orderToCreate.Items.Sum(i => i.TotalPrice);
+            orderToCreate.Taxes = 0.14m * orderToCreate.Subtotal;
+            orderToCreate.TotalAmount = orderToCreate.Subtotal + orderToCreate.ShippingFees + orderToCreate.Taxes;
 
-        //    return _mapper.Map<OrderDto>(orderToCreate);
+            _context.Orders.Add(orderToCreate);
+            _context.CartItems.RemoveRange(cart.Items);
+            cart.LastUpdated = DateTime.UtcNow;
 
-        //}
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConflictException("Stock changed during checkout. Please try again.");
+            }
+
+            return _mapper.Map<OrderDto>(orderToCreate);
+
+        }
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -274,7 +301,7 @@ namespace ECommerce.Business.Services
             return userId;
         }
 
-        private bool IsAdmin() => _httpContext?.HttpContext?.User.IsInRole("Admin") ?? false;
+        #endregion  
 
     }
 }
