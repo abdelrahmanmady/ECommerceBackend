@@ -10,9 +10,10 @@ namespace ECommerce.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Tags("Authentication")]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
     {
         private readonly IAuthService _authService = authService;
+        private readonly ILogger<AuthController> _logger = logger;
 
         [HttpPost("[action]")]
         [EndpointName("RegisterUser")]
@@ -56,12 +57,15 @@ namespace ECommerce.API.Controllers
             var refreshToken = Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(refreshToken))
+            {
+                _logger.LogWarning("Refresh Token Attempt Failed: No token provided in cookies.");
+
                 return Unauthorized(new ApiErrorResponseDto
                 {
                     StatusCode = 401,
                     Message = "No refresh token provided."
                 });
-
+            }
             var authResponse = await _authService.RefreshTokenAsync(refreshToken);
 
             SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);

@@ -5,6 +5,8 @@ using ECommerce.Business.DTOs.Brands;
 using ECommerce.Business.DTOs.Categories;
 using ECommerce.Business.DTOs.OrderItems;
 using ECommerce.Business.DTOs.Orders.Admin;
+using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.OrderTrackingMilestones;
 using ECommerce.Business.DTOs.ProductImages;
 using ECommerce.Business.DTOs.Products.Admin;
 using ECommerce.Business.DTOs.Products.Management;
@@ -51,7 +53,7 @@ namespace ECommerce.Business.Mappings
                 .ForMember(dest => dest.ItemsCount, opt => opt.MapFrom(src => src.Items.Count));
             CreateMap<Order, AdminOrderDetailsDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName));
-
+            CreateMap<Order, OrderDto>();
 
             //OrderItem Mapping
             CreateMap<OrderItem, OrderItemDto>()
@@ -62,6 +64,8 @@ namespace ECommerce.Business.Mappings
                 => pi.IsMain).Select(pi
                 => pi.ImageUrl).FirstOrDefault()));
 
+            //OrderTrackingMilestone Mapping
+            CreateMap<OrderTrackingMilestone, OrderTrackingMilestoneDto>();
 
             //User Mapping
             CreateMap<RegisterDto, ApplicationUser>();

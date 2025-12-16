@@ -52,41 +52,46 @@ namespace ECommerce.API.Extensions
 
                 options.Events = new JwtBearerEvents
                 {
-                    OnAuthenticationFailed = context =>
+                    OnAuthenticationFailed = async context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
 
                         if (context.Exception is SecurityTokenExpiredException)
                         {
-                            logger.LogWarning("Token expired for user.");
+                            logger.LogWarning("Access Token expired.");
                         }
                         else if (context.Exception is SecurityTokenInvalidSignatureException)
                         {
-                            logger.LogError(context.Exception, "Invalid Token Signature detected!");
+                            logger.LogWarning("Invalid Access Token Signature.");
                         }
                         else
                         {
-                            logger.LogError(context.Exception, "Authentication failed.");
+                            logger.LogWarning("Authentication failed: {Message}", context.Exception.Message);
                         }
 
-                        return Task.CompletedTask;
                     },
 
                     OnChallenge = async context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                        logger.LogWarning("401 Unauthorized triggered. Error: {Error}, Description: {Desc}",
-                            context.Error,
-                            context.ErrorDescription ?? "Token missing or invalid");
+
+                        if (!context.Handled)
+                        {
+                            logger.LogWarning("Client Error ({StatusCode}): {Message}",
+                                (int)HttpStatusCode.Unauthorized,
+                                context.ErrorDescription ?? "Token missing or invalid");
+                        }
+
+
                         context.HandleResponse();
                         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                         context.Response.ContentType = "application/json";
+
                         var errorResponse = new ApiErrorResponseDto
                         {
-                            StatusCode = 401,
+                            StatusCode = (int)HttpStatusCode.Unauthorized,
                             Message = "You are not authorized.",
-                            Detail = context.ErrorDescription ?? "Token is missing, invalid, or expired.",
-                            TimeStamp = DateTime.UtcNow
+                            Detail = "Token is missing, invalid, or expired."
                         };
                         await context.Response.WriteAsJsonAsync(errorResponse);
                     },
@@ -103,7 +108,6 @@ namespace ECommerce.API.Extensions
                             StatusCode = 403,
                             Message = "You are not authorized to access this resource.",
                             Detail = "You do not have the required permissions (Role) to perform this action.",
-                            TimeStamp = DateTime.UtcNow
                         };
 
                         await context.Response.WriteAsJsonAsync(errorResponse);

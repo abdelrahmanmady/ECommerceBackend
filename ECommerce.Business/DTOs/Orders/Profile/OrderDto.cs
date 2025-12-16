@@ -12,7 +12,6 @@ namespace ECommerce.Business.DTOs.Orders.Profile
         public ICollection<OrderItemDto> Items { get; set; } = [];
         public OrderStatus Status { get; set; }
         public decimal TotalAmount { get; set; }
-        public string PaymentMethod { get; set; } = string.Empty;
         public ShippingMethod ShippingMethod { get; set; }
         public decimal Subtotal { get; set; }
         public decimal ShippingFees { get; set; }

@@ -32,27 +32,22 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("VARCHAR(100)");
 
                     b.Property<string>("Country")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("VARCHAR(100)");
 
                     b.Property<string>("PostalCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("VARCHAR(100)");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("VARCHAR(100)");
 
                     b.Property<string>("Street")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("VARCHAR(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -299,8 +294,10 @@ namespace ECommerce.Data.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<byte>("Status")
-                        .HasColumnType("tinyint");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("datetime2");
@@ -309,7 +306,7 @@ namespace ECommerce.Data.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderTrackingMilestone");
+                    b.ToTable("OrderTrackingMilestones");
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>
@@ -622,31 +619,26 @@ namespace ECommerce.Data.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("VARCHAR(100)")
                                 .HasColumnName("ShippingCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("VARCHAR(100)")
                                 .HasColumnName("ShippingCountry");
 
                             b1.Property<string>("PostalCode")
-                                .HasMaxLength(20)
-                                .HasColumnType("nvarchar(20)")
+                                .HasColumnType("VARCHAR(100)")
                                 .HasColumnName("ShippingPostalCode");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("VARCHAR(100)")
                                 .HasColumnName("ShippingState");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasColumnType("VARCHAR(100)")
                                 .HasColumnName("ShippingStreet");
 
                             b1.HasKey("OrderId");

@@ -107,6 +107,7 @@ namespace ECommerce.Business.Services
             var cart = await _context.ShoppingCarts
                 .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
+                .ThenInclude(p => p.Images)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)

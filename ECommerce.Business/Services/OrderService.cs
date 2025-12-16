@@ -34,18 +34,22 @@ namespace ECommerce.Business.Services
         {
             var query = _context.Orders.AsNoTracking().Include(o => o.User).AsQueryable();
 
-            //Search
-            if (!string.IsNullOrEmpty(specParams.Search))
-            {
-                var isNumeric = int.TryParse(specParams.Search, out int searchId);
-                query = query.Where(o => (isNumeric && o.Id == searchId) ||
-                $"{o.User.FirstName} {o.User.LastName}".ToLower().Contains(specParams.Search.ToLower()));
-            }
 
             //Filter
             if (specParams.Status.HasValue)
             {
                 query = query.Where(o => o.Status == specParams.Status.Value);
+            }
+
+            //Search
+            if (!string.IsNullOrEmpty(specParams.Search))
+            {
+                var term = specParams.Search.Trim().ToLower();
+                bool isNumeric = int.TryParse(term, out int searchId);
+
+                query = query.Where(o => (isNumeric && o.Id == searchId) ||
+                                    o.User.FirstName.Contains(term) ||
+                                    o.User.LastName.Contains(term));
             }
 
             //Sort
@@ -111,7 +115,7 @@ namespace ECommerce.Business.Services
             if (orderToUpdate.Status != dto.Status)
             {
                 //block terminal status updates
-                if (orderToUpdate.Status == OrderStatus.Delivered || orderToUpdate.Status == OrderStatus.Canceled)
+                if (orderToUpdate.Status == OrderStatus.Delivered || orderToUpdate.Status == OrderStatus.Cancelled)
                     throw new BadRequestException($"Order is {orderToUpdate.Status}. No further changes allowed.");
 
                 //Shipped Orders can only be updated to Delivered
@@ -123,7 +127,7 @@ namespace ECommerce.Business.Services
                     throw new BadRequestException("Order must be marked as Shipped before it can be Delivered.");
 
                 //if order is pending or processing and new status is canceled => retrieve stock
-                if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.Status == OrderStatus.Canceled)
+                if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.Status == OrderStatus.Cancelled)
                 {
                     foreach (var item in orderToUpdate.Items)
                     {
@@ -207,6 +211,7 @@ namespace ECommerce.Business.Services
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)
                 .Take(specParams.PageSize)
                 .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
+                .AsSplitQuery()
                 .ToListAsync();
 
             return new PagedResponseDto<OrderDto>

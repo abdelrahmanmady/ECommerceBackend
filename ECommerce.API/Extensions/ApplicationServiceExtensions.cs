@@ -9,6 +9,7 @@ using ECommerce.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -136,7 +137,19 @@ namespace ECommerce.API.Extensions
 
                     return Task.CompletedTask;
                 });
-
+                options.AddSchemaTransformer((schema, context, cancellationToken) =>
+                {
+                    if (context.JsonTypeInfo.Type.IsEnum)
+                    {
+                        schema.Type = "string";
+                        schema.Format = null; // Clear any "int32" formatting
+                        schema.Enum = Enum.GetNames(context.JsonTypeInfo.Type)
+                            .Select(name => new OpenApiString(JsonNamingPolicy.CamelCase.ConvertName(name)))
+                            .Cast<IOpenApiAny>()
+                            .ToList();
+                    }
+                    return Task.CompletedTask;
+                });
                 options.AddOperationTransformer((operation, context, cancellationToken) =>
                 {
                     var metadata = context.Description.ActionDescriptor.EndpointMetadata;
