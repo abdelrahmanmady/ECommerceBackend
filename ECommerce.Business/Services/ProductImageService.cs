@@ -5,6 +5,7 @@ using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
 using ECommerce.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -33,7 +34,7 @@ namespace ECommerce.Business.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<ProductImageDto>> AddImagesAsync(int productId, AddProductImageDto dto)
+        public async Task AddImagesAsync(int productId, List<IFormFile> images)
         {
             var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
             if (!productExists)
@@ -43,14 +44,14 @@ namespace ECommerce.Business.Services
             if (_logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("Starting upload of {Count} images for Product {ProductId}",
-                    dto.Images.Count,
+                    images.Count,
                     productId);
             }
 
             var uploadedImages = new List<ProductImage>();
             var uploadedFileNames = new List<string>();
 
-            foreach (var image in dto.Images)
+            foreach (var image in images)
             {
 
                 var relativePath = await _fileStorageService.SaveFileAsync(image, "products");
@@ -82,7 +83,6 @@ namespace ECommerce.Business.Services
                     productId,
                     string.Join(", ", uploadedFileNames));
             }
-            return _mapper.Map<IEnumerable<ProductImageDto>>(uploadedImages);
 
         }
 

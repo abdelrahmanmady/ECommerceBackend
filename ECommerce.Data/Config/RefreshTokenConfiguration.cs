@@ -9,7 +9,7 @@ namespace ECommerce.Data.Config
         public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
             builder.Property(rt => rt.Token)
-                .HasColumnType("VARCHAR(100)");
+                .HasColumnType("NVARCHAR(100)");
         }
     }
 }

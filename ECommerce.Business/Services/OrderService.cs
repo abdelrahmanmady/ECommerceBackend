@@ -30,7 +30,7 @@ namespace ECommerce.Business.Services
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
         #region Admin Dashboard
-        public async Task<PagedResponseDto<AdminOrderDto>> GetAllAdminAsync(AdminOrderSpecParams specParams)
+        public async Task<PagedResponseDto<AdminOrderDto>> GetAllOrdersAdminAsync(AdminOrderSpecParams specParams)
         {
             var query = _context.Orders.AsNoTracking().Include(o => o.User).AsQueryable();
 
@@ -78,7 +78,7 @@ namespace ECommerce.Business.Services
             };
         }
 
-        public async Task<AdminOrderDetailsDto> GetByIdAdminAsync(int orderId)
+        public async Task<AdminOrderDetailsDto> GetOrderDetailsAdminAsync(int orderId)
         {
             var order = await _context.Orders
                 .AsNoTracking()
@@ -89,9 +89,7 @@ namespace ECommerce.Business.Services
             return order;
         }
 
-
-
-        public async Task<AdminOrderDetailsDto> UpdateAdminAsync(int orderId, AdminUpdateOrderDto dto)
+        public async Task<AdminOrderDetailsDto> UpdateOrderAdminAsync(int orderId, AdminUpdateOrderDto dto)
         {
 
 
@@ -167,7 +165,7 @@ namespace ECommerce.Business.Services
 
         }
 
-        public async Task DeleteAdminAsync(int orderId)
+        public async Task DeleteOrderAdminAsync(int orderId)
         {
 
             var orderToDelete = await _context.Orders.FindAsync(orderId)
@@ -184,7 +182,7 @@ namespace ECommerce.Business.Services
 
         #region Customer
 
-        public async Task<PagedResponseDto<OrderDto>> GetAllAsync(OrderSpecParams specParams)
+        public async Task<PagedResponseDto<OrderDto>> GetAllOrdersAsync(OrderSpecParams specParams)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -223,7 +221,6 @@ namespace ECommerce.Business.Services
             };
 
         }
-
 
         public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
         {
@@ -296,6 +293,7 @@ namespace ECommerce.Business.Services
             return _mapper.Map<OrderDto>(orderToCreate);
 
         }
+
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);

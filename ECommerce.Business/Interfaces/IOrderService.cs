@@ -8,11 +8,11 @@ namespace ECommerce.Business.Interfaces
 {
     public interface IOrderService
     {
-        Task<PagedResponseDto<AdminOrderDto>> GetAllAdminAsync(AdminOrderSpecParams specParams);
-        Task<AdminOrderDetailsDto> GetByIdAdminAsync(int orderId);
-        Task<AdminOrderDetailsDto> UpdateAdminAsync(int orderId, AdminUpdateOrderDto dto);
-        Task DeleteAdminAsync(int orderId);
-        Task<PagedResponseDto<OrderDto>> GetAllAsync(OrderSpecParams specParams);
+        Task<PagedResponseDto<AdminOrderDto>> GetAllOrdersAdminAsync(AdminOrderSpecParams specParams);
+        Task<AdminOrderDetailsDto> GetOrderDetailsAdminAsync(int orderId);
+        Task<AdminOrderDetailsDto> UpdateOrderAdminAsync(int orderId, AdminUpdateOrderDto dto);
+        Task DeleteOrderAdminAsync(int orderId);
+        Task<PagedResponseDto<OrderDto>> GetAllOrdersAsync(OrderSpecParams specParams);
         Task<OrderDto> CheckoutAsync(CheckoutDto dto);
     }
 }

@@ -32,11 +32,11 @@ namespace ECommerce.Data.Config
             builder.OwnsOne(o => o.ShippingAddress, a =>
             {
                 a.WithOwner();
-                a.Property(x => x.Street).HasColumnName("ShippingStreet").HasColumnType("VARCHAR(100)");
-                a.Property(x => x.City).HasColumnName("ShippingCity").HasColumnType("VARCHAR(100)");
-                a.Property(x => x.State).HasColumnName("ShippingState").HasColumnType("VARCHAR(100)");
-                a.Property(x => x.PostalCode).HasColumnName("ShippingPostalCode").HasColumnType("VARCHAR(100)");
-                a.Property(x => x.Country).HasColumnName("ShippingCountry").HasColumnType("VARCHAR(100)");
+                a.Property(x => x.Street).HasColumnName("ShippingStreet").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.City).HasColumnName("ShippingCity").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.State).HasColumnName("ShippingState").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.PostalCode).HasColumnName("ShippingPostalCode").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.Country).HasColumnName("ShippingCountry").HasColumnType("NVARCHAR(100)");
             });
 
             //one to many relation with OrderItems

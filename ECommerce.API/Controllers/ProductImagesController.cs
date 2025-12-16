@@ -20,17 +20,17 @@ namespace ECommerce.API.Controllers
         public async Task<IActionResult> GetAll([FromRoute] int productId)
             => Ok(await _productImages.GetAllAsync(productId));
 
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        [EndpointSummary("Upload product images")]
-        [Consumes("multipart/form-data")]
-        [ProducesResponseType(typeof(IEnumerable<ProductImageDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Add([FromRoute] int productId, [FromForm] AddProductImageDto dto)
-            => Ok(await _productImages.AddImagesAsync(productId, dto));
+        //[HttpPost]
+        //[Authorize(Roles = "Admin")]
+        //[EndpointSummary("Upload product images")]
+        //[Consumes("multipart/form-data")]
+        //[ProducesResponseType(typeof(IEnumerable<ProductImageDto>), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        //public async Task<IActionResult> Add([FromRoute] int productId, [FromForm] AddProductImageDto dto)
+        //    => Ok(await _productImages.AddImagesAsync(productId, dto));
 
 
 

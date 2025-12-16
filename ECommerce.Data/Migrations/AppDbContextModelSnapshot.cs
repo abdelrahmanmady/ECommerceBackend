@@ -32,22 +32,22 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("Country")
                         .IsRequired()
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("PostalCode")
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("Street")
                         .IsRequired()
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -148,12 +148,11 @@ namespace ECommerce.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("VARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(MAX)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(50)");
 
                     b.HasKey("Id");
 
@@ -195,14 +194,22 @@ namespace ECommerce.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("VARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(MAX)");
+
+                    b.Property<string>("HierarchyPath")
+                        .IsRequired()
+                        .HasColumnType("NVARCHAR(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(50)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("Categories");
                 });
@@ -327,15 +334,14 @@ namespace ECommerce.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("VARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(MAX)");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("DECIMAL(18,2)");
@@ -368,8 +374,7 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(2000)");
 
                     b.Property<bool>("IsMain")
                         .HasColumnType("bit");
@@ -405,7 +410,7 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -604,6 +609,15 @@ namespace ECommerce.Data.Migrations
                     b.Navigation("ShoppingCart");
                 });
 
+            modelBuilder.Entity("ECommerce.Core.Entities.Category", b =>
+                {
+                    b.HasOne("ECommerce.Core.Entities.Category", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("ECommerce.Core.Entities.Order", b =>
                 {
                     b.HasOne("ECommerce.Core.Entities.ApplicationUser", "User")
@@ -619,26 +633,26 @@ namespace ECommerce.Data.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasColumnType("VARCHAR(100)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .HasColumnType("VARCHAR(100)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingCountry");
 
                             b1.Property<string>("PostalCode")
-                                .HasColumnType("VARCHAR(100)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingPostalCode");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasColumnType("VARCHAR(100)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingState");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
-                                .HasColumnType("VARCHAR(100)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingStreet");
 
                             b1.HasKey("OrderId");

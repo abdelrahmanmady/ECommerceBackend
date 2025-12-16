@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Core.Specifications
+﻿namespace ECommerce.Core.Specifications.Products
 {
     public class ProductSpecParams
     {

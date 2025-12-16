@@ -38,10 +38,23 @@ namespace ECommerce.Business.Services
         public async Task<CategoryDto> CreateAsync(CreateCategoryDto dto)
         {
             var categoryToAdd = _mapper.Map<Category>(dto);
+            if (dto.ParentId.HasValue)
+            {
+                var parent = await _context.Categories.FindAsync(dto.ParentId.Value)
+                    ?? throw new NotFoundException("Parent Category does not exist.");
+                categoryToAdd.HierarchyPath = $"{parent.HierarchyPath}\\{categoryToAdd.Name}";
+            }
+            else
+            {
+                categoryToAdd.HierarchyPath = categoryToAdd.Name;
+            }
+
             _context.Categories.Add(categoryToAdd);
             await _context.SaveChangesAsync();
+
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Category added with id = {id}.", categoryToAdd.Id);
+
             return _mapper.Map<CategoryDto>(categoryToAdd);
         }
 

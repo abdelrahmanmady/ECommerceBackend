@@ -2,88 +2,25 @@
 using AutoMapper.QueryableExtensions;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.DTOs.Products.Admin;
-using ECommerce.Business.DTOs.Products.Management;
-using ECommerce.Business.DTOs.Products.Store;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
-using ECommerce.Core.Specifications;
+using ECommerce.Core.Specifications.Products;
 using ECommerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ECommerce.Business.Services
 {
-    public class ProductService(AppDbContext context, IMapper mapper, ILogger<ProductService> logger) : IProductService
+    public class ProductService(AppDbContext context, IMapper mapper, ILogger<ProductService> logger, IProductImageService productImages) : IProductService
     {
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<ProductService> _logger = logger;
+        private readonly IProductImageService _productImages = productImages;
 
-        public async Task<PagedResponseDto<ProductDto>> GetProductsForCustomerAsync(ProductSpecParams specParams)
-        {
-            //Create basic query
-            var query = _context.Products.AsNoTracking().AsQueryable();
 
-            //1.Search
-            if (!string.IsNullOrEmpty(specParams.Search))
-            {
-                query = query.Where(p => p.Name.ToLower().Contains(specParams.Search.ToLower()));
-
-            }
-
-            //2.Filter Category / Brand / Price Range
-
-            if (specParams.CategoryId.HasValue)
-            {
-                query = query.Where(p => p.CategoryId == specParams.CategoryId.Value);
-            }
-
-            if (specParams.BrandId.HasValue)
-            {
-                query = query.Where(p => p.BrandId == specParams.BrandId.Value);
-            }
-
-            if (specParams.MinPrice.HasValue)
-            {
-                query = query.Where(p => p.Price >= specParams.MinPrice.Value);
-            }
-
-            if (specParams.MaxPrice.HasValue)
-            {
-                query = query.Where(p => p.Price <= specParams.MaxPrice.Value);
-            }
-
-            //3.Sorting
-
-            query = specParams.Sort switch
-            {
-                "priceAsc" => query.OrderBy(p => p.Price),
-                "priceDesc" => query.OrderByDescending(p => p.Price),
-                "newest" => query.OrderByDescending(p => p.Created),
-                "featured" => query.OrderByDescending(p => p.IsFeatured).ThenBy(p => p.Name),
-                _ => query.OrderBy(p => p.Name)
-            };
-
-            //4.Pagination
-
-            var totalCount = await query.CountAsync();
-            var items = await query
-                .Skip((specParams.PageIndex - 1) * specParams.PageSize)
-                .Take(specParams.PageSize)
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            return new PagedResponseDto<ProductDto>
-            {
-                PageIndex = specParams.PageIndex,
-                PageSize = specParams.PageSize,
-                TotalCount = totalCount,
-                Items = items
-            };
-        }
-
-        public async Task<PagedResponseDto<AdminProductDto>> GetProductsForAdminAsync(AdminProductSpecParams specParams)
+        public async Task<PagedResponseDto<AdminProductDto>> GetAllProductsAdminAsync(AdminProductSpecParams specParams)
         {
             var query = _context.Products.AsNoTracking().AsQueryable();
 
@@ -119,69 +56,150 @@ namespace ECommerce.Business.Services
                 Items = items
             };
         }
-
-        public async Task<ProductDto> GetByIdAsync(int id)
+        public async Task<AdminProductDetailsDto> GetProductDetailsAdminAsync(int productId)
         {
-            var product = await _context.Products.Where(p => p.Id == id)
+            var product = await _context.Products
                 .AsNoTracking()
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .Where(p => p.Id == productId)
+                .ProjectTo<AdminProductDetailsDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");
             return product;
         }
 
-        public async Task<ProductDto> CreateAsync(CreateProductDto dto)
+        public async Task<AdminProductDetailsDto> CreateProductAdminAsync(AdminCreateProductDto dto)
         {
-            //Validate Category
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
-            if (!categoryExists)
-                throw new NotFoundException("Category does not exist.");
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                //Validate Category
+                var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
+                if (!categoryExists)
+                    throw new NotFoundException("Category does not exist.");
 
-            //Validate Brand
-            var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
-            if (!brandExists)
-                throw new NotFoundException("Brand does not exist");
+                //Validate Brand
+                var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
+                if (!brandExists)
+                    throw new NotFoundException("Brand does not exist");
 
-            var productToAdd = _mapper.Map<Product>(dto);
-            _context.Products.Add(productToAdd);
-            await _context.SaveChangesAsync();
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Product added with id = {id}.", productToAdd.Id);
-            return _mapper.Map<ProductDto>(productToAdd);
+                var productToAdd = _mapper.Map<Product>(dto);
+
+                _context.Products.Add(productToAdd);
+                await _context.SaveChangesAsync();
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("Product added with id = {id}.", productToAdd.Id);
+
+                if (dto.Images != null && dto.Images.Count != 0)
+                {
+                    await _productImages.AddImagesAsync(productToAdd.Id, dto.Images);
+                }
+
+                await transaction.CommitAsync();
+
+                return await GetProductDetailsAdminAsync(productToAdd.Id);
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
+        //public async Task<PagedResponseDto<ProductDto>> GetProductsForCustomerAsync(ProductSpecParams specParams)
+        //{
+        //    //Create basic query
+        //    var query = _context.Products.AsNoTracking().AsQueryable();
 
-        public async Task<ProductDto> UpdateAsync(int id, UpdateProductDto dto)
-        {
+        //    //1.Search
+        //    if (!string.IsNullOrEmpty(specParams.Search))
+        //    {
+        //        query = query.Where(p => p.Name.ToLower().Contains(specParams.Search.ToLower()));
 
-            var productToUpdate = await _context.Products.FindAsync(id)
-                ?? throw new NotFoundException("Product does not exist.");
+        //    }
 
-            //Validate Category
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
-            if (!categoryExists)
-                throw new NotFoundException("Category does not exist.");
+        //    //2.Filter Category / Brand / Price Range
 
-            //Validate Brand
-            var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
-            if (!brandExists)
-                throw new NotFoundException("Brand does not exist");
+        //    if (specParams.CategoryId.HasValue)
+        //    {
+        //        query = query.Where(p => p.CategoryId == specParams.CategoryId.Value);
+        //    }
 
-            _mapper.Map(dto, productToUpdate);
-            await _context.SaveChangesAsync();
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Product updated with id = {id}.", productToUpdate.Id);
-            return _mapper.Map<ProductDto>(productToUpdate);
-        }
+        //    if (specParams.BrandId.HasValue)
+        //    {
+        //        query = query.Where(p => p.BrandId == specParams.BrandId.Value);
+        //    }
 
-        public async Task DeleteAsync(int id)
-        {
-            var productToDelete = await _context.Products.FindAsync(id)
-                ?? throw new NotFoundException("Product does not exist.");
-            _context.Products.Remove(productToDelete);
-            await _context.SaveChangesAsync();
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Product deleted with id = {id}.", productToDelete.Id);
-        }
+        //    if (specParams.MinPrice.HasValue)
+        //    {
+        //        query = query.Where(p => p.Price >= specParams.MinPrice.Value);
+        //    }
+
+        //    if (specParams.MaxPrice.HasValue)
+        //    {
+        //        query = query.Where(p => p.Price <= specParams.MaxPrice.Value);
+        //    }
+
+        //    //3.Sorting
+
+        //    query = specParams.Sort switch
+        //    {
+        //        "priceAsc" => query.OrderBy(p => p.Price),
+        //        "priceDesc" => query.OrderByDescending(p => p.Price),
+        //        "newest" => query.OrderByDescending(p => p.Created),
+        //        "featured" => query.OrderByDescending(p => p.IsFeatured).ThenBy(p => p.Name),
+        //        _ => query.OrderBy(p => p.Name)
+        //    };
+
+        //    //4.Pagination
+
+        //    var totalCount = await query.CountAsync();
+        //    var items = await query
+        //        .Skip((specParams.PageIndex - 1) * specParams.PageSize)
+        //        .Take(specParams.PageSize)
+        //        .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+        //        .ToListAsync();
+
+        //    return new PagedResponseDto<ProductDto>
+        //    {
+        //        PageIndex = specParams.PageIndex,
+        //        PageSize = specParams.PageSize,
+        //        TotalCount = totalCount,
+        //        Items = items
+        //    };
+        //}
+
+        //public async Task<ProductDto> UpdateAsync(int id, UpdateProductDto dto)
+        //{
+
+        //    var productToUpdate = await _context.Products.FindAsync(id)
+        //        ?? throw new NotFoundException("Product does not exist.");
+
+        //    //Validate Category
+        //    var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
+        //    if (!categoryExists)
+        //        throw new NotFoundException("Category does not exist.");
+
+        //    //Validate Brand
+        //    var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
+        //    if (!brandExists)
+        //        throw new NotFoundException("Brand does not exist");
+
+        //    _mapper.Map(dto, productToUpdate);
+        //    await _context.SaveChangesAsync();
+        //    if (_logger.IsEnabled(LogLevel.Information))
+        //        _logger.LogInformation("Product updated with id = {id}.", productToUpdate.Id);
+        //    return _mapper.Map<ProductDto>(productToUpdate);
+        //}
+
+        //public async Task DeleteAsync(int id)
+        //{
+        //    var productToDelete = await _context.Products.FindAsync(id)
+        //        ?? throw new NotFoundException("Product does not exist.");
+        //    _context.Products.Remove(productToDelete);
+        //    await _context.SaveChangesAsync();
+        //    if (_logger.IsEnabled(LogLevel.Information))
+        //        _logger.LogInformation("Product deleted with id = {id}.", productToDelete.Id);
+        //}
 
 
     }
