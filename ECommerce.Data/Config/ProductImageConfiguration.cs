@@ -11,8 +11,8 @@ namespace ECommerce.Data.Config
             builder.HasKey(pi => pi.Id);
 
             builder.Property(pi => pi.ImageUrl)
-                .HasColumnType("VARCHAR")
-                .HasMaxLength(2000);
+                .HasColumnType("NVARCHAR(2000)");
+
 
             builder.HasIndex(pi => pi.ProductId)
                 .IsUnique()

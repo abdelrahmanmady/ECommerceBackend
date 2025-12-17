@@ -2,6 +2,9 @@
 {
     public class UserSpecParams
     {
+        //Filter Params
+        public string? Role { get; set; } //Admin , Customer
+
         //Search Params
         private string? _search;
         public string? Search
@@ -9,9 +12,6 @@
             get => _search;
             set => _search = value?.ToLower(); // Force lowercase for consistency
         }
-
-        //Filter Params
-        public string? Role { get; set; } //Admin , Customer
 
         //Sort Params 
         public string? Sort { get; set; } // newestfirst , oldestfirst, name , email 

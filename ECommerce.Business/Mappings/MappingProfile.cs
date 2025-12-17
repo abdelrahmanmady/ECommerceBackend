@@ -4,11 +4,14 @@ using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Brands;
 using ECommerce.Business.DTOs.Categories;
 using ECommerce.Business.DTOs.OrderItems;
-using ECommerce.Business.DTOs.Orders;
+using ECommerce.Business.DTOs.Orders.Admin;
+using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.OrderTrackingMilestones;
 using ECommerce.Business.DTOs.ProductImages;
-using ECommerce.Business.DTOs.Products;
+using ECommerce.Business.DTOs.Products.Admin;
+using ECommerce.Business.DTOs.Products.Store;
 using ECommerce.Business.DTOs.ShoppingCart;
-using ECommerce.Business.DTOs.Users;
+using ECommerce.Business.DTOs.Users.Auth;
 using ECommerce.Core.Entities;
 
 namespace ECommerce.Business.Mappings
@@ -18,7 +21,8 @@ namespace ECommerce.Business.Mappings
         public MappingProfile()
         {
             //Brand Mapping
-            CreateMap<Brand, BrandDto>();
+            CreateMap<Brand, BrandDto>()
+                .ForMember(dest => dest.ProductsCount, opt => opt.MapFrom(src => src.Products.Count));
             CreateMap<CreateBrandDto, Brand>();
             CreateMap<UpdateBrandDto, Brand>();
 
@@ -28,27 +32,65 @@ namespace ECommerce.Business.Mappings
             CreateMap<UpdateCategoryDto, Category>();
 
             //Product Mapping
+            CreateMap<Product, AdminProductDto>()
+                .ForMember(dest => dest.ThumbnailUrl,
+                opt => opt.MapFrom(src => src.Images
+                                                                .Where(pi => pi.IsMain)
+                                                                .Select(pi => pi.ImageUrl)
+                                                                .FirstOrDefault()))
+                .ForMember(dest => dest.CategoryName,
+                opt => opt.MapFrom(src => src.Category.Name))
+                .ForMember(dest => dest.BrandName,
+                opt => opt.MapFrom(src => src.Brand.Name))
+                .ForMember(dest => dest.InStock,
+                opt => opt.MapFrom(src => src.StockQuantity > 0));
+            CreateMap<Product, AdminProductDetailsDto>();
+            CreateMap<AdminCreateProductDto, Product>();
+            CreateMap<AdminUpdateProductDto, Product>();
             CreateMap<Product, ProductDto>()
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(mapExpression: src => src.Category.Name))
-                .ForMember(dest => dest.BrandName, opt => opt.MapFrom(mapExpression: src => src.Brand.Name))
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src =>
-                        src.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).FirstOrDefault()));
-            CreateMap<CreateProductDto, Product>();
-            CreateMap<UpdateProductDto, Product>();
+                .ForMember(dest => dest.ThumbnailUrl,
+                opt => opt.MapFrom(src => src.Images
+                                                                .Where(pi => pi.IsMain)
+                                                                .Select(pi => pi.ImageUrl)
+                                                                .FirstOrDefault()))
+                .ForMember(dest => dest.CategoryBreadcrumb,
+                opt => opt.MapFrom(src => src.Category.HierarchyPath))
+                .ForMember(dest => dest.BrandedName,
+                opt => opt.MapFrom(src => src.Brand.Name + " " + src.Name));
+            CreateMap<Product, ProductDetailsDto>()
+                .ForMember(dest => dest.BrandName,
+                opt => opt.MapFrom(src => src.Brand.Name))
+                .ForMember(dest => dest.CategoryName,
+                opt => opt.MapFrom(src => src.Category.Name));
 
             //ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
 
             //Order Mapping
+            CreateMap<Order, AdminOrderDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName))
+                .ForMember(dest => dest.ItemsCount, opt => opt.MapFrom(src => src.Items.Count));
+            CreateMap<Order, AdminOrderDetailsDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName));
             CreateMap<Order, OrderDto>();
 
             //OrderItem Mapping
-            CreateMap<OrderItem, OrderItemDto>();
+            CreateMap<OrderItem, OrderItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+                .ForMember(dest => dest.ProductThumbnailUrl, opt
+                => opt.MapFrom(src
+                => src.Product.Images.Where(pi
+                => pi.IsMain).Select(pi
+                => pi.ImageUrl).FirstOrDefault()));
+
+            //OrderTrackingMilestone Mapping
+            CreateMap<OrderTrackingMilestone, OrderTrackingMilestoneDto>();
 
             //User Mapping
             CreateMap<RegisterDto, ApplicationUser>();
-            CreateMap<ApplicationUser, UserDto>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName));
+            CreateMap<ApplicationUser, UserSessionDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + " " + src.LastName));
+
             //CreateMap<ApplicationUser, UserDetailsDto>()
             //    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FirstName + src.LastName))
             //    .ForMember(dest => dest.TotalOrders, opt => opt.MapFrom(src => src.Orders.Count));
@@ -57,8 +99,9 @@ namespace ECommerce.Business.Mappings
             //CreateMap<UpdateUserDto, ApplicationUser>();
 
 
-            CreateMap<ApplicationUser, UserManagementDto>();
-            CreateMap<UpdateUserDto, ApplicationUser>();
+            //CreateMap<ApplicationUser, UserManagementDto>();
+            //CreateMap<UpdateUserProfileDto, ApplicationUser>();
+
             //Address Mapping
             CreateMap<Address, AddressDto>();
             CreateMap<Address, AddressWithUserDto>()

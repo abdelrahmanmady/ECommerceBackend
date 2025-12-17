@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.Business.DTOs.Auth;
+using ECommerce.Business.DTOs.Users.Auth;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -18,7 +19,7 @@ namespace ECommerce.Business.Services
         private readonly ITokenService _tokenService = tokenService;
         private readonly AppDbContext _context = context;
 
-        public async Task<UserDto> RegisterAsync(RegisterDto dto)
+        public async Task<UserSessionDto> RegisterAsync(RegisterDto dto)
         {
             var userToCreate = _mapper.Map<ApplicationUser>(dto);
             var result = await _userManager.CreateAsync(userToCreate, dto.Password);
@@ -28,10 +29,12 @@ namespace ECommerce.Business.Services
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new ConflictException($"Could not register the user ,Errors : {errors}");
             }
+
             await _userManager.AddToRoleAsync(userToCreate, "Customer");
-            var roles = await _userManager.GetRolesAsync(userToCreate);
-            var userDetails = _mapper.Map<UserDto>(userToCreate);
-            userDetails.Roles = [.. roles];
+            var currentRole = (await _userManager.GetRolesAsync(userToCreate))[0];
+            var userDetails = _mapper.Map<UserSessionDto>(userToCreate);
+            userDetails.Role = currentRole ?? string.Empty;
+
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User created with id = {id}.", userToCreate.Id);
             return userDetails;
@@ -92,8 +95,8 @@ namespace ECommerce.Business.Services
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {Identifier} logged in.", dto.Identifier);
-            var userDetails = _mapper.Map<UserDto>(user);
-            userDetails.Roles = [.. roles];
+            var userDetails = _mapper.Map<UserSessionDto>(user);
+            userDetails.Role = roles.FirstOrDefault() ?? string.Empty;
             return new AuthResponseDto
             {
                 AccessToken = accessToken,
@@ -132,8 +135,8 @@ namespace ECommerce.Business.Services
             _context.RefreshTokens.Add(newRefreshToken);
             await _context.SaveChangesAsync();
 
-            var userDetails = _mapper.Map<UserDto>(newRefreshToken.User);
-            userDetails.Roles = [.. roles];
+            var userDetails = _mapper.Map<UserSessionDto>(newRefreshToken.User);
+            userDetails.Role = roles.FirstOrDefault() ?? string.Empty;
 
             return new AuthResponseDto
             {

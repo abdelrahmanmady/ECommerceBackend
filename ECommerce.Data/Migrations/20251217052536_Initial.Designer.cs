@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251214045815_Initial")]
+    [Migration("20251217052536_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -35,27 +35,22 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("Country")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("PostalCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("Street")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -156,12 +151,11 @@ namespace ECommerce.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("VARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(MAX)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(50)");
 
                     b.HasKey("Id");
 
@@ -203,14 +197,22 @@ namespace ECommerce.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("VARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(MAX)");
+
+                    b.Property<string>("HierarchyPath")
+                        .IsRequired()
+                        .HasColumnType("NVARCHAR(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(50)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("Categories");
                 });
@@ -226,13 +228,30 @@ namespace ECommerce.Data.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("ShippingFees")
+                        .HasColumnType("DECIMAL(18,2)");
+
+                    b.Property<string>("ShippingMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("DECIMAL(18,2)");
+
+                    b.Property<decimal>("Taxes")
+                        .HasColumnType("DECIMAL(18,2)");
+
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("DECIMAL(18,2)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -274,6 +293,32 @@ namespace ECommerce.Data.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("ECommerce.Core.Entities.OrderTrackingMilestone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderTrackingMilestones");
+                });
+
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -292,15 +337,14 @@ namespace ECommerce.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("VARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(MAX)");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("DECIMAL(18,2)");
@@ -333,8 +377,7 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("NVARCHAR(2000)");
 
                     b.Property<bool>("IsMain")
                         .HasColumnType("bit");
@@ -370,7 +413,7 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("VARCHAR(100)");
+                        .HasColumnType("NVARCHAR(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -569,6 +612,15 @@ namespace ECommerce.Data.Migrations
                     b.Navigation("ShoppingCart");
                 });
 
+            modelBuilder.Entity("ECommerce.Core.Entities.Category", b =>
+                {
+                    b.HasOne("ECommerce.Core.Entities.Category", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("ECommerce.Core.Entities.Order", b =>
                 {
                     b.HasOne("ECommerce.Core.Entities.ApplicationUser", "User")
@@ -584,31 +636,26 @@ namespace ECommerce.Data.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingCountry");
 
                             b1.Property<string>("PostalCode")
-                                .HasMaxLength(20)
-                                .HasColumnType("nvarchar(20)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingPostalCode");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingState");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasColumnType("NVARCHAR(100)")
                                 .HasColumnName("ShippingStreet");
 
                             b1.HasKey("OrderId");
@@ -642,6 +689,17 @@ namespace ECommerce.Data.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("ECommerce.Core.Entities.OrderTrackingMilestone", b =>
+                {
+                    b.HasOne("ECommerce.Core.Entities.Order", "Order")
+                        .WithMany("OrderTrackingMilestones")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>
@@ -772,6 +830,8 @@ namespace ECommerce.Data.Migrations
             modelBuilder.Entity("ECommerce.Core.Entities.Order", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("OrderTrackingMilestones");
                 });
 
             modelBuilder.Entity("ECommerce.Core.Entities.Product", b =>

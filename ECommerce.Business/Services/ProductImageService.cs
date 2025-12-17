@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using ECommerce.Business.DTOs.ProductImages;
+using ECommerce.Business.DTOs.Products.Admin;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
 using ECommerce.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -21,59 +21,67 @@ namespace ECommerce.Business.Services
         private readonly ILogger<ProductImageService> _logger = logger;
         private readonly IFileStorageService _fileStorageService = fileStorageService;
 
-        public async Task<IEnumerable<ProductImageDto>> GetAllAsync(int productId)
-        {
-            var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
-            if (!productExists)
-                throw new NotFoundException("Product does not exist.");
-            return await _context.ProductImages
-                .AsNoTracking()
-                .Where(pi => pi.ProductId == productId)
-                .ProjectTo<ProductImageDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-        }
+        //public async Task<IEnumerable<ProductImageDto>> GetAllAsync(int productId)
+        //{
+        //    var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
+        //    if (!productExists)
+        //        throw new NotFoundException("Product does not exist.");
+        //    return await _context.ProductImages
+        //        .AsNoTracking()
+        //        .Where(pi => pi.ProductId == productId)
+        //        .ProjectTo<ProductImageDto>(_mapper.ConfigurationProvider)
+        //        .ToListAsync();
+        //}
 
-        public async Task<IEnumerable<ProductImageDto>> AddImagesAsync(int productId, AddProductImageDto dto)
+        public async Task<AdminProductDetailsDto> AddImagesAsync(int productId, List<IFormFile> files)
         {
-            var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
-            if (!productExists)
-                throw new NotFoundException("Product does not exist.");
+            var product = await _context.Products.FindAsync(productId)
+                ?? throw new NotFoundException("Product does not exist.");
 
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("Starting upload of {Count} images for Product {ProductId}",
-                    dto.Images.Count,
+                    files.Count,
                     productId);
             }
 
             var uploadedImages = new List<ProductImage>();
             var uploadedFileNames = new List<string>();
-
-            foreach (var image in dto.Images)
+            try
             {
-
-                var relativePath = await _fileStorageService.SaveFileAsync(image, "products");
-                var fileName = Path.GetFileName(relativePath);
-
-                var productImageToAdd = new ProductImage
+                foreach (var file in files)
                 {
-                    ProductId = productId,
-                    ImageUrl = relativePath
-                };
 
-                if (!await _context.ProductImages.AnyAsync(p => p.ProductId == productId))
-                {
-                    productImageToAdd.IsMain = true;
+                    var relativePath = await _fileStorageService.SaveFileAsync(file, "products");
+                    var fileName = Path.GetFileName(relativePath);
+
+                    var productImageToAdd = new ProductImage
+                    {
+                        ProductId = productId,
+                        ImageUrl = relativePath,
+                        IsMain = false
+                    };
+
+                    uploadedImages.Add(productImageToAdd);
+                    uploadedFileNames.Add(fileName);
+
                 }
 
-                uploadedImages.Add(productImageToAdd);
-                uploadedFileNames.Add(fileName);
+                _context.ProductImages.AddRange(uploadedImages);
+                await _context.SaveChangesAsync();
 
             }
 
-            _context.ProductImages.AddRange(uploadedImages);
-            await _context.SaveChangesAsync();
+            catch
+            {
+                if (uploadedFileNames.Count > 0)
+                {
+                    foreach (var fileName in uploadedFileNames)
+                        await _fileStorageService.DeleteFileAsync($"/images/products/{fileName}");
+                }
+                throw;
+            }
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
@@ -82,16 +90,17 @@ namespace ECommerce.Business.Services
                     productId,
                     string.Join(", ", uploadedFileNames));
             }
-            return _mapper.Map<IEnumerable<ProductImageDto>>(uploadedImages);
+
+            return _mapper.Map<AdminProductDetailsDto>(product);
 
         }
 
-        public async Task SetMainImageAsync(int productIdFromRoute, int imageId)
+        public async Task SetMainImageAsync(int productId, int imageId)
         {
             var image = await _context.ProductImages.FindAsync(imageId)
                 ?? throw new NotFoundException("Image does not exist.");
 
-            if (image.ProductId != productIdFromRoute)
+            if (image.ProductId != productId)
                 throw new BadRequestException("Image does not belong to this product.");
 
             var product = await _context.Products.FindAsync(image.ProductId)
@@ -103,25 +112,26 @@ namespace ECommerce.Business.Services
             if (currentMainImage?.Id == imageId)
                 return;
 
+            using var transaction = _context.Database.BeginTransaction();
             if (currentMainImage != null)
             {
                 currentMainImage.IsMain = false;
-                await _context.SaveChangesAsync();
             }
             image.IsMain = true;
-
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Image with id = {imageId} for product = {productId} is set as main.", image.Id, image.ProductId);
 
         }
 
-        public async Task DeleteImageAsync(int productIdFromRoute, int imageId)
+        public async Task DeleteImageAsync(int productId, int imageId)
         {
             var image = await _context.ProductImages.FindAsync(imageId)
                 ?? throw new NotFoundException("Image does not exist.");
 
-            if (image.ProductId != productIdFromRoute)
+            if (image.ProductId != productId)
                 throw new BadRequestException("Image does not belong to this product.");
 
             var product = await _context.Products.FindAsync(image.ProductId)
@@ -130,8 +140,6 @@ namespace ECommerce.Business.Services
             //Throw ConflictException
             if (image.IsMain)
                 throw new ConflictException("Cannot delete the main image. Set another image as main first.");
-
-            await _fileStorageService.DeleteFileAsync(image.ImageUrl);
 
             _context.ProductImages.Remove(image);
             await _fileStorageService.DeleteFileAsync(image.ImageUrl);

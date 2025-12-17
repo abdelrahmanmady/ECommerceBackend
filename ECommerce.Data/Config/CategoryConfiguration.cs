@@ -9,12 +9,14 @@ namespace ECommerce.Data.Config
         public void Configure(EntityTypeBuilder<Category> builder)
         {
             builder.Property(x => x.Name)
-                .HasColumnType("VARCHAR")
-                .HasMaxLength(50);
+                .HasColumnType("NVARCHAR(50)");
 
 
             builder.Property(x => x.Description)
-                .HasColumnType("VARCHAR(MAX)");
+                .HasColumnType("NVARCHAR(MAX)");
+
+            builder.Property(c => c.HierarchyPath)
+                .HasColumnType("NVARCHAR(500)");
 
             //one to many relation with Product
             builder.HasMany(c => c.Products)

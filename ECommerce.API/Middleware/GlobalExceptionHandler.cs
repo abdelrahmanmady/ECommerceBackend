@@ -10,15 +10,12 @@ namespace ECommerce.API.Middleware
         private readonly ILogger<GlobalExceptionHandler> _logger = logger;
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError("Exception Caught: {message}\n{trace}", exception.Message, exception.StackTrace);
-
             var response = httpContext.Response;
             response.ContentType = "application/json";
 
             var statusCode = (int)HttpStatusCode.InternalServerError;
             var message = "An internal server error occurred.";
-            string? detail = "";
+            string? detail = null;
 
             switch (exception)
             {
@@ -48,8 +45,16 @@ namespace ECommerce.API.Middleware
             }
 
 
-            response.StatusCode = statusCode;
+            if (statusCode >= 500)
+            {
+                _logger.LogError(exception, "Server Error: {Message}", exception.Message);
+            }
+            else
+            {
+                _logger.LogWarning("Client Error ({StatusCode}): {Message}", statusCode, exception.Message);
+            }
 
+            response.StatusCode = statusCode;
 
             var errorResponse = new ApiErrorResponseDto
             {

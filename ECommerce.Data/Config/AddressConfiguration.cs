@@ -8,11 +8,11 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<Address> builder)
         {
-            builder.Property(a => a.Street).HasMaxLength(100);
-            builder.Property(a => a.City).HasMaxLength(50);
-            builder.Property(a => a.State).HasMaxLength(50);
-            builder.Property(a => a.PostalCode).HasMaxLength(20);
-            builder.Property(a => a.Country).HasMaxLength(50);
+            builder.Property(a => a.Street).HasColumnType("NVARCHAR(100)");
+            builder.Property(a => a.City).HasColumnType("NVARCHAR(100)");
+            builder.Property(a => a.State).HasColumnType("NVARCHAR(100)");
+            builder.Property(a => a.PostalCode).HasColumnType("NVARCHAR(100)");
+            builder.Property(a => a.Country).HasColumnType("NVARCHAR(100)");
         }
     }
 }

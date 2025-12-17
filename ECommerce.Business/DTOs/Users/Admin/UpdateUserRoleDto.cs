@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Business.DTOs.Users
+﻿namespace ECommerce.Business.DTOs.Users.Admin
 {
     public class UpdateUserRoleDto
     {
