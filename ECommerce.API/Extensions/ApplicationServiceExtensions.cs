@@ -58,7 +58,11 @@ namespace ECommerce.API.Extensions
             {
                 options.AddPolicy("AngularApp", policy =>
                 {
-                    policy.WithOrigins("http://localhost:4200") // Angular Port
+                    policy.WithOrigins(
+                        "http://localhost:4200",
+                        "https://ec-frontend-amber.vercel.app",
+                        "https://finalproject1.runasp.net"
+                        ) // Angular Port
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials(); // Required for HttpOnly Cookies
