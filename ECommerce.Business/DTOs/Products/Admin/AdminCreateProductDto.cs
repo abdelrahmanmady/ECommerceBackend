@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Business.DTOs.Products.Admin
 {
@@ -7,6 +6,7 @@ namespace ECommerce.Business.DTOs.Products.Admin
     {
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
+        [Required]
         public int CategoryId { get; set; }
         public int BrandId { get; set; }
 
@@ -16,7 +16,6 @@ namespace ECommerce.Business.DTOs.Products.Admin
         [Range(0, int.MaxValue, ErrorMessage = "Stock must be greater than or equal to zero")]
         public int StockQuantity { get; set; }
         public bool IsFeatured { get; set; }
-        public List<IFormFile>? Images { get; set; }
     }
 
 

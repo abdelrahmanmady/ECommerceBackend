@@ -35,7 +35,8 @@ namespace ECommerce.Business.Mappings
             CreateMap<Product, AdminProductDto>()
                 .ForMember(dest => dest.ThumbnailUrl,
                 opt => opt.MapFrom(src => src.Images
-                                                                .Where(i => i.IsMain)
+                                                                .Where(pi => pi.IsMain)
+                                                                .Select(pi => pi.ImageUrl)
                                                                 .FirstOrDefault()))
                 .ForMember(dest => dest.CategoryName,
                 opt => opt.MapFrom(src => src.Category.Name))
@@ -44,13 +45,13 @@ namespace ECommerce.Business.Mappings
                 .ForMember(dest => dest.InStock,
                 opt => opt.MapFrom(src => src.StockQuantity > 0));
             CreateMap<Product, AdminProductDetailsDto>();
-            CreateMap<AdminCreateProductDto, Product>()
-                .ForMember(dest => dest.Images, opt => opt.Ignore());
-            //update mapping
+            CreateMap<AdminCreateProductDto, Product>();
+            CreateMap<AdminUpdateProductDto, Product>();
             CreateMap<Product, ProductDto>()
                 .ForMember(dest => dest.ThumbnailUrl,
                 opt => opt.MapFrom(src => src.Images
-                                                                .Where(i => i.IsMain)
+                                                                .Where(pi => pi.IsMain)
+                                                                .Select(pi => pi.ImageUrl)
                                                                 .FirstOrDefault()))
                 .ForMember(dest => dest.CategoryBreadcrumb,
                 opt => opt.MapFrom(src => src.Category.HierarchyPath))

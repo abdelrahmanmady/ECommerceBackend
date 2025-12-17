@@ -22,7 +22,7 @@ namespace ECommerce.Data
                 await context.Database.MigrateAsync();
                 await UserSeeder.SeedAsync(context, userManager, roleManager);
                 await StoreSeeder.SeedAsync(context);
-                //await OrderSeeder.SeedAsync(context, userManager);
+                await OrderSeeder.SeedAsync(context, userManager);
             }
             catch (Exception ex)
             {

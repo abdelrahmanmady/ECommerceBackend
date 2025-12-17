@@ -1,6 +1,7 @@
 ﻿using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.DTOs.Products.Admin;
+using ECommerce.Business.DTOs.Products.Store;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Specifications.Products;
 using Microsoft.AspNetCore.Authorization;
@@ -38,50 +39,55 @@ namespace ECommerce.API.Controllers
         [HttpPost("admin")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Create a new product.")]
-        [Consumes("multipart/form-data")]
-        [ProducesResponseType(typeof(AdminProductDetailsDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CreateProductAdmin([FromForm] AdminCreateProductDto dto)
+        public async Task<IActionResult> CreateProductAdmin([FromBody] AdminCreateProductDto dto)
         {
-            var createdProduct = await _products.CreateProductAdminAsync(dto);
-            return CreatedAtAction(nameof(GetProductDetailsAdmin), new { id = createdProduct.Id }, createdProduct);
+            var createdProductId = await _products.CreateProductAdminAsync(dto);
+            return StatusCode(StatusCodes.Status201Created, new { createdProductId });
         }
 
-        //[HttpPut("{id:int}")]
-        //[Authorize(Roles = "Admin")]
-        //[EndpointSummary("Update product")]
-        //[EndpointDescription("Updates product details. Concurrency safe.")]
-        //[ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        //public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateProductDto dto)
-        //{
-        //    var updatedProduct = await _products.UpdateAsync(id, dto);
-        //    return Ok(updatedProduct);
-        //}
+        [HttpPut("admin/{productId:int}")]
+        [Authorize(Roles = "Admin")]
+        [EndpointSummary("Updates product details.")]
+        [ProducesResponseType(typeof(AdminProductDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] AdminUpdateProductDto dto)
+        {
+            var updatedProduct = await _products.UpdateProductAdminAsync(id, dto);
+            return Ok(updatedProduct);
+        }
 
-        //[HttpDelete("{id:int}")]
-        //[Authorize(Roles = "Admin")]
-        //[EndpointSummary("Delete product")]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        //[ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        //public async Task<IActionResult> Delete([FromRoute] int id)
-        //{
-        //    await _products.DeleteAsync(id);
-        //    return NoContent();
-        //}
+        [HttpDelete("admin/{id:int}")]
+        [Authorize(Roles = "Admin")]
+        [EndpointSummary("Delete product with its images.")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            await _products.DeleteProductAdminAsync(id);
+            return NoContent();
+        }
 
+        [HttpGet]
+        [EndpointSummary("Get all products.")]
+        [ProducesResponseType(typeof(PagedResponseDto<ProductDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllProducts([FromQuery] ProductSpecParams specParams)
+            => Ok(await _products.GetAllProductsAsync(specParams));
 
-        //[HttpGet]
-        //[EndpointSummary("Get all products")]
-        //[EndpointDescription("Retrieves a list of all products.")]
-        //[ProducesResponseType(typeof(PagedResponseDto<ProductDto>), StatusCodes.Status200OK)]
-        //public async Task<IActionResult> GetAll([FromQuery] ProductSpecParams specParams) => Ok(await _products.GetProductsForCustomerAsync(specParams));
+        [HttpGet("{productId:int}")]
+        [EndpointSummary("Get product details.")]
+        [ProducesResponseType(typeof(ProductDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetProductDetails([FromRoute] int productId)
+            => Ok(await _products.GetProductDetailsAsync(productId));
     }
 }

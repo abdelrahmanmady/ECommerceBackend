@@ -92,7 +92,7 @@ namespace ECommerce.Data.Seeders
             {
                 Name = name,
                 Parent = parent,
-                HierarchyPath = $"{parent.HierarchyPath} > {name}"
+                HierarchyPath = $"{parent.HierarchyPath}\\{name}"
             };
         }
 

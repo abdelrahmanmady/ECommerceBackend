@@ -4,6 +4,7 @@ namespace ECommerce.Business.DTOs.Products.Store
 {
     public class ProductDetailsDto
     {
+        public int Id { get; set; }
         public IEnumerable<ProductImageDto> Images { get; set; } = [];
         public string Name { get; set; } = string.Empty;
         public int BrandId { get; set; }
