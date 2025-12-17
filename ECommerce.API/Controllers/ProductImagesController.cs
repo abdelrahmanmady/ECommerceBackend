@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers
 {
-    [Route("api/products/{productId:int}/images")]
+    [Route("api/Products/{productId:int}/images")]
     [ApiController]
     [Tags("Products Management")]
     public class ProductImagesController(IProductImageService productImages) : ControllerBase
