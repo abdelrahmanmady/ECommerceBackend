@@ -31,14 +31,16 @@ namespace ECommerce.API
                 // Configure the HTTP request pipeline.
                 app.UseExceptionHandler();
 
-                app.MapOpenApi();
-                app.UseSwaggerUI(options =>
+                if (app.Environment.IsDevelopment())
                 {
-                    options.SwaggerEndpoint("/openapi/v1.json", "My Api v1");
-                    options.RoutePrefix = "";
+                    app.MapOpenApi();
+                    app.UseSwaggerUI(options =>
+                    {
+                        options.SwaggerEndpoint("/openapi/v1.json", "My Api v1");
+                        options.RoutePrefix = "";
 
-                });
-
+                    });
+                }
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();

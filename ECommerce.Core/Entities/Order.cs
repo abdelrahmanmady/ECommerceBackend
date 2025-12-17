@@ -5,9 +5,14 @@ namespace ECommerce.Core.Entities
     public class Order
     {
         public int Id { get; set; }
-        public DateTime Created { get; set; }
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public DateTime Updated { get; set; } = DateTime.UtcNow;
         public OrderStatus Status { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal ShippingFees { get; set; }
+        public decimal Taxes { get; set; }
         public decimal TotalAmount { get; set; }
+        public ShippingMethod ShippingMethod { get; set; }
         public OrderAddress ShippingAddress { get; set; } = null!;
 
         //one to many relation with OrderItems
@@ -16,5 +21,8 @@ namespace ECommerce.Core.Entities
         //many to one relation with User
         public string UserId { get; set; } = null!;
         public virtual ApplicationUser User { get; set; } = null!;
+
+        //one to many relation with OrderTrackingMilestones
+        public virtual ICollection<OrderTrackingMilestone> OrderTrackingMilestones { get; set; } = [];
     }
 }

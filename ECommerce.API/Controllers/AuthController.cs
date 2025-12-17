@@ -1,5 +1,6 @@
 ﻿using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Errors;
+using ECommerce.Business.DTOs.Users.Auth;
 using ECommerce.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,15 +10,16 @@ namespace ECommerce.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Tags("Authentication")]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
     {
         private readonly IAuthService _authService = authService;
+        private readonly ILogger<AuthController> _logger = logger;
 
         [HttpPost("[action]")]
         [EndpointName("RegisterUser")]
         [EndpointSummary("Register a new user")]
         [EndpointDescription("Creates a new user account with the default 'Customer' role. Requires a unique email and username.")]
-        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserSessionDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)] // Input Validation (Missing fields)
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)] // Logic Error (User already exists - if you add this logic later)
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -55,12 +57,15 @@ namespace ECommerce.API.Controllers
             var refreshToken = Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(refreshToken))
+            {
+                _logger.LogWarning("Refresh Token Attempt Failed: No token provided in cookies.");
+
                 return Unauthorized(new ApiErrorResponseDto
                 {
                     StatusCode = 401,
                     Message = "No refresh token provided."
                 });
-
+            }
             var authResponse = await _authService.RefreshTokenAsync(refreshToken);
 
             SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);

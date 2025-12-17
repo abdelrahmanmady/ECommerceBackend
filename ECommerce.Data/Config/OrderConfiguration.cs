@@ -12,8 +12,32 @@ namespace ECommerce.Data.Config
                 .HasConversion<string>()
                 .HasMaxLength(50);
 
+            builder.Property(o => o.Subtotal)
+                .HasColumnType("DECIMAL(18,2)");
+
+            builder.Property(o => o.ShippingFees)
+                .HasColumnType("DECIMAL(18,2)");
+
+            builder.Property(o => o.Taxes)
+                .HasColumnType("DECIMAL(18,2)");
+
             builder.Property(o => o.TotalAmount)
                 .HasColumnType("DECIMAL(18,2)");
+
+            builder.Property(o => o.ShippingMethod)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            //configure owned type (snapshot)
+            builder.OwnsOne(o => o.ShippingAddress, a =>
+            {
+                a.WithOwner();
+                a.Property(x => x.Street).HasColumnName("ShippingStreet").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.City).HasColumnName("ShippingCity").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.State).HasColumnName("ShippingState").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.PostalCode).HasColumnName("ShippingPostalCode").HasColumnType("NVARCHAR(100)");
+                a.Property(x => x.Country).HasColumnName("ShippingCountry").HasColumnType("NVARCHAR(100)");
+            });
 
             //one to many relation with OrderItems
             builder.HasMany(o => o.Items)
@@ -21,16 +45,14 @@ namespace ECommerce.Data.Config
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            //configure owned type (snapshot)
-            builder.OwnsOne(o => o.ShippingAddress, a =>
-            {
-                a.WithOwner();
-                a.Property(x => x.Street).HasColumnName("ShippingStreet").HasMaxLength(100);
-                a.Property(x => x.City).HasColumnName("ShippingCity").HasMaxLength(50);
-                a.Property(x => x.State).HasColumnName("ShippingState").HasMaxLength(50);
-                a.Property(x => x.PostalCode).HasColumnName("ShippingPostalCode").HasMaxLength(20);
-                a.Property(x => x.Country).HasColumnName("ShippingCountry").HasMaxLength(50);
-            });
+            //one to many relation with OrderTrackingMilestones
+            builder.HasMany(o => o.OrderTrackingMilestones)
+                .WithOne(otm => otm.Order)
+                .HasForeignKey(otm => otm.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+
         }
     }
 }

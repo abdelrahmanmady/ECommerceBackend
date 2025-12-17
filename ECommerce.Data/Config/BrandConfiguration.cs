@@ -10,12 +10,11 @@ namespace ECommerce.Data.Config
         {
 
             builder.Property(x => x.Name)
-                .HasColumnType("VARCHAR")
-                .HasMaxLength(50);
+                .HasColumnType("NVARCHAR(50)");
 
 
             builder.Property(x => x.Description)
-                .HasColumnType("VARCHAR(MAX)");
+                .HasColumnType("NVARCHAR(MAX)");
 
 
             //one to many relation with Product

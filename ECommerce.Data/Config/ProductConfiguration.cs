@@ -9,11 +9,10 @@ namespace ECommerce.Data.Config
         public void Configure(EntityTypeBuilder<Product> builder)
         {
             builder.Property(p => p.Name)
-                .HasColumnType("VARCHAR")
-                .HasMaxLength(100);
+                .HasColumnType("NVARCHAR(100)");
 
             builder.Property(p => p.Description)
-                .HasColumnType("VARCHAR(MAX)");
+                .HasColumnType("NVARCHAR(MAX)");
 
             builder.Property(p => p.Price)
                 .HasColumnType("DECIMAL(18,2)");
