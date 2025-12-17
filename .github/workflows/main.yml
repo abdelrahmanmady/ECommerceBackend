@@ -13,16 +13,16 @@ jobs:
           dotnet-version: 9.0
           
       - name: Install dependencies
-        run: dotnet restore src/ECommerce.API/ECommerce.API.csproj
+        run: dotnet restore ECommerce.API/ECommerce.API.csproj
         
       - name: Build
-        run: dotnet build src/ECommerce.API/ECommerce.API.csproj --configuration Release --no-restore
+        run: dotnet build ECommerce.API/ECommerce.API.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish src/ECommerce.API/ECommerce.API.csproj --configuration Release --output ./publish --runtime win-x86 
+        run: dotnet publish ECommerce.API/ECommerce.API.csproj --configuration Release --output ./publish --runtime win-x86 
         
       - name: Test with .NET
-        run: dotnet test src/ECommerce.API/ECommerce.API.csproj
+        run: dotnet test ECommerce.API/ECommerce.API.csproj
 
       - name: Deploy to MonsterASP.NET via WebDeploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0
