@@ -114,18 +114,19 @@ namespace ECommerce.Business.Mappings
             //ShoppingCart Mapping
             CreateMap<ShoppingCart, ShoppingCartDto>();
             CreateMap<CartItem, CartItemDto>()
-                .ForMember(dest => dest.ProductName, opt
-                    => opt.MapFrom(src
-                        => src.Product.Name))
-                .ForMember(dest => dest.ProductImageUrl, opt
-                    => opt.MapFrom(src
-                        => src.Product.Images
-                        .Where(i => i.IsMain)
-                        .Select(i => i.ImageUrl)
-                        .FirstOrDefault()))
-                .ForMember(dest => dest.Price, opt
-                    => opt.MapFrom(src
-                        => src.Product.Price));
+                .ForMember(dest => dest.ThumbnailUrl,
+                opt => opt.MapFrom(src => src.Product.Images
+                                                                .Where(pi => pi.IsMain)
+                                                                .Select(pi => pi.ImageUrl)
+                                                                .FirstOrDefault()))
+                .ForMember(dest => dest.BrandedName,
+                opt => opt.MapFrom(src => src.Product.Brand.Name + " " + src.Product.Name))
+                .ForMember(dest => dest.CategoryName,
+                opt => opt.MapFrom(src => src.Product.Category.Name))
+                .ForMember(dest => dest.Price,
+                opt => opt.MapFrom(src => src.Product.Price));
+
+
 
             //Checkout Mapping
             CreateMap<CartItem, OrderItem>()

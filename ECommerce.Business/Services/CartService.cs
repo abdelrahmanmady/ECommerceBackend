@@ -6,6 +6,7 @@ using ECommerce.Core.Exceptions;
 using ECommerce.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace ECommerce.Business.Services
@@ -13,11 +14,13 @@ namespace ECommerce.Business.Services
     public class CartService(
         AppDbContext context,
         IMapper mapper,
-        IHttpContextAccessor httpContext) : ICartService
+        IHttpContextAccessor httpContext,
+        ILogger<CartService> logger) : ICartService
     {
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
         private readonly IHttpContextAccessor _httpContext = httpContext;
+        private readonly ILogger<CartService> _logger = logger;
 
         public async Task<ShoppingCartDto> GetAsync()
         {
@@ -26,58 +29,46 @@ namespace ECommerce.Business.Services
             return _mapper.Map<ShoppingCartDto>(cart);
         }
 
-
-
-        public async Task<ShoppingCartDto> AddItemAsync(int productId)
+        public async Task<ShoppingCartDto> UpdateAsync(UpdateShoppingCartDto dto)
         {
+            if (dto.Items is null || dto.Items.Count == 0)
+                throw new BadRequestException("No Items found in the incoming request.");
+
             var currentUserId = GetCurrentUserId();
             var cart = await GetCartEntityAsync(currentUserId);
 
-            var product = await _context.Products.FindAsync(productId)
-                ?? throw new NotFoundException("Product does not exist.");
-
-            if (product.StockQuantity == 0)
-                throw new BadRequestException("Out of stock.");
-
-            var exisitngItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-            if (exisitngItem is not null)
+            foreach (var cartItem in dto.Items)
             {
-                exisitngItem.Quantity++;
-                if (product.StockQuantity < exisitngItem.Quantity)
-                    throw new BadRequestException($"Cannot add more. You already have {exisitngItem.Quantity - 1} in cart.");
-            }
-            else
-            {
-                cart.Items.Add(new CartItem
+                var cartItemToUpdate = await _context.CartItems
+                    .FirstOrDefaultAsync(ci => ci.ProductId == cartItem.ProductId && ci.ShoppingCartId == cart.Id);
+
+                var product = await _context.Products.FindAsync(cartItem.ProductId)
+                    ?? throw new NotFoundException("Product does not exist.");
+
+                if (cartItemToUpdate is null)
                 {
-                    ProductId = productId,
-                    Quantity = 1
-                });
+                    cartItemToUpdate = new CartItem { ProductId = cartItem.ProductId };
+                    cart.Items.Add(cartItemToUpdate);
+                }
+
+                //check stock
+                if (product.StockQuantity < cartItem.Quantity)
+                    throw new BadRequestException($"Added Quantity exceeds product stock, In Stock : {product.StockQuantity}");
+
+                if (cartItem.Quantity <= 0)
+                {
+                    _context.CartItems.Remove(cartItemToUpdate);
+                    continue;
+                }
+                cartItemToUpdate.Quantity = cartItem.Quantity;
             }
-
             cart.LastUpdated = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return _mapper.Map<ShoppingCartDto>(cart);
         }
 
-        public async Task<ShoppingCartDto> RemoveItemAsync(int productId)
-        {
-            var currentUserId = GetCurrentUserId();
-            var cart = await GetCartEntityAsync(currentUserId);
 
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == productId)
-                ?? throw new NotFoundException("Item does not exist in cart.");
-
-            item.Quantity--;
-
-            if (item.Quantity == 0)
-                _context.CartItems.Remove(item);
-
-            cart.LastUpdated = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return _mapper.Map<ShoppingCartDto>(cart);
-        }
 
         public async Task ClearAsync()
         {
@@ -108,7 +99,9 @@ namespace ECommerce.Business.Services
                 .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
                 .ThenInclude(p => p.Images)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(c => c.UserId == userId);
+
 
             if (cart == null)
             {

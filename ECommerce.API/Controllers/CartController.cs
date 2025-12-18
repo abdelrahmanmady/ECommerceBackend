@@ -17,30 +17,29 @@ namespace ECommerce.API.Controllers
         [HttpGet]
         [EndpointSummary("Get my cart")]
         [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Get() => Ok(await _cart.GetAsync());
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetCart() => Ok(await _cart.GetAsync());
 
-        [HttpPost("items/{productId:int}")]
-        [EndpointSummary("Add item to cart")]
-        [EndpointDescription("Adds a product to the cart. If it exists, increments quantity by 1. Checks stock.")]
+        [HttpPost]
+        [EndpointSummary("Update user cart.")]
         [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> AddItem([FromRoute] int productId) => Ok(await _cart.AddItemAsync(productId));
-
-        [HttpDelete("items/{productId:int}")]
-        [EndpointSummary("Remove item")]
-        [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status200OK)] // Returns updated cart
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> RemoveItem([FromRoute] int productId) => Ok(await _cart.RemoveItemAsync(productId));
+        public async Task<IActionResult> UpdateCart([FromBody] UpdateShoppingCartDto dto)
+        {
+            var updatedCart = await _cart.UpdateAsync(dto);
+            return Ok(updatedCart);
+        }
 
         [HttpDelete]
-        [EndpointSummary("Clear cart")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [EndpointSummary("Clears user cart.")]
+        [ProducesResponseType(typeof(ShoppingCartDto), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> ClearCart()
         {
             await _cart.ClearAsync();
             return NoContent();
         }
-
     }
 }
