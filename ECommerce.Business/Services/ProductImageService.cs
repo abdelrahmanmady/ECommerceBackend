@@ -21,17 +21,7 @@ namespace ECommerce.Business.Services
         private readonly ILogger<ProductImageService> _logger = logger;
         private readonly IFileStorageService _fileStorageService = fileStorageService;
 
-        //public async Task<IEnumerable<ProductImageDto>> GetAllAsync(int productId)
-        //{
-        //    var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
-        //    if (!productExists)
-        //        throw new NotFoundException("Product does not exist.");
-        //    return await _context.ProductImages
-        //        .AsNoTracking()
-        //        .Where(pi => pi.ProductId == productId)
-        //        .ProjectTo<ProductImageDto>(_mapper.ConfigurationProvider)
-        //        .ToListAsync();
-        //}
+
 
         public async Task<AdminProductDetailsDto> AddImagesAsync(int productId, List<IFormFile> files)
         {
@@ -142,7 +132,7 @@ namespace ECommerce.Business.Services
                 throw new ConflictException("Cannot delete the main image. Set another image as main first.");
 
             _context.ProductImages.Remove(image);
-            await _fileStorageService.DeleteFileAsync(image.ImageUrl);
+            //await _fileStorageService.DeleteFileAsync(image.ImageUrl);
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
