@@ -21,26 +21,26 @@ namespace ECommerce.API.Middleware
             {
                 case NotFoundException:
                     statusCode = (int)HttpStatusCode.NotFound;
-                    message = exception.Message;
-                    detail = "Resource not found.";
+                    message = "Resource not found.";
+                    detail = exception.Message;
                     break;
 
                 case BadRequestException:
                     statusCode = (int)HttpStatusCode.BadRequest;
-                    message = exception.Message;
-                    detail = "Invalid request data.";
+                    message = "Invalid request data.";
+                    detail = exception.Message;
                     break;
 
                 case ConflictException:
                     statusCode = (int)HttpStatusCode.Conflict;
-                    message = exception.Message;
-                    detail = "Data conflict occurred.";
+                    message = "Data conflict occurred.";
+                    detail = exception.Message;
                     break;
 
                 case UnauthorizedException:
                     statusCode = (int)HttpStatusCode.Unauthorized;
-                    message = exception.Message;
-                    detail = "You are not authorized to perform this action.";
+                    message = "You are not authorized to perform this action.";
+                    detail = exception.Message;
                     break;
             }
 

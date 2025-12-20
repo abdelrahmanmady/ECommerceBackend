@@ -26,8 +26,8 @@ namespace ECommerce.Business.Services
 
             if (!result.Succeeded)
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new ConflictException($"Could not register the user ,Errors : {errors}");
+                var errors = string.Join("; ", result.Errors.Select(e => $"{e.Code}:{e.Description}"));
+                throw new ConflictException(errors);
             }
 
             await _userManager.AddToRoleAsync(userToCreate, "Customer");
