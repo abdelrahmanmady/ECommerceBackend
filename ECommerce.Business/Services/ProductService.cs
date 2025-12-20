@@ -73,6 +73,7 @@ namespace ECommerce.Business.Services
         {
             var product = await _context.Products
                 .AsNoTracking()
+                .IgnoreQueryFilters()
                 .Where(p => p.Id == productId)
                 .ProjectTo<AdminProductDetailsDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()

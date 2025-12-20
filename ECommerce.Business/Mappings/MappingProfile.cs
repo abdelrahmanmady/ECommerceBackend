@@ -2,7 +2,8 @@
 using ECommerce.Business.DTOs.Addresses;
 using ECommerce.Business.DTOs.Auth;
 using ECommerce.Business.DTOs.Brands;
-using ECommerce.Business.DTOs.Categories;
+using ECommerce.Business.DTOs.Categories.Admin;
+using ECommerce.Business.DTOs.Categories.Store;
 using ECommerce.Business.DTOs.OrderItems;
 using ECommerce.Business.DTOs.Orders.Admin;
 using ECommerce.Business.DTOs.Orders.Profile;
@@ -27,9 +28,20 @@ namespace ECommerce.Business.Mappings
             CreateMap<UpdateBrandDto, Brand>();
 
             //Category Mapping
-            CreateMap<Category, CategoryDto>();
-            CreateMap<CreateCategoryDto, Category>();
-            CreateMap<UpdateCategoryDto, Category>();
+            CreateMap<Category, AdminCategoryDto>()
+                .ForMember(d => d.ParentCategoryName,
+                o => o.MapFrom(s => s.Parent == null ? "Root Category" : s.Parent.Name))
+                .ForMember(d => d.PathFromRoot,
+                o => o.MapFrom(s => $"Root\\{s.HierarchyPath}"));
+            CreateMap<Category, AdminCategoryDetailsDto>()
+                .ForMember(d => d.SubcategoriesNames,
+                o => o.Ignore())
+                .ForMember(d => d.PathFromRoot,
+                o => o.MapFrom(s => $"Root\\{s.HierarchyPath}"));
+            CreateMap<AdminCreateCategoryDto, Category>();
+            CreateMap<AdminUpdateCategoryDto, Category>();
+            CreateMap<Category, CategoryDto>()
+                .ForMember(d => d.Subcategories, o => o.Ignore());
 
             //Product Mapping
             CreateMap<Product, AdminProductDto>()

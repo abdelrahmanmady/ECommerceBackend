@@ -14,7 +14,7 @@ namespace ECommerce.Data.Config
 
 
             builder.Property(x => x.Description)
-                .HasColumnType("NVARCHAR(MAX)");
+                .HasColumnType("NVARCHAR(1000)");
 
 
             //one to many relation with Product

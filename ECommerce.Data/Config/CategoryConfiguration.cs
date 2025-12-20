@@ -13,7 +13,7 @@ namespace ECommerce.Data.Config
 
 
             builder.Property(x => x.Description)
-                .HasColumnType("NVARCHAR(MAX)");
+                .HasColumnType("NVARCHAR(1000)");
 
             builder.Property(c => c.HierarchyPath)
                 .HasColumnType("NVARCHAR(500)");

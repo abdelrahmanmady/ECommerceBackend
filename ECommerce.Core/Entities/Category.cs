@@ -6,6 +6,8 @@
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public string HierarchyPath { get; set; } = null!;
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public DateTime Updated { get; set; } = DateTime.UtcNow;
 
         //one to many relation with Product
         public virtual ICollection<Product> Products { get; set; } = [];

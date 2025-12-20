@@ -15,7 +15,7 @@ namespace ECommerce.Data.Config
                 po.WithOwner();
                 po.Property(po => po.ProductId).HasColumnName("OrderedProductId");
                 po.Property(po => po.ProductName).HasColumnName("OrderedProductName").HasMaxLength(100);
-                po.Property(po => po.PictureUrl).HasColumnName("OrderedProductThumbnailUrl");
+                po.Property(po => po.PictureUrl).HasColumnName("OrderedProductThumbnailUrl").HasMaxLength(2000);
             });
         }
     }

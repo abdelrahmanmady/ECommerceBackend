@@ -12,7 +12,7 @@ namespace ECommerce.Data.Config
                 .HasColumnType("NVARCHAR(100)");
 
             builder.Property(p => p.Description)
-                .HasColumnType("NVARCHAR(MAX)");
+                .HasColumnType("NVARCHAR(1000)");
 
             builder.Property(p => p.Price)
                 .HasColumnType("DECIMAL(18,2)");

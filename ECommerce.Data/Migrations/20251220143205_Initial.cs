@@ -61,7 +61,7 @@ namespace ECommerce.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "NVARCHAR(50)", nullable: false),
-                    Description = table.Column<string>(type: "NVARCHAR(MAX)", nullable: true)
+                    Description = table.Column<string>(type: "NVARCHAR(1000)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -75,8 +75,10 @@ namespace ECommerce.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "NVARCHAR(50)", nullable: false),
-                    Description = table.Column<string>(type: "NVARCHAR(MAX)", nullable: true),
+                    Description = table.Column<string>(type: "NVARCHAR(1000)", nullable: true),
                     HierarchyPath = table.Column<string>(type: "NVARCHAR(500)", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ParentId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -301,7 +303,7 @@ namespace ECommerce.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    Description = table.Column<string>(type: "NVARCHAR(MAX)", nullable: true),
+                    Description = table.Column<string>(type: "NVARCHAR(1000)", nullable: true),
                     Price = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     StockQuantity = table.Column<int>(type: "int", nullable: false),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -384,7 +386,7 @@ namespace ECommerce.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OrderedProductId = table.Column<int>(type: "int", nullable: false),
                     OrderedProductName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    OrderedProductThumbnailUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OrderedProductThumbnailUrl = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: false),

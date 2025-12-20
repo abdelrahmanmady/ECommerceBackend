@@ -148,7 +148,7 @@ namespace ECommerce.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("NVARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -193,8 +193,11 @@ namespace ECommerce.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
-                        .HasColumnType("NVARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(1000)");
 
                     b.Property<string>("HierarchyPath")
                         .IsRequired()
@@ -206,6 +209,9 @@ namespace ECommerce.Data.Migrations
 
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -334,7 +340,7 @@ namespace ECommerce.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("NVARCHAR(MAX)");
+                        .HasColumnType("NVARCHAR(1000)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -691,7 +697,9 @@ namespace ECommerce.Data.Migrations
                                 .HasColumnType("int");
 
                             b1.Property<string>("PictureUrl")
-                                .HasColumnType("nvarchar(max)")
+                                .IsRequired()
+                                .HasMaxLength(2000)
+                                .HasColumnType("nvarchar(2000)")
                                 .HasColumnName("OrderedProductThumbnailUrl");
 
                             b1.Property<int>("ProductId")

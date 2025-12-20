@@ -137,6 +137,11 @@ namespace ECommerce.Business.Services
                 }
 
                 orderToUpdate.Status = dto.Status;
+                //add milestone
+                orderToUpdate.OrderTrackingMilestones.Add(new OrderTrackingMilestone
+                {
+                    Status = dto.Status
+                });
                 changes.Add($"Status: {oldStatus} -> {dto.Status}");
             }
 

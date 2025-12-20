@@ -1,6 +1,9 @@
-﻿using ECommerce.Business.DTOs.Categories;
+﻿using ECommerce.Business.DTOs.Categories.Admin;
+using ECommerce.Business.DTOs.Categories.Store;
 using ECommerce.Business.DTOs.Errors;
+using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
+using ECommerce.Core.Specifications.Categories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,61 +17,82 @@ namespace ECommerce.API.Controllers
         private readonly ICategoryService _categories = categories;
 
 
-        [HttpGet]
-        [EndpointSummary("Get all categories")]
-        [EndpointDescription("Retrieves the full list of product categories available in the store.")]
-        [ProducesResponseType(typeof(IEnumerable<CategoryDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAll() => Ok(await _categories.GetAllAsync());
-
-        [HttpGet("{id:int}")]
-        [EndpointSummary("Get category details")]
-        [EndpointDescription("Retrieves a specific category by its unique ID.")]
-        [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetById([FromRoute] int id) => Ok(await _categories.GetByIdAsync(id));
-
-        [HttpPost]
+        [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
-        [EndpointSummary("Create category")]
-        [EndpointDescription("Creates a new product category. Restricted to Administrators.")]
-        [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
+        [EndpointSummary("Get all categories with paging and search support.")]
+        [ProducesResponseType(typeof(PagedResponseDto<AdminCategoryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
+        public async Task<IActionResult> GetAllCategoriesAdmin([FromQuery] AdminCategorySpecParams specParams)
         {
-            var createdCategory = await _categories.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = createdCategory.Id }, createdCategory);
+            var result = await _categories.GetAllCategoriesAdminAsync(specParams);
+            return Ok(result);
         }
 
-        [HttpPut("{id:int}")]
+        [HttpGet("admin/{categoryId:int}")]
         [Authorize(Roles = "Admin")]
-        [EndpointSummary("Update category")]
-        [EndpointDescription("Updates an existing category's details. Restricted to Administrators.")]
-        [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
+        [EndpointSummary("Get category details.")]
+        [ProducesResponseType(typeof(AdminCategoryDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetCategoryDetailsAdmin([FromRoute] int categoryId)
+        {
+            var category = await _categories.GetCategoryAdminAsync(categoryId);
+            return Ok(category);
+        }
+
+        [HttpPost("admin")]
+        [Authorize(Roles = "Admin")]
+        [EndpointSummary("Create new category.")]
+        [ProducesResponseType(typeof(AdminCategoryDetailsDto), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateCategoryDto dto)
+        public async Task<IActionResult> CreateCategoryAdmin([FromBody] AdminCreateCategoryDto dto)
         {
-            var updatedCategory = await _categories.UpdateAsync(id, dto);
-            return Ok(updatedCategory);
+            var categoryCreated = await _categories.CreateCategoryAdminAsync(dto);
+            return CreatedAtAction(nameof(GetCategoryDetailsAdmin), new { categoryCreated.Id }, categoryCreated);
         }
 
-        [HttpDelete("{id:int}")]
+
+        [HttpPut("admin/{categoryId:int}")]
         [Authorize(Roles = "Admin")]
-        [EndpointSummary("Delete category")]
-        [EndpointDescription("Permanently removes a category. Fails with 409 Conflict if products are linked to this category. Restricted to Administrators.")]
+        [EndpointSummary("Update existing cateogry with its children.")]
+        [ProducesResponseType(typeof(AdminCategoryDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateCategoryAdmin([FromRoute] int categoryId, [FromBody] AdminUpdateCategoryDto dto)
+        {
+            var categoryUpdated = await _categories.UpdateCategoryAdminAsync(categoryId, dto);
+            return Ok(categoryUpdated);
+        }
+
+        [HttpDelete("admin/{categoryId:int}")]
+        [Authorize(Roles = "Admin")]
+        [EndpointSummary("Deletes a category if no product nor subcategories are referencing it.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> DeleteCategoryAdmin([FromRoute] int categoryId)
         {
-            await _categories.DeleteAsync(id);
+            await _categories.DeleteCategoryAdminAsync(categoryId);
             return NoContent();
+        }
+
+        [HttpGet]
+        [EndpointSummary("Get all categories nested tree hierarchy.")]
+        [ProducesResponseType(typeof(List<CategoryDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllCateories()
+        {
+            var categoriesTree = await _categories.GetAllCategories();
+            return Ok(categoriesTree);
         }
     }
 }

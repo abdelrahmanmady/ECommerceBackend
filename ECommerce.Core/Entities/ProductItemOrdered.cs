@@ -6,7 +6,7 @@ namespace ECommerce.Core.Entities
     public class ProductItemOrdered
     {
         public int ProductId { get; set; }
-        public string ProductName { get; set; } = string.Empty;
-        public string? PictureUrl { get; set; }
+        public string ProductName { get; set; } = null!;
+        public string PictureUrl { get; set; } = null!;
     }
 }
