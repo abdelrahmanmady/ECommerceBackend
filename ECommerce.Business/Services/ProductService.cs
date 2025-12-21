@@ -174,10 +174,10 @@ namespace ECommerce.Business.Services
             //show in stock products only.
             query = query.Where(p => p.StockQuantity > 0);
 
-            //Filter with Category
-            if (specParams.BrandId.HasValue)
+            //Filter with Brands
+            if (specParams.BrandIds.Count > 0)
             {
-                query = query.Where(p => p.BrandId == specParams.BrandId);
+                query = query.Where(p => specParams.BrandIds.Contains(p.BrandId));
             }
 
             //Filter with Category

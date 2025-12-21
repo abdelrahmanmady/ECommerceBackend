@@ -1,10 +1,28 @@
-﻿namespace ECommerce.Core.Specifications.Products
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ECommerce.Core.Specifications.Products
 {
     public class ProductSpecParams
     {
 
         //Filter Params
-        public int? BrandId { get; set; }
+        public List<int> BrandIds = [];
+
+        [DataType(DataType.Text)]
+        public string? Brands
+        {
+            get => string.Join(",", BrandIds);
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    BrandIds = value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(int.Parse)
+                                    .ToList();
+                }
+            }
+        }
+
         public int? CategoryId { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
