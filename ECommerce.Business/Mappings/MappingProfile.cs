@@ -51,35 +51,33 @@ namespace ECommerce.Business.Mappings
 
             //Product Mapping
             CreateMap<Product, AdminProductDto>()
-                .ForMember(dest => dest.ThumbnailUrl,
-                opt => opt.MapFrom(src => src.Images
-                                                                .Where(pi => pi.IsMain)
-                                                                .Select(pi => pi.ImageUrl)
-                                                                .FirstOrDefault()))
-                .ForMember(dest => dest.CategoryName,
-                opt => opt.MapFrom(src => src.Category.Name))
-                .ForMember(dest => dest.BrandName,
-                opt => opt.MapFrom(src => src.Brand.Name))
-                .ForMember(dest => dest.InStock,
-                opt => opt.MapFrom(src => src.StockQuantity > 0));
+                .ForMember(d => d.ThumbnailUrl,
+                o => o.MapFrom(s => s.Images
+                                                            .Where(pi => pi.IsMain)
+                                                            .Select(pi => pi.ImageUrl)
+                                                            .FirstOrDefault()))
+                .ForMember(d => d.CategoryName,
+                o => o.MapFrom(s => s.Category.Name))
+                .ForMember(d => d.BrandName,
+                o => o.MapFrom(s => s.Brand.Name))
+                .ForMember(d => d.InStock,
+                o => o.MapFrom(s => s.StockQuantity > 0));
             CreateMap<Product, AdminProductDetailsDto>();
             CreateMap<AdminCreateProductDto, Product>();
             CreateMap<AdminUpdateProductDto, Product>();
             CreateMap<Product, ProductDto>()
-                .ForMember(dest => dest.ThumbnailUrl,
-                opt => opt.MapFrom(src => src.Images
-                                                                .Where(pi => pi.IsMain)
-                                                                .Select(pi => pi.ImageUrl)
-                                                                .FirstOrDefault()))
-                .ForMember(dest => dest.CategoryBreadcrumb,
-                opt => opt.MapFrom(src => src.Category.HierarchyPath))
-                .ForMember(dest => dest.BrandedName,
-                opt => opt.MapFrom(src => src.Brand.Name + " " + src.Name));
+                .ForMember(d => d.ThumbnailUrl,
+                o => o.MapFrom(s => s.Images
+                                                            .Where(pi => pi.IsMain)
+                                                            .Select(pi => pi.ImageUrl)
+                                                            .FirstOrDefault()))
+                .ForMember(d => d.BrandedName,
+                o => o.MapFrom(s => s.Brand.Name + " " + s.Name));
             CreateMap<Product, ProductDetailsDto>()
-                .ForMember(dest => dest.BrandName,
-                opt => opt.MapFrom(src => src.Brand.Name))
-                .ForMember(dest => dest.CategoryName,
-                opt => opt.MapFrom(src => src.Category.Name));
+                .ForMember(d => d.BrandName,
+                o => o.MapFrom(s => s.Brand.Name))
+                .ForMember(d => d.CategoryName,
+                o => o.MapFrom(s => s.Category.Name));
 
             //ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();

@@ -166,7 +166,9 @@ namespace ECommerce.Business.Services
 
         public async Task<PagedResponseDto<ProductDto>> GetAllProductsAsync(ProductSpecParams specParams)
         {
-            var query = _context.Products.AsNoTracking().AsQueryable();
+            var query = _context.Products
+                .AsNoTracking()
+                .AsQueryable();
 
             //Filter
             //show in stock products only.
@@ -226,6 +228,33 @@ namespace ECommerce.Business.Services
                 .Take(specParams.PageSize)
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+
+            var categories = await _context.Categories
+                .AsNoTracking()
+                .Select(c => new { c.Id, c.Name, c.ParentId })
+                .ToDictionaryAsync(c => c.Id);
+
+            foreach (var item in items)
+            {
+                int? currentCategoryId = item.CategoryId;
+
+                while (currentCategoryId.HasValue)
+                {
+                    var categoryExists = categories.TryGetValue(currentCategoryId.Value, out var category);
+
+                    if (categoryExists && category != null)
+                    {
+                        item.CategoryBreadcrumbLinks.Add(new BreadcrumbLink
+                        {
+                            Id = category.Id,
+                            Name = category.Name,
+                        });
+                    }
+
+                    currentCategoryId = category?.ParentId;
+                }
+                item.CategoryBreadcrumbLinks.Reverse();
+            }
 
             return new PagedResponseDto<ProductDto>
             {
