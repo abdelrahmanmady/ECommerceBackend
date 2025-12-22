@@ -237,6 +237,11 @@ namespace ECommerce.Data.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<decimal>("ShippingFees")
                         .HasColumnType("DECIMAL(18,2)");
 

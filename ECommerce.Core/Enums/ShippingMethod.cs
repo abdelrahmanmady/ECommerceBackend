@@ -2,6 +2,7 @@
 {
     public enum ShippingMethod
     {
-        Standard, Express
+        Standard,
+        Express
     }
 }

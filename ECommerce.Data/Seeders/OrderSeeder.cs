@@ -47,6 +47,9 @@ namespace ECommerce.Data.Seeders
             var createdDate = faker.Date.Past(3);
 
             var shippingMethod = faker.PickRandom<ShippingMethod>();
+
+            var paymentMethod = faker.PickRandom<PaymentMethod>();
+
             decimal shippingFees = shippingMethod == ShippingMethod.Express ? 250m : 150m;
 
             var shippingAddress = new OrderAddress
@@ -92,6 +95,7 @@ namespace ECommerce.Data.Seeders
                 Updated = createdDate,
                 Status = status,
                 ShippingMethod = shippingMethod,
+                PaymentMethod = paymentMethod,
                 ShippingAddress = shippingAddress,
                 Subtotal = subtotal,
                 ShippingFees = shippingFees,

@@ -1,7 +1,6 @@
 ﻿using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.DTOs.Orders.Admin;
 using ECommerce.Business.DTOs.Orders.Profile;
-using ECommerce.Business.DTOs.Orders.Store;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Specifications.Orders;
@@ -75,18 +74,5 @@ namespace ECommerce.API.Controllers
         public async Task<IActionResult> GetAllOrders([FromQuery] OrderSpecParams specParams)
             => Ok(await _orders.GetAllOrdersAsync(specParams));
 
-        [HttpPost("checkout")]
-        [EndpointSummary("Checkout Cart")]
-        [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
-
-        public async Task<IActionResult> Checkout([FromBody] CheckoutDto dto)
-        {
-            var createdOrder = await _orders.CheckoutAsync(dto);
-            return StatusCode(StatusCodes.Status201Created, createdOrder);
-        }
     }
 }

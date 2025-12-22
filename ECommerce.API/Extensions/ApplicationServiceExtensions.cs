@@ -52,6 +52,7 @@ namespace ECommerce.API.Extensions
             services.AddScoped<IAddressService, AddressService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IFileStorageService, LocalFileStorageService>();
+            services.AddScoped<ICheckoutService, CheckoutService>();
 
             // Add CORS
             services.AddCors(options =>

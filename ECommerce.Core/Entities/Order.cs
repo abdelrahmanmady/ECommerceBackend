@@ -13,6 +13,7 @@ namespace ECommerce.Core.Entities
         public decimal Taxes { get; set; }
         public decimal TotalAmount { get; set; }
         public ShippingMethod ShippingMethod { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
         public OrderAddress ShippingAddress { get; set; } = null!;
 
         //one to many relation with OrderItems

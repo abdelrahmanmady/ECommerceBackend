@@ -13,6 +13,7 @@ namespace ECommerce.Business.DTOs.Orders.Profile
         public OrderStatus Status { get; set; }
         public decimal TotalAmount { get; set; }
         public ShippingMethod ShippingMethod { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
         public decimal Subtotal { get; set; }
         public decimal ShippingFees { get; set; }
         public decimal Taxes { get; set; }

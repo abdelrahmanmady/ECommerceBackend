@@ -28,6 +28,10 @@ namespace ECommerce.Data.Config
                 .HasConversion<string>()
                 .HasMaxLength(50);
 
+            builder.Property(o => o.PaymentMethod)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
             //configure owned type (snapshot)
             builder.OwnsOne(o => o.ShippingAddress, sa =>
             {

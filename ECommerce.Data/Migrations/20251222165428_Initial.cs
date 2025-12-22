@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -236,6 +237,7 @@ namespace ECommerce.Data.Migrations
                     Taxes = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     ShippingMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PaymentMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ShippingStreet = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
                     ShippingCity = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
                     ShippingState = table.Column<string>(type: "NVARCHAR(100)", nullable: false),

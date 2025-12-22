@@ -2,7 +2,6 @@
 using AutoMapper.QueryableExtensions;
 using ECommerce.Business.DTOs.Orders.Admin;
 using ECommerce.Business.DTOs.Orders.Profile;
-using ECommerce.Business.DTOs.Orders.Store;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
@@ -21,15 +20,13 @@ namespace ECommerce.Business.Services
         AppDbContext context,
         IMapper mapper,
         ILogger<OrderService> logger,
-        IHttpContextAccessor httpContext
-        ) : IOrderService
+        IHttpContextAccessor httpContext) : IOrderService
     {
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<OrderService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-        #region Admin Dashboard
         public async Task<PagedResponseDto<AdminOrderDto>> GetAllOrdersAdminAsync(AdminOrderSpecParams specParams)
         {
             var query = _context.Orders.AsNoTracking().Include(o => o.User).AsQueryable();
@@ -185,10 +182,6 @@ namespace ECommerce.Business.Services
                 _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
         }
 
-        #endregion
-
-        #region Customer
-
         public async Task<PagedResponseDto<OrderDto>> GetAllOrdersAsync(OrderSpecParams specParams)
         {
             var currentUserId = GetCurrentUserId();
@@ -229,81 +222,6 @@ namespace ECommerce.Business.Services
 
         }
 
-        public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
-        {
-            //get current user
-            var currentUserId = GetCurrentUserId();
-
-            // get User's Cart (Include Product info for Price/Stock validation)
-            var cart = await _context.ShoppingCarts
-                .Include(c => c.Items)
-                .ThenInclude(ci => ci.Product)
-                    .ThenInclude(p => p.Images)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
-
-            if (cart == null || cart.Items.Count == 0)
-                throw new BadRequestException("Cannot checkout. Your cart is empty.");
-
-            //get shipping address of user
-            var shippingAddress = await _context.Addresses
-                .AsNoTracking()
-                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
-                .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync()
-                ?? throw new NotFoundException("Shipping Address not found.");
-
-            //create order
-            var orderToCreate = new Order
-            {
-                UserId = currentUserId,
-                Status = OrderStatus.Pending,
-                ShippingFees = dto.ShippingMethod switch
-                {
-                    ShippingMethod.Standard => 150,
-                    ShippingMethod.Express => 250,
-                    _ => 150
-                },
-                ShippingMethod = dto.ShippingMethod,
-                ShippingAddress = shippingAddress,
-                Items = [],
-                OrderTrackingMilestones = []
-            };
-            //Loop over the cart items => validate stock => add them to order
-            foreach (var cartItem in cart.Items)
-            {
-                //product stock check
-                if (cartItem.Quantity > cartItem.Product.StockQuantity)
-                    throw new BadRequestException($"Not enough stock for {cartItem.Product.Name}. Available: {cartItem.Product.StockQuantity}");
-                cartItem.Product.StockQuantity -= cartItem.Quantity;
-
-                orderToCreate.Items.Add(_mapper.Map<OrderItem>(cartItem));
-            }
-            orderToCreate.OrderTrackingMilestones.Add(new OrderTrackingMilestone
-            {
-                Status = OrderStatus.Pending,
-            });
-            orderToCreate.Subtotal = orderToCreate.Items.Sum(i => i.TotalPrice);
-            orderToCreate.Taxes = 0.14m * orderToCreate.Subtotal;
-            orderToCreate.TotalAmount = orderToCreate.Subtotal + orderToCreate.ShippingFees + orderToCreate.Taxes;
-
-            _context.Orders.Add(orderToCreate);
-            _context.CartItems.RemoveRange(cart.Items);
-            cart.LastUpdated = DateTime.UtcNow;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw new ConflictException("Stock changed during checkout. Please try again.");
-            }
-
-            return _mapper.Map<OrderDto>(orderToCreate);
-
-        }
-
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -313,8 +231,5 @@ namespace ECommerce.Business.Services
 
             return userId;
         }
-
-        #endregion  
-
     }
 }
