@@ -82,6 +82,19 @@ namespace ECommerce.Business.Mappings
             //ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
 
+            //ShoppingCart Mapping
+            CreateMap<ShoppingCart, ShoppingCartDto>();
+            CreateMap<CartItem, CartItemDto>()
+                .ForMember(dest => dest.ProductThumbnailUrl,
+                opt => opt.MapFrom(src => src.Product.Images
+                                                                .Where(pi => pi.IsMain)
+                                                                .Select(pi => pi.ImageUrl)
+                                                                .FirstOrDefault()))
+                .ForMember(dest => dest.ProductName,
+                opt => opt.MapFrom(src => src.Product.Name))
+                .ForMember(dest => dest.ProductPrice,
+                opt => opt.MapFrom(src => src.Product.Price));
+
             //Order Mapping
             CreateMap<Order, AdminOrderDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName))
@@ -126,23 +139,6 @@ namespace ECommerce.Business.Mappings
             CreateMap<CreateAddressDto, Address>();
             CreateMap<UpdateAddressDto, Address>();
             CreateMap<Address, OrderAddress>();
-
-            //ShoppingCart Mapping
-            CreateMap<ShoppingCart, ShoppingCartDto>();
-            CreateMap<CartItem, CartItemDto>()
-                .ForMember(dest => dest.ThumbnailUrl,
-                opt => opt.MapFrom(src => src.Product.Images
-                                                                .Where(pi => pi.IsMain)
-                                                                .Select(pi => pi.ImageUrl)
-                                                                .FirstOrDefault()))
-                .ForMember(dest => dest.BrandedName,
-                opt => opt.MapFrom(src => src.Product.Brand.Name + " " + src.Product.Name))
-                .ForMember(dest => dest.CategoryName,
-                opt => opt.MapFrom(src => src.Product.Category.Name))
-                .ForMember(dest => dest.Price,
-                opt => opt.MapFrom(src => src.Product.Price));
-
-
 
             //Checkout Mapping
             CreateMap<CartItem, OrderItem>()
