@@ -9,13 +9,13 @@ namespace ECommerce.Data.Config
         public void Configure(EntityTypeBuilder<Product> builder)
         {
             builder.Property(p => p.Name)
-                .HasColumnType("NVARCHAR(100)");
+                .HasMaxLength(200);
 
             builder.Property(p => p.Description)
-                .HasColumnType("NVARCHAR(1000)");
+                .HasMaxLength(1000);
 
             builder.Property(p => p.Price)
-                .HasColumnType("DECIMAL(18,2)");
+                .HasPrecision(18, 2);
 
             builder.Property(p => p.Version)
                 .IsRowVersion();
@@ -26,20 +26,13 @@ namespace ECommerce.Data.Config
             builder.HasMany(p => p.Images)
                 .WithOne(i => i.Product)
                 .HasForeignKey(i => i.ProductId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            //one to many Relationship with OrderItem
-            builder.HasMany(p => p.OrderItems)
-                .WithOne(oi => oi.Product)
-                .HasForeignKey(oi => oi.ProductId)
-                .OnDelete(DeleteBehavior.Restrict)
-                .IsRequired(false);
+                .OnDelete(DeleteBehavior.Restrict);
 
             //one to many relation with CartItems
             builder.HasMany(p => p.CartItems)
                 .WithOne(ci => ci.Product)
                 .HasForeignKey(ci => ci.ProductId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

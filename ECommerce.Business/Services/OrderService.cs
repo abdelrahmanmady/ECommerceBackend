@@ -93,8 +93,6 @@ namespace ECommerce.Business.Services
             var orderToUpdate = await _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
-                .AsSplitQuery()
                 .FirstOrDefaultAsync(o => o.Id == orderId)
                 ?? throw new NotFoundException("Order does not exist.");
 
@@ -102,7 +100,7 @@ namespace ECommerce.Business.Services
             var oldStatus = orderToUpdate.Status;
 
             //FastExit if status is same and no addressId sent
-            if (orderToUpdate.Status == dto.Status && dto.AddressId is null)
+            if (orderToUpdate.Status == dto.Status && dto.ShippingAddressId is null)
             {
                 return _mapper.Map<AdminOrderDetailsDto>(orderToUpdate);
             }
@@ -125,10 +123,14 @@ namespace ECommerce.Business.Services
                 //if order is pending or processing and new status is canceled => retrieve stock
                 if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.Status == OrderStatus.Cancelled)
                 {
+                    var productsIds = orderToUpdate.Items.Select(i => i.OrderedProduct.Id).Distinct().ToList();
+                    var productsDict = await _context.Products.Where(p => productsIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+
                     foreach (var item in orderToUpdate.Items)
                     {
-                        if (item.Product is not null)
-                            item.Product.StockQuantity += item.Quantity;
+                        var productExists = productsDict.TryGetValue(item.OrderedProduct.Id, out var product);
+                        if (productExists && product is not null)
+                            product.StockQuantity += item.Quantity;
                     }
                     changes.Add("Inventory restocked");
                 }
@@ -143,21 +145,18 @@ namespace ECommerce.Business.Services
             }
 
             //update address if order status is pending or processing & new addressid is not null
-            if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.AddressId is not null)
+            if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.ShippingAddressId is not null)
             {
-                var address = await _context.Addresses
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(a => a.Id == dto.AddressId && a.UserId == orderToUpdate.UserId)
-                    ?? throw new NotFoundException("Address does not exist or belongs to another user.");
-                orderToUpdate.ShippingAddress = new OrderAddress
-                {
-                    Street = address.Street,
-                    City = address.City,
-                    State = address.State,
-                    PostalCode = address.PostalCode,
-                    Country = address.Country
-                };
-                changes.Add($"Shipping Address updated (Source ID: {dto.AddressId})");
+                var shippingAddress = await _context.Addresses
+                .AsNoTracking()
+                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == orderToUpdate.UserId)
+                .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Shipping Address not found or belongs to another user.");
+
+                orderToUpdate.ShippingAddress = shippingAddress;
+
+                changes.Add($"Shipping Address updated (Source ID: {dto.ShippingAddressId})");
             }
             var changesWrittenToDB = await _context.SaveChangesAsync();
             if (_logger.IsEnabled(LogLevel.Information) && changes.Count > 0 && changesWrittenToDB > 0)

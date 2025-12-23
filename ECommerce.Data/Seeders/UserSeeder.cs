@@ -27,6 +27,7 @@ namespace ECommerce.Data.Seeders
 
                 foreach (var user in fakeUsers)
                 {
+                    user.Addresses.FirstOrDefault()!.IsDefault = true;
                     await userManager.CreateAsync(user, "Pa$$w0rd");
                     await userManager.AddToRoleAsync(user, "Customer");
                 }

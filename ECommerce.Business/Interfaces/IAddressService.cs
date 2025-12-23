@@ -4,10 +4,10 @@ namespace ECommerce.Business.Interfaces
 {
     public interface IAddressService
     {
-        Task<IEnumerable<AddressDto>> GetAllAsync(string? userId = null);
-        Task<AddressDto> GetByIdAsync(int id);
-        Task<AddressDto> CreateAsync(CreateAddressDto dto);
-        Task<AddressDto> UpdateAsync(int id, UpdateAddressDto dto);
-        Task DeleteAsync(int id);
+        Task<IEnumerable<AddressDto>> GetAllAddressesAsync();
+        Task<AddressDto> CreateAddressAsync(CreateAddressDto dto);
+        Task<AddressDto> UpdateAddressAsync(int addressId, UpdateAddressDto dto);
+        Task<IEnumerable<AddressDto>> SetDefaultAsync(int addressId);
+        Task DeleteAddressAsync(int addressId);
     }
 }

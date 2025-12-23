@@ -8,6 +8,9 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<ApplicationUser> builder)
         {
+            builder.Property(u => u.FirstName).HasMaxLength(50);
+            builder.Property(u => u.LastName).HasMaxLength(50);
+
             //one to many relation with orders
             builder.HasMany(u => u.Orders)
                 .WithOne(o => o.User)

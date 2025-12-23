@@ -16,12 +16,12 @@ namespace ECommerce.Core.Entities
         public PaymentMethod PaymentMethod { get; set; }
         public OrderAddress ShippingAddress { get; set; } = null!;
 
-        //one to many relation with OrderItems
-        public virtual ICollection<OrderItem> Items { get; set; } = [];
-
         //many to one relation with User
         public string UserId { get; set; } = null!;
         public virtual ApplicationUser User { get; set; } = null!;
+
+        //one to many relation with OrderItems
+        public virtual ICollection<OrderItem> Items { get; set; } = [];
 
         //one to many relation with OrderTrackingMilestones
         public virtual ICollection<OrderTrackingMilestone> OrderTrackingMilestones { get; set; } = [];

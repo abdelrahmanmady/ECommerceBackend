@@ -32,15 +32,22 @@ namespace ECommerce.Data.Config
                 .HasConversion<string>()
                 .HasMaxLength(50);
 
-            //configure owned type (snapshot)
-            builder.OwnsOne(o => o.ShippingAddress, sa =>
+            //Shipping Address Snapshot
+            builder.OwnsOne(o => o.ShippingAddress, a =>
             {
-                sa.WithOwner();
-                sa.Property(sa => sa.Street).HasColumnName("ShippingStreet").HasColumnType("NVARCHAR(100)");
-                sa.Property(sa => sa.City).HasColumnName("ShippingCity").HasColumnType("NVARCHAR(100)");
-                sa.Property(sa => sa.State).HasColumnName("ShippingState").HasColumnType("NVARCHAR(100)");
-                sa.Property(sa => sa.PostalCode).HasColumnName("ShippingPostalCode").HasColumnType("NVARCHAR(100)");
-                sa.Property(sa => sa.Country).HasColumnName("ShippingCountry").HasColumnType("NVARCHAR(100)");
+                a.WithOwner();
+                a.Property(a => a.FullName).HasMaxLength(50);
+                a.Property(a => a.MobileNumber).HasColumnType("VARCHAR").HasMaxLength(15);
+                a.Property(a => a.Street).HasMaxLength(60);
+                a.Property(a => a.Building).HasMaxLength(50);
+                a.Property(a => a.City).HasMaxLength(50);
+                a.Property(a => a.District).HasMaxLength(50);
+                a.Property(a => a.Governorate).HasMaxLength(50);
+                a.Property(a => a.Country).HasMaxLength(100);
+                a.Property(a => a.ZipCode).HasMaxLength(50);
+                a.Property(a => a.Hints).HasMaxLength(100);
+                a.Property(a => a.Title).HasMaxLength(50);
+
             });
 
             //one to many relation with OrderItems

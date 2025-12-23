@@ -109,7 +109,7 @@ namespace ECommerce.Business.Services
             return _mapper.Map<OrderDto>(orderToCreate);
         }
 
-
+        //Helper Methods
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -171,6 +171,7 @@ namespace ECommerce.Business.Services
             return new OrderCalculations(subtotal, shippingFees, taxes, total);
         }
 
+        //Helper Records
         private record OrderCalculations(decimal Subtotal, decimal ShippingFees, decimal Taxes, decimal Total);
 
 

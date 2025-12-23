@@ -30,8 +30,8 @@ namespace ECommerce.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -120,11 +120,20 @@ namespace ECommerce.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Street = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    City = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    State = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    PostalCode = table.Column<string>(type: "NVARCHAR(100)", nullable: true),
-                    Country = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    MobileNumber = table.Column<string>(type: "VARCHAR(15)", maxLength: 15, nullable: false),
+                    Street = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    Building = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    District = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Governorate = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ZipCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Hints = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -238,11 +247,18 @@ namespace ECommerce.Data.Migrations
                     TotalAmount = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     ShippingMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     PaymentMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ShippingStreet = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    ShippingCity = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    ShippingState = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    ShippingPostalCode = table.Column<string>(type: "NVARCHAR(100)", nullable: true),
-                    ShippingCountry = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
+                    ShippingAddress_Id = table.Column<int>(type: "int", nullable: false),
+                    ShippingAddress_FullName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ShippingAddress_MobileNumber = table.Column<string>(type: "VARCHAR(15)", maxLength: 15, nullable: false),
+                    ShippingAddress_Street = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    ShippingAddress_Building = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ShippingAddress_City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ShippingAddress_District = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ShippingAddress_Governorate = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ShippingAddress_Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ShippingAddress_ZipCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    ShippingAddress_Hints = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ShippingAddress_Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -305,9 +321,9 @@ namespace ECommerce.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "NVARCHAR(100)", nullable: false),
-                    Description = table.Column<string>(type: "NVARCHAR(1000)", nullable: true),
-                    Price = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     StockQuantity = table.Column<int>(type: "int", nullable: false),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false),
@@ -331,6 +347,31 @@ namespace ECommerce.Data.Migrations
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderedProduct_Id = table.Column<int>(type: "int", nullable: false),
+                    OrderedProduct_Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    OrderedProduct_Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    OrderedProduct_Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    OrderedProduct_ThumbnailUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -372,44 +413,13 @@ namespace ECommerce.Data.Migrations
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_CartItems_ShoppingCarts_ShoppingCartId",
                         column: x => x.ShoppingCartId,
                         principalTable: "ShoppingCarts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrderItems",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    OrderedProductId = table.Column<int>(type: "int", nullable: false),
-                    OrderedProductName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    OrderedProductThumbnailUrl = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
-                    OrderId = table.Column<int>(type: "int", nullable: false),
-                    ProductId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderItems_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_OrderItems_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -430,13 +440,15 @@ namespace ECommerce.Data.Migrations
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Addresses_UserId",
                 table: "Addresses",
-                column: "UserId");
+                column: "UserId",
+                unique: true,
+                filter: "[IsDefault] = 1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -496,11 +508,6 @@ namespace ECommerce.Data.Migrations
                 name: "IX_OrderItems_OrderId",
                 table: "OrderItems",
                 column: "OrderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrderItems_ProductId",
-                table: "OrderItems",
-                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserId",

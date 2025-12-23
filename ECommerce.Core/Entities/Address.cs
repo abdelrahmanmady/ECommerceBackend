@@ -3,11 +3,24 @@
     public class Address
     {
         public int Id { get; set; }
+        public bool IsDefault { get; set; }
+
+        //Personal Info
+        public string FullName { get; set; } = null!;
+        public string MobileNumber { get; set; } = null!;
+
+        //Address Info
         public string Street { get; set; } = null!;
+        public string Building { get; set; } = null!;
         public string City { get; set; } = null!;
-        public string State { get; set; } = null!;
-        public string? PostalCode { get; set; }
+        public string District { get; set; } = null!;
+        public string Governorate { get; set; } = null!;
         public string Country { get; set; } = null!;
+        public string? ZipCode { get; set; } = null!;
+        public string? Hints { get; set; }
+        public string Title { get; set; } = null!;
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public DateTime Updated { get; set; } = DateTime.UtcNow;
 
         //many to one relation with user
         public string UserId { get; set; } = null!;

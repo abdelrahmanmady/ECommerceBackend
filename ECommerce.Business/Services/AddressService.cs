@@ -22,105 +22,114 @@ namespace ECommerce.Business.Services
         private readonly ILogger<BrandService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-        //Admin
-        //1. userId null => return all saved addresses for all users as IEnumerable<AddressWithUserDto>
-        //2. userId not null => return all saved addresses for user with id = userId as IEnumerable<AddressDto>
-
-        //Not Admin (Customer)
-        // userId null or not => return all saved addresses for current logged in user as IEnumerable<AddressDto>
-
-        public async Task<IEnumerable<AddressDto>> GetAllAsync(string? userId = null)
+        public async Task<IEnumerable<AddressDto>> GetAllAddressesAsync()
         {
             var currentUserId = GetCurrentUserId();
 
-            var query = _context.Addresses.AsNoTracking().AsQueryable();
-
-            if (!IsAdmin())
-            {
-                query = query.Where(a => a.UserId == currentUserId);
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    query = query.Where(a => a.UserId == userId);
-                }
-            }
-
-            if (IsAdmin() && string.IsNullOrEmpty(userId))
-                return await query
-                    .ProjectTo<AddressWithUserDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
-            else
-                return await query
-                    .ProjectTo<AddressDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
-
-        }
-
-        public async Task<AddressDto> GetByIdAsync(int id)
-        {
-            var currentUserId = GetCurrentUserId();
-
-            var address = await _context.Addresses
+            var addresses = await _context.Addresses
                 .AsNoTracking()
-                .Where(a => (IsAdmin() || a.UserId == currentUserId) && a.Id == id)
+                .Where(a => a.UserId == currentUserId)
+                .OrderByDescending(a => a.Updated)
                 .ProjectTo<AddressDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync()
-                ?? throw new NotFoundException("Address does not exist.");
-            return address;
+                .ToListAsync();
+            return addresses;
         }
 
-        public async Task<AddressDto> CreateAsync(CreateAddressDto dto)
+        public async Task<AddressDto> CreateAddressAsync(CreateAddressDto dto)
         {
             var currentUserId = GetCurrentUserId();
 
             var addressToCreate = _mapper.Map<Address>(dto);
             addressToCreate.UserId = currentUserId;
+            addressToCreate.District ??= addressToCreate.City;
+            addressToCreate.Governorate ??= addressToCreate.City;
+            addressToCreate.Title ??= "No Title";
+            addressToCreate.Created = DateTime.UtcNow;
+            addressToCreate.Updated = DateTime.UtcNow;
 
             _context.Addresses.Add(addressToCreate);
             await _context.SaveChangesAsync();
 
-            if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Information))
-                _logger.LogInformation("Address created with id = {id} for user {userId}", addressToCreate.Id, addressToCreate.UserId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("User {currentUserId} added new address with id = {adddressToCreateId}", currentUserId, addressToCreate.Id);
+
             return _mapper.Map<AddressDto>(addressToCreate);
+
         }
 
-        public async Task<AddressDto> UpdateAsync(int id, UpdateAddressDto dto)
+        public async Task<AddressDto> UpdateAddressAsync(int addressId, UpdateAddressDto dto)
         {
             var currentUserId = GetCurrentUserId();
 
-            var addressToUpdate = await _context.Addresses.
-                FirstOrDefaultAsync(a => a.Id == id && a.UserId == currentUserId)
-                ?? throw new NotFoundException("Address does not exist.");
+            var addressToUpdate = await _context.Addresses
+                .Where(a => a.Id == addressId && a.UserId == currentUserId)
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Address does not exist or does not belong to current user.");
 
             _mapper.Map(dto, addressToUpdate);
+            addressToUpdate.District ??= addressToUpdate.City;
+            addressToUpdate.Governorate ??= addressToUpdate.City;
+            addressToUpdate.Title ??= "No Title";
+            addressToUpdate.Updated = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-
-            if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Information))
-                _logger.LogInformation("updated with id = {id} for user {userId}", addressToUpdate.Id, addressToUpdate.UserId);
-
-            return _mapper.Map<AddressDto>(addressToUpdate);
-
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var currentUserId = GetCurrentUserId();
-
-            var addressToDelete = await _context.Addresses.
-                FirstOrDefaultAsync(a => a.Id == id && (IsAdmin() || a.UserId == currentUserId))
-                ?? throw new NotFoundException("Address does not exist.");
-
-            _context.Addresses.Remove(addressToDelete);
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Address deleted with id = {id}", id);
+                _logger.LogInformation("User {currentUserId} updated his existing address with id = {adddressToCreateId}", currentUserId, addressToUpdate.Id);
+
+            return _mapper.Map<AddressDto>(addressToUpdate);
         }
 
+        public async Task<IEnumerable<AddressDto>> SetDefaultAsync(int addressId)
+        {
+            var currentUserId = GetCurrentUserId();
 
+            var savedAddresses = await _context.Addresses.Where(a => a.UserId == currentUserId).ToListAsync();
+
+            var addressToMarkDefault = savedAddresses.Where(a => a.Id == addressId).FirstOrDefault()
+                ?? throw new NotFoundException("Address does not exist or does not belong to current user.");
+
+
+            if (!addressToMarkDefault.IsDefault)
+            {
+                var currentDefaultAddress = savedAddresses
+                    .Where(a => a.IsDefault == true)
+                    .FirstOrDefault();
+
+                if (currentDefaultAddress is not null)
+                    currentDefaultAddress.IsDefault = false;
+
+                addressToMarkDefault.IsDefault = true;
+
+                await _context.SaveChangesAsync();
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("User {currentUserId} changed his default address from address : {currentDefaultAddressId} to address : {addressToMarkDefaultId}", currentUserId, currentDefaultAddress?.Id, addressToMarkDefault.Id);
+            }
+
+            return _mapper.Map<IEnumerable<AddressDto>>(savedAddresses);
+
+        }
+
+        public async Task DeleteAddressAsync(int addressId)
+        {
+            var currentUserId = GetCurrentUserId();
+            var addressToDelete = await _context.Addresses
+                .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == currentUserId)
+                ?? throw new NotFoundException("Address does not exist or does not belong to current user.");
+
+            if (addressToDelete.IsDefault)
+                throw new ConflictException("Cannot delete the default address, set another to default first.");
+
+            _context.Addresses.Remove(addressToDelete);
+
+            await _context.SaveChangesAsync();
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("User {currentUserId} removed his saved address with id = {addressToDelteId}", currentUserId, addressToDelete.Id);
+        }
+
+        //Helper Methods
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -130,8 +139,5 @@ namespace ECommerce.Business.Services
 
             return userId;
         }
-
-        private bool IsAdmin() => _httpContext?.HttpContext?.User.IsInRole("Admin") ?? false;
-
     }
 }

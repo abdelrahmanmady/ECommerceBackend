@@ -12,8 +12,7 @@ namespace ECommerce.Data.Seeders.Fakers
                 .RuleFor(u => u.LastName, f => f.Name.LastName())
                 .RuleFor(u => u.UserName, (f, u) => f.Internet.UserName(u.FirstName, u.LastName))
                 .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.FirstName, u.LastName, "test.com"))
-                .RuleFor(u => u.PhoneNumber, f => f.Phone.PhoneNumber("+20 ##########"))
-                // Generate 1 address for every user automatically
+                .RuleFor(u => u.PhoneNumber, f => f.Phone.PhoneNumber("##########"))
                 .RuleFor(u => u.Addresses, _ => AddressFaker.GetAddress().Generate(3));
         }
     }

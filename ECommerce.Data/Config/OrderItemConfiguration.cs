@@ -8,14 +8,17 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<OrderItem> builder)
         {
-            builder.Property(oi => oi.UnitPrice)
-                .HasColumnType("DECIMAL(18,2)");
-            builder.OwnsOne(oi => oi.ProductOrdered, po =>
+
+            builder.OwnsOne(oi => oi.OrderedProduct, p =>
             {
-                po.WithOwner();
-                po.Property(po => po.ProductId).HasColumnName("OrderedProductId");
-                po.Property(po => po.ProductName).HasColumnName("OrderedProductName").HasMaxLength(100);
-                po.Property(po => po.PictureUrl).HasColumnName("OrderedProductThumbnailUrl").HasMaxLength(2000);
+                p.WithOwner();
+                p.Property(p => p.Name)
+                .HasMaxLength(200);
+                p.Property(p => p.Description)
+                .HasMaxLength(1000);
+                p.Property(p => p.Price)
+                .HasPrecision(18, 2);
+
             });
         }
     }

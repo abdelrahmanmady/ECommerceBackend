@@ -14,7 +14,7 @@ namespace ECommerce.Data.Seeders
 
             // 1. UPDATE: Include Images so we can snapshot the PictureUrl
             var products = await context.Products
-                .Include(p => p.Images) // <--- CRITICAL for snapshotting
+                .Include(p => p.Images)
                 .ToListAsync();
 
             var customers = await userManager.GetUsersInRoleAsync("Customer");
@@ -52,13 +52,22 @@ namespace ECommerce.Data.Seeders
 
             decimal shippingFees = shippingMethod == ShippingMethod.Express ? 250m : 150m;
 
-            var shippingAddress = new OrderAddress
+            var address = faker.PickRandom(user.Addresses);
+            OrderAddress shippingAddress = new()
             {
-                Street = faker.Address.StreetAddress(),
-                City = faker.Address.City(),
-                State = faker.Address.State(),
-                PostalCode = faker.Address.ZipCode(),
-                Country = "Egypt"
+                Id = address.Id,
+                FullName = address.FullName,
+                MobileNumber = address.MobileNumber,
+                Street = address.Street,
+                Building = address.Building,
+                City = address.City,
+                District = address.District,
+                Governorate = address.Governorate,
+                Country = address.Country,
+                ZipCode = address.ZipCode,
+                Hints = address.Hints,
+                Title = address.Title
+
             };
 
             // --- C. Build Order Items (UPDATED) ---
@@ -67,24 +76,19 @@ namespace ECommerce.Data.Seeders
             {
                 orderItems.Add(new OrderItem
                 {
-                    // 1. The Link (For constraints/analytics)
-                    ProductId = p.Id,
-
-                    // 2. Transaction Data
-                    Quantity = faker.Random.Int(1, 3),
-                    UnitPrice = p.Price,
-
-                    // 3. THE SNAPSHOT (New Value Object)
-                    ProductOrdered = new ProductItemOrdered
+                    OrderedProduct = new OrderedProduct
                     {
-                        ProductId = p.Id, // Original ID
-                        ProductName = p.Name,
-                        PictureUrl = p.Images.FirstOrDefault(x => x.IsMain)?.ImageUrl
-                    }
+                        Id = p.Id,
+                        Name = p.Name,
+                        Description = p.Description,
+                        Price = p.Price,
+                        ThumbnailUrl = p.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).First()
+                    },
+                    Quantity = faker.Random.Int(1, 3)
                 });
             }
 
-            var subtotal = orderItems.Sum(i => i.UnitPrice * i.Quantity);
+            var subtotal = orderItems.Sum(i => i.TotalPrice);
             var taxes = subtotal * 0.14m;
             var totalAmount = subtotal + taxes + shippingFees;
 

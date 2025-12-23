@@ -8,11 +8,9 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<ProductImage> builder)
         {
-            builder.HasKey(pi => pi.Id);
 
             builder.Property(pi => pi.ImageUrl)
                 .HasColumnType("NVARCHAR(2000)");
-
 
             builder.HasIndex(pi => pi.ProductId)
                 .IsUnique()
