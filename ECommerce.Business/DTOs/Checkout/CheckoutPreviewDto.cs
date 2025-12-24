@@ -1,4 +1,4 @@
-﻿using ECommerce.Business.DTOs.ShoppingCart;
+﻿using ECommerce.Business.DTOs.OrderItems;
 
 namespace ECommerce.Business.DTOs.Checkout
 {
@@ -8,6 +8,8 @@ namespace ECommerce.Business.DTOs.Checkout
         public decimal ShippingFees { get; set; }
         public decimal Taxes { get; set; }
         public decimal Total { get; set; }
-        public IEnumerable<CartItemDto> Items { get; set; } = [];
+        public DateTime EstimatedDeliveryDateStart { get; set; }
+        public DateTime EstimatedDeliveryDateEnd { get; set; }
+        public IEnumerable<OrderItemDto> Items { get; set; } = [];
     }
 }

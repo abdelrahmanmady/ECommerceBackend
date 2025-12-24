@@ -38,6 +38,7 @@ namespace ECommerce.Data.Config
                 a.WithOwner();
                 a.Property(a => a.FullName).HasMaxLength(50);
                 a.Property(a => a.MobileNumber).HasColumnType("VARCHAR").HasMaxLength(15);
+                a.Property(a => a.Label).HasMaxLength(50);
                 a.Property(a => a.Street).HasMaxLength(60);
                 a.Property(a => a.Building).HasMaxLength(50);
                 a.Property(a => a.City).HasMaxLength(50);
@@ -46,7 +47,6 @@ namespace ECommerce.Data.Config
                 a.Property(a => a.Country).HasMaxLength(100);
                 a.Property(a => a.ZipCode).HasMaxLength(50);
                 a.Property(a => a.Hints).HasMaxLength(100);
-                a.Property(a => a.Title).HasMaxLength(50);
 
             });
 

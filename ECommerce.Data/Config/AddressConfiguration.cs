@@ -10,6 +10,7 @@ namespace ECommerce.Data.Config
         {
             builder.Property(a => a.FullName).HasMaxLength(50);
             builder.Property(a => a.MobileNumber).HasColumnType("VARCHAR").HasMaxLength(15);
+            builder.Property(a => a.Label).HasMaxLength(50);
             builder.Property(a => a.Street).HasMaxLength(60);
             builder.Property(a => a.Building).HasMaxLength(50);
             builder.Property(a => a.City).HasMaxLength(50);
@@ -18,7 +19,6 @@ namespace ECommerce.Data.Config
             builder.Property(a => a.Country).HasMaxLength(100);
             builder.Property(a => a.ZipCode).HasMaxLength(50);
             builder.Property(a => a.Hints).HasMaxLength(100);
-            builder.Property(a => a.Title).HasMaxLength(50);
 
             builder.HasIndex(pi => pi.UserId)
                 .IsUnique()

@@ -10,7 +10,7 @@ namespace ECommerce.API.Controllers
     [ApiController]
     [Authorize]
     [Tags("Addresses Managment")]
-    public class AddressController(IAddressService addresses) : ControllerBase
+    public class AddressesController(IAddressService addresses) : ControllerBase
     {
         private readonly IAddressService _addresses = addresses;
 

@@ -43,9 +43,12 @@ namespace ECommerce.Business.Services
             addressToCreate.UserId = currentUserId;
             addressToCreate.District ??= addressToCreate.City;
             addressToCreate.Governorate ??= addressToCreate.City;
-            addressToCreate.Title ??= "No Title";
+            addressToCreate.Label ??= "No Label";
             addressToCreate.Created = DateTime.UtcNow;
             addressToCreate.Updated = DateTime.UtcNow;
+
+            if (!await _context.Addresses.AnyAsync(a => a.UserId == currentUserId)) //addresses is empty for the logged in user
+                addressToCreate.IsDefault = true;
 
             _context.Addresses.Add(addressToCreate);
             await _context.SaveChangesAsync();
@@ -69,7 +72,7 @@ namespace ECommerce.Business.Services
             _mapper.Map(dto, addressToUpdate);
             addressToUpdate.District ??= addressToUpdate.City;
             addressToUpdate.Governorate ??= addressToUpdate.City;
-            addressToUpdate.Title ??= "No Title";
+            addressToUpdate.Label ??= "No Label";
             addressToUpdate.Updated = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -118,8 +121,8 @@ namespace ECommerce.Business.Services
                 .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == currentUserId)
                 ?? throw new NotFoundException("Address does not exist or does not belong to current user.");
 
-            if (addressToDelete.IsDefault)
-                throw new ConflictException("Cannot delete the default address, set another to default first.");
+            //if (addressToDelete.IsDefault)
+            //    throw new ConflictException("Cannot delete the default address, set another to default first.");
 
             _context.Addresses.Remove(addressToDelete);
 

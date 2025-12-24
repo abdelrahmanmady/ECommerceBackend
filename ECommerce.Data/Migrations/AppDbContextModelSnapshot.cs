@@ -70,6 +70,11 @@ namespace ECommerce.Data.Migrations
                     b.Property<bool>("IsDefault")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("MobileNumber")
                         .IsRequired()
                         .HasMaxLength(15)
@@ -79,11 +84,6 @@ namespace ECommerce.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("Updated")
                         .HasColumnType("datetime2");
@@ -730,6 +730,11 @@ namespace ECommerce.Data.Migrations
                             b1.Property<int>("Id")
                                 .HasColumnType("int");
 
+                            b1.Property<string>("Label")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
                             b1.Property<string>("MobileNumber")
                                 .IsRequired()
                                 .HasMaxLength(15)
@@ -739,10 +744,6 @@ namespace ECommerce.Data.Migrations
                                 .IsRequired()
                                 .HasMaxLength(60)
                                 .HasColumnType("nvarchar(60)");
-
-                            b1.Property<string>("Title")
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("ZipCode")
                                 .HasMaxLength(50)

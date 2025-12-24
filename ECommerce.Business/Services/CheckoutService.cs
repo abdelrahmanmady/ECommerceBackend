@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ECommerce.Business.DTOs.Checkout;
-using ECommerce.Business.DTOs.Orders.Profile;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Enums;
@@ -39,14 +38,14 @@ namespace ECommerce.Business.Services
             checkoutPreviewDto.ShippingFees = calculations.ShippingFees;
             checkoutPreviewDto.Taxes = calculations.Taxes;
             checkoutPreviewDto.Total = calculations.Total;
-
+            checkoutPreviewDto.EstimatedDeliveryDateStart = DateTime.UtcNow.AddDays(shippingMethod == ShippingMethod.Express ? 2 : 5);
+            checkoutPreviewDto.EstimatedDeliveryDateEnd = DateTime.UtcNow.AddDays(shippingMethod == ShippingMethod.Express ? 3 : 7);
             return checkoutPreviewDto;
         }
 
-        public async Task<OrderDto> CheckoutAsync(CheckoutDto dto)
+        public async Task<OrderConfirmationDto> CheckoutAsync(CheckoutDto dto)
         {
             var currentUserId = GetCurrentUserId();
-
             var cart = await GetCartEntityAsync(currentUserId);
 
             if (cart.Items.Count == 0)
@@ -74,6 +73,7 @@ namespace ECommerce.Business.Services
                 ShippingAddress = shippingAddress,
                 Items = [],
                 UserId = currentUserId,
+                User = cart.User,
                 OrderTrackingMilestones = []
             };
 
@@ -100,13 +100,15 @@ namespace ECommerce.Business.Services
             try
             {
                 await _context.SaveChangesAsync();
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("User {userId} placed an order {orderId} at {datetime}", currentUserId, orderToCreate.Id, DateTime.UtcNow);
             }
             catch (DbUpdateConcurrencyException)
             {
                 throw new ConflictException("Stock changed during checkout. Please try again.");
             }
 
-            return _mapper.Map<OrderDto>(orderToCreate);
+            return _mapper.Map<OrderConfirmationDto>(orderToCreate);
         }
 
         //Helper Methods
@@ -127,6 +129,7 @@ namespace ECommerce.Business.Services
                 .Include(sc => sc.Items)
                     .ThenInclude(i => i.Product)
                         .ThenInclude(p => p.Images)
+                .Include(sc => sc.User)
                 .IgnoreQueryFilters()
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(sc => sc.UserId == userId);

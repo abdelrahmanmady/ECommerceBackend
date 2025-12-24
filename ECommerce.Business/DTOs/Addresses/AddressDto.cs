@@ -10,6 +10,7 @@
         public string MobileNumber { get; set; } = string.Empty;
 
         //Address Info
+        public string Label { get; set; } = string.Empty;
         public string Street { get; set; } = string.Empty;
         public string Building { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
@@ -18,6 +19,5 @@
         public string Country { get; set; } = string.Empty;
         public string? ZipCode { get; set; }
         public string? Hints { get; set; }
-        public string Title { get; set; } = string.Empty;
     }
 }

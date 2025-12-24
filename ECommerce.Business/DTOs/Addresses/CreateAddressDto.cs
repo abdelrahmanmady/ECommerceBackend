@@ -4,6 +4,8 @@ namespace ECommerce.Business.DTOs.Addresses
 {
     public class CreateAddressDto
     {
+        [MaxLength(50, ErrorMessage = "Address Label must be no longer than 50 characters.")]
+        public string? Label { get; set; } = null!;
 
         //Personal Info
         [MaxLength(50, ErrorMessage = "Full Name must be no longer than 50 characters.")]
@@ -37,7 +39,5 @@ namespace ECommerce.Business.DTOs.Addresses
         [MaxLength(100, ErrorMessage = "Hints must be no longer than 100 characters.")]
         public string? Hints { get; set; }
 
-        [MaxLength(50, ErrorMessage = "Title must be no longer than 50 characters.")]
-        public string? Title { get; set; } = null!;
     }
 }

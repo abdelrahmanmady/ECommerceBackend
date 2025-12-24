@@ -58,6 +58,7 @@ namespace ECommerce.Data.Seeders
                 Id = address.Id,
                 FullName = address.FullName,
                 MobileNumber = address.MobileNumber,
+                Label = address.Label,
                 Street = address.Street,
                 Building = address.Building,
                 City = address.City,
@@ -65,8 +66,7 @@ namespace ECommerce.Data.Seeders
                 Governorate = address.Governorate,
                 Country = address.Country,
                 ZipCode = address.ZipCode,
-                Hints = address.Hints,
-                Title = address.Title
+                Hints = address.Hints
 
             };
 
@@ -88,7 +88,7 @@ namespace ECommerce.Data.Seeders
                 });
             }
 
-            var subtotal = orderItems.Sum(i => i.TotalPrice);
+            var subtotal = orderItems.Sum(i => i.Total);
             var taxes = subtotal * 0.14m;
             var totalAmount = subtotal + taxes + shippingFees;
 

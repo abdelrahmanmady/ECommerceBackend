@@ -123,6 +123,7 @@ namespace ECommerce.Data.Migrations
                     IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     MobileNumber = table.Column<string>(type: "VARCHAR(15)", maxLength: 15, nullable: false),
+                    Label = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Street = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
                     Building = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -131,7 +132,6 @@ namespace ECommerce.Data.Migrations
                     Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ZipCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Hints = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
@@ -250,6 +250,7 @@ namespace ECommerce.Data.Migrations
                     ShippingAddress_Id = table.Column<int>(type: "int", nullable: false),
                     ShippingAddress_FullName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ShippingAddress_MobileNumber = table.Column<string>(type: "VARCHAR(15)", maxLength: 15, nullable: false),
+                    ShippingAddress_Label = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ShippingAddress_Street = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
                     ShippingAddress_Building = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ShippingAddress_City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -258,7 +259,6 @@ namespace ECommerce.Data.Migrations
                     ShippingAddress_Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ShippingAddress_ZipCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     ShippingAddress_Hints = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    ShippingAddress_Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>

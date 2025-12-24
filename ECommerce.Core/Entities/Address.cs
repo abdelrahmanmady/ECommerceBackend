@@ -10,6 +10,7 @@
         public string MobileNumber { get; set; } = null!;
 
         //Address Info
+        public string Label { get; set; } = null!;
         public string Street { get; set; } = null!;
         public string Building { get; set; } = null!;
         public string City { get; set; } = null!;
@@ -18,7 +19,6 @@
         public string Country { get; set; } = null!;
         public string? ZipCode { get; set; } = null!;
         public string? Hints { get; set; }
-        public string Title { get; set; } = null!;
         public DateTime Created { get; set; } = DateTime.UtcNow;
         public DateTime Updated { get; set; } = DateTime.UtcNow;
 
