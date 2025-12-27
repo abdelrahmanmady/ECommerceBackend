@@ -1,5 +1,5 @@
-﻿using ECommerce.Business.DTOs.Brands.Admin;
-using ECommerce.Business.DTOs.Brands.Store;
+﻿using ECommerce.Business.DTOs.Brands.Requests;
+using ECommerce.Business.DTOs.Brands.Responses;
 using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
@@ -19,10 +19,10 @@ namespace ECommerce.API.Controllers
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Get all brands with paging and search support.")]
-        [ProducesResponseType(typeof(PagedResponseDto<AdminBrandDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(PagedResponse<AdminBrandSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllBrandsAsmin([FromQuery] AdminBrandSpecParams specParams)
         {
             var brands = await _brands.GetAllBrandsAdminAsync(specParams);
@@ -32,10 +32,10 @@ namespace ECommerce.API.Controllers
         [HttpGet("admin/{brandId:int}")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Get brand details.")]
-        [ProducesResponseType(typeof(AdminBrandDetailsDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BrandDetailsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetBrandDetailsAdmin([FromRoute] int brandId)
         {
             var brand = await _brands.GetBrandDetailsAdminAsync(brandId);
@@ -45,13 +45,13 @@ namespace ECommerce.API.Controllers
         [HttpPost("admin")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Create a new brand.")]
-        [ProducesResponseType(typeof(AdminBrandDetailsDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> CreateBrandAdmin([FromBody] AdminCreateBrandDto dto)
+        [ProducesResponseType(typeof(BrandDetailsResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> CreateBrandAdmin([FromBody] CreateBrandRequest createBrandRequest)
         {
-            var brandCreated = await _brands.CreateBrandAdminAsync(dto);
+            var brandCreated = await _brands.CreateBrandAdminAsync(createBrandRequest);
             return CreatedAtAction(nameof(GetBrandDetailsAdmin), new { brandCreated.Id }, brandCreated);
         }
 
@@ -59,14 +59,14 @@ namespace ECommerce.API.Controllers
         [HttpPost("admin/{brandId:int}")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Update existing brand.")]
-        [ProducesResponseType(typeof(AdminBrandDetailsDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateBrandAdmin([FromRoute] int brandId, [FromBody] AdminUpdateBrandDto dto)
+        [ProducesResponseType(typeof(BrandDetailsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateBrandAdmin([FromRoute] int brandId, [FromBody] UpdateBrandRequest updateBrandRequest)
         {
-            var brandUpdated = await _brands.UpdateBrandAdminAsync(brandId, dto);
+            var brandUpdated = await _brands.UpdateBrandAdminAsync(brandId, updateBrandRequest);
             return Ok(brandUpdated);
         }
 
@@ -75,10 +75,10 @@ namespace ECommerce.API.Controllers
         [EndpointSummary("Delete existing brand if no products are referencing it.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> DeleteBrandAdmin([FromRoute] int brandId)
         {
             await _brands.DeleteBrandAdminAsync(brandId);
@@ -87,7 +87,7 @@ namespace ECommerce.API.Controllers
 
         [HttpGet]
         [EndpointSummary("Get all brands.")]
-        [ProducesResponseType(typeof(IEnumerable<BrandDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<BrandSummaryDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllBrands()
         {
             var brands = await _brands.GetAllBrandsAsync();

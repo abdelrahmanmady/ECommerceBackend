@@ -1,20 +1,19 @@
 ﻿using AutoMapper;
-using ECommerce.Business.DTOs.Addresses;
-using ECommerce.Business.DTOs.Auth;
-using ECommerce.Business.DTOs.Brands.Admin;
-using ECommerce.Business.DTOs.Brands.Store;
-using ECommerce.Business.DTOs.Categories.Admin;
-using ECommerce.Business.DTOs.Categories.Store;
-using ECommerce.Business.DTOs.Checkout;
+using ECommerce.Business.DTOs.Addresses.Requests;
+using ECommerce.Business.DTOs.Addresses.Responses;
+using ECommerce.Business.DTOs.Auth.Requests;
+using ECommerce.Business.DTOs.Brands.Requests;
+using ECommerce.Business.DTOs.Brands.Responses;
+using ECommerce.Business.DTOs.Categories.Requests;
+using ECommerce.Business.DTOs.Categories.Responses;
+using ECommerce.Business.DTOs.Checkout.Responses;
 using ECommerce.Business.DTOs.OrderItems;
-using ECommerce.Business.DTOs.Orders.Admin;
-using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.Orders.Responses;
 using ECommerce.Business.DTOs.OrderTrackingMilestones;
-using ECommerce.Business.DTOs.ProductImages;
-using ECommerce.Business.DTOs.Products.Admin;
-using ECommerce.Business.DTOs.Products.Store;
-using ECommerce.Business.DTOs.ShoppingCart;
-using ECommerce.Business.DTOs.Users.Auth;
+using ECommerce.Business.DTOs.ProductImages.Responses;
+using ECommerce.Business.DTOs.Products.Requests;
+using ECommerce.Business.DTOs.Products.Responses;
+using ECommerce.Business.DTOs.ShoppingCart.Responses;
 using ECommerce.Core.Entities;
 
 namespace ECommerce.Business.Mappings
@@ -23,53 +22,64 @@ namespace ECommerce.Business.Mappings
     {
         public MappingProfile()
         {
+            //Auth Mapping
+            CreateMap<RegisterRequest, ApplicationUser>()
+                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
+
             //Brand Mapping
-            CreateMap<Brand, AdminBrandDto>()
+            CreateMap<Brand, AdminBrandSummaryDto>()
                 .ForMember(d => d.ProductsCount, o => o.MapFrom(s => s.Products.Count));
 
-            CreateMap<Brand, AdminBrandDetailsDto>();
+            CreateMap<Brand, BrandDetailsResponse>();
 
-            CreateMap<AdminCreateBrandDto, Brand>();
+            CreateMap<CreateBrandRequest, Brand>();
 
-            CreateMap<AdminUpdateBrandDto, Brand>();
+            CreateMap<UpdateBrandRequest, Brand>();
 
-            CreateMap<Brand, BrandDto>()
+            CreateMap<Brand, BrandSummaryDto>()
                 .ForMember(d => d.ProductsCount, o => o.MapFrom(s => s.Products.Count));
 
             //Category Mapping
-            CreateMap<Category, AdminCategoryDto>()
+            CreateMap<Category, AdminCategorySummaryDto>()
                 .ForMember(d => d.ParentCategoryName, o => o.MapFrom(s => s.Parent == null ? "Root Category" : s.Parent.Name))
                 .ForMember(d => d.PathFromRoot, o => o.MapFrom(s => $"Root\\{s.HierarchyPath}"));
 
-            CreateMap<Category, AdminCategoryDetailsDto>()
+            CreateMap<Category, CategoryDetailsResponse>()
                 .ForMember(d => d.SubcategoriesNames, o => o.Ignore())
                 .ForMember(d => d.PathFromRoot, o => o.MapFrom(s => $"Root\\{s.HierarchyPath}"));
 
-            CreateMap<AdminCreateCategoryDto, Category>();
+            CreateMap<CreateCategoryRequest, Category>()
+                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
 
-            CreateMap<AdminUpdateCategoryDto, Category>();
+            CreateMap<UpdateCategoryRequest, Category>()
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
 
-            CreateMap<Category, CategoryDto>()
+            CreateMap<Category, CategorySummaryDto>()
                 .ForMember(d => d.Subcategories, o => o.Ignore());
 
             //Product Mapping
-            CreateMap<Product, AdminProductDto>()
+            CreateMap<Product, AdminProductSummaryDto>()
                 .ForMember(d => d.ThumbnailUrl, o => o.MapFrom(s => s.Images.Where(pi => pi.IsMain).Select(pi => pi.ImageUrl).FirstOrDefault()))
                 .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.Name))
                 .ForMember(d => d.BrandName, o => o.MapFrom(s => s.Brand.Name))
                 .ForMember(d => d.InStock, o => o.MapFrom(s => s.StockQuantity > 0));
 
-            CreateMap<Product, AdminProductDetailsDto>();
+            CreateMap<Product, AdminProductDetailsResponse>();
 
-            CreateMap<AdminCreateProductDto, Product>();
+            CreateMap<CreateProductRequest, Product>()
+                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
 
-            CreateMap<AdminUpdateProductDto, Product>();
+            CreateMap<UpdateProductRequest, Product>()
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow)); ;
 
-            CreateMap<Product, ProductDto>()
+            CreateMap<Product, ProductSummaryDto>()
                 .ForMember(d => d.ThumbnailUrl, o => o.MapFrom(s => s.Images.Where(pi => pi.IsMain).Select(pi => pi.ImageUrl).FirstOrDefault()))
                 .ForMember(d => d.BrandedName, o => o.MapFrom(s => s.Brand.Name + " " + s.Name));
 
-            CreateMap<Product, ProductDetailsDto>()
+            CreateMap<Product, ProductDetailsResponse>()
                 .ForMember(d => d.BrandName, o => o.MapFrom(s => s.Brand.Name))
                 .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.Name));
 
@@ -77,7 +87,8 @@ namespace ECommerce.Business.Mappings
             CreateMap<ProductImage, ProductImageDto>();
 
             //ShoppingCart Mapping
-            CreateMap<ShoppingCart, ShoppingCartDto>();
+            CreateMap<ShoppingCart, CartResponse>()
+                .ForMember(d => d.CartTotal, o => o.MapFrom(s => s.Items.Sum(i => i.Quantity * i.Product.Price)));
 
             CreateMap<CartItem, OrderItemDto>()
                 .ForMember(d => d.ProductName, o => o.MapFrom(s => s.Product.Name))
@@ -87,14 +98,14 @@ namespace ECommerce.Business.Mappings
 
 
             //Order Mapping
-            CreateMap<Order, AdminOrderDto>()
+            CreateMap<Order, AdminOrderSummaryDto>()
                 .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.FirstName + " " + s.User.LastName))
                 .ForMember(d => d.ItemsCount, o => o.MapFrom(s => s.Items.Count));
 
-            CreateMap<Order, AdminOrderDetailsDto>()
+            CreateMap<Order, OrderDetailsResponse>()
                 .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.FirstName + " " + s.User.LastName));
 
-            CreateMap<Order, OrderDto>()
+            CreateMap<Order, OrderSummaryDto>()
                 .ForMember(d => d.ItemsCount, o => o.MapFrom(s => s.Items.Count));
 
             //OrderItem Mapping
@@ -108,19 +119,23 @@ namespace ECommerce.Business.Mappings
             CreateMap<OrderTrackingMilestone, OrderTrackingMilestoneDto>();
 
             //Address Mapping
-            CreateMap<Address, AddressDto>();
+            CreateMap<Address, AddressSummaryDto>();
 
-            CreateMap<CreateAddressDto, Address>();
+            CreateMap<CreateAddressRequest, Address>()
+                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
 
-            CreateMap<UpdateAddressDto, Address>();
+            CreateMap<UpdateAddressRequest, Address>()
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
 
             CreateMap<Address, OrderAddress>();
 
             //Checkout Mapping
-            CreateMap<ShoppingCart, CheckoutPreviewDto>();
+            CreateMap<ShoppingCart, CheckoutPreviewResponse>();
 
             CreateMap<CartItem, OrderItem>()
                 .ForMember(d => d.Id, o => o.Ignore())
+                .ForMember(d => d.Total, o => o.MapFrom(s => s.Quantity * s.Product.Price))
                 .ForMember(d => d.OrderedProduct, o => o.MapFrom(s => new OrderedProduct
                 {
                     Id = s.Product.Id,
@@ -130,16 +145,13 @@ namespace ECommerce.Business.Mappings
                     ThumbnailUrl = s.Product.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).First()
                 }));
 
-            CreateMap<Order, OrderConfirmationDto>()
+            CreateMap<Order, OrderConfirmationResponse>()
                 .ForMember(d => d.EstimatedDeliveryDateStart, o => o.MapFrom(s => s.Created.AddDays(s.ShippingMethod == Core.Enums.ShippingMethod.Express ? 2 : 5)))
                 .ForMember(d => d.EstimatedDeliveryDateEnd, o => o.MapFrom(s => s.Created.AddDays(s.ShippingMethod == Core.Enums.ShippingMethod.Express ? 3 : 7)))
                 .ForMember(d => d.UserEmail, o => o.MapFrom(s => s.User.Email))
                 .ForMember(d => d.ItemsCount, o => o.MapFrom(s => s.Items.Count));
 
-            //User Mapping
-            CreateMap<RegisterDto, ApplicationUser>();
-            CreateMap<ApplicationUser, UserSessionDto>()
-                .ForMember(d => d.Name, o => o.MapFrom(s => s.FirstName + " " + s.LastName));
+
         }
     }
 }

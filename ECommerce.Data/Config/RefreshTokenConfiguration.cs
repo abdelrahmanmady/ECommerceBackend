@@ -8,8 +8,7 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
-            builder.Property(rt => rt.Token)
-                .HasColumnType("NVARCHAR(100)");
+            builder.Property(rt => rt.Token).HasMaxLength(100);
         }
     }
 }

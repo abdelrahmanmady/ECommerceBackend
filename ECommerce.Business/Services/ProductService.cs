@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ECommerce.Business.DTOs.Pagination;
-using ECommerce.Business.DTOs.Products.Admin;
-using ECommerce.Business.DTOs.Products.Store;
+using ECommerce.Business.DTOs.Products;
+using ECommerce.Business.DTOs.Products.Requests;
+using ECommerce.Business.DTOs.Products.Responses;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -20,7 +21,7 @@ namespace ECommerce.Business.Services
         private readonly ILogger<ProductService> _logger = logger;
 
 
-        public async Task<PagedResponseDto<AdminProductDto>> GetAllProductsAdminAsync(AdminProductSpecParams specParams)
+        public async Task<PagedResponse<AdminProductSummaryDto>> GetAllProductsAdminAsync(AdminProductSpecParams specParams)
         {
             var query = _context.Products.IgnoreQueryFilters().AsNoTracking().AsQueryable();
 
@@ -56,10 +57,10 @@ namespace ECommerce.Business.Services
             var items = await query
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)
                 .Take(specParams.PageSize)
-                .ProjectTo<AdminProductDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<AdminProductSummaryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
-            return new PagedResponseDto<AdminProductDto>
+            return new PagedResponse<AdminProductSummaryDto>
             {
                 PageIndex = specParams.PageIndex,
                 PageSize = specParams.PageSize,
@@ -68,37 +69,37 @@ namespace ECommerce.Business.Services
             };
         }
 
-        public async Task<AdminProductDetailsDto> GetProductDetailsAdminAsync(int productId)
+        public async Task<AdminProductDetailsResponse> GetProductDetailsAdminAsync(int productId)
         {
             var product = await _context.Products
                 .AsNoTracking()
                 .IgnoreQueryFilters()
                 .Where(p => p.Id == productId)
-                .ProjectTo<AdminProductDetailsDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<AdminProductDetailsResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");
             return product;
         }
 
-        public async Task<int> CreateProductAdminAsync(AdminCreateProductDto dto)
+        public async Task<AdminProductDetailsResponse> CreateProductAdminAsync(CreateProductRequest createProductRequest)
         {
             //Validate Category
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
+            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == createProductRequest.CategoryId);
             if (!categoryExists)
                 throw new NotFoundException("Category does not exist.");
             //Validate Category is Terminal (Leaf Node)
             // If any other category has this ID as its Parent, then this is NOT a leaf.
-            var isParentCategory = await _context.Categories.AnyAsync(c => c.ParentId == dto.CategoryId);
+            var isParentCategory = await _context.Categories.AnyAsync(c => c.ParentId == createProductRequest.CategoryId);
             if (isParentCategory)
             {
                 throw new BadRequestException("You cannot add products to a Parent Category. Please select a sub-category.");
             }
             //Validate Brand
-            var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
+            var brandExists = await _context.Brands.AnyAsync(b => b.Id == createProductRequest.BrandId);
             if (!brandExists)
                 throw new NotFoundException("Brand does not exist");
 
-            var productToAdd = _mapper.Map<Product>(dto);
+            var productToAdd = _mapper.Map<Product>(createProductRequest);
 
             _context.Products.Add(productToAdd);
 
@@ -107,33 +108,33 @@ namespace ECommerce.Business.Services
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Product added with id = {id}.", productToAdd.Id);
 
-            return productToAdd.Id;
+            return _mapper.Map<AdminProductDetailsResponse>(productToAdd);
         }
 
-        public async Task<AdminProductDetailsDto> UpdateProductAdminAsync(int productId, AdminUpdateProductDto dto)
+        public async Task<AdminProductDetailsResponse> UpdateProductAdminAsync(int productId, UpdateProductRequest updateProductRequest)
         {
             var productToUpdate = await _context.Products.FindAsync(productId)
                 ?? throw new NotFoundException("Product does not exist.");
 
             //Validate Category
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
+            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == updateProductRequest.CategoryId);
             if (!categoryExists)
                 throw new NotFoundException("Category does not exist.");
             //Validate Category is Terminal (Leaf Node)
             // If any other category has this ID as its Parent, then this is NOT a leaf.
-            var isParentCategory = await _context.Categories.AnyAsync(c => c.ParentId == dto.CategoryId);
+            var isParentCategory = await _context.Categories.AnyAsync(c => c.ParentId == updateProductRequest.CategoryId);
             if (isParentCategory)
             {
                 throw new BadRequestException("You cannot add products to a Parent Category. Please select a sub-category.");
             }
 
             //Validate Brand
-            var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
+            var brandExists = await _context.Brands.AnyAsync(b => b.Id == updateProductRequest.BrandId);
             if (!brandExists)
                 throw new NotFoundException("Brand does not exist");
 
             //Update Product
-            _mapper.Map(dto, productToUpdate);
+            _mapper.Map(updateProductRequest, productToUpdate);
 
             if (productToUpdate.Images.Count == 0 || !productToUpdate.Images.Any(pi => pi.IsMain))
                 throw new BadRequestException("Product must have a main image before saving.");
@@ -149,7 +150,7 @@ namespace ECommerce.Business.Services
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Product updated with id = {productId}.", productId);
 
-            return _mapper.Map<AdminProductDetailsDto>(productToUpdate);
+            return _mapper.Map<AdminProductDetailsResponse>(productToUpdate);
         }
 
         public async Task DeleteProductAdminAsync(int productId)
@@ -163,7 +164,7 @@ namespace ECommerce.Business.Services
                 _logger.LogInformation("Product deleted with id = {productId}.", productId);
         }
 
-        public async Task<PagedResponseDto<ProductDto>> GetAllProductsAsync(ProductSpecParams specParams)
+        public async Task<PagedResponse<ProductSummaryDto>> GetAllProductsAsync(ProductSpecParams specParams)
         {
             var query = _context.Products
                 .AsNoTracking()
@@ -225,7 +226,7 @@ namespace ECommerce.Business.Services
             var items = await query
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)
                 .Take(specParams.PageSize)
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<ProductSummaryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             var categories = await _context.Categories
@@ -255,7 +256,7 @@ namespace ECommerce.Business.Services
                 item.CategoryBreadcrumbLinks.Reverse();
             }
 
-            return new PagedResponseDto<ProductDto>
+            return new PagedResponse<ProductSummaryDto>
             {
                 PageIndex = specParams.PageIndex,
                 PageSize = specParams.PageSize,
@@ -264,12 +265,12 @@ namespace ECommerce.Business.Services
             };
         }
 
-        public async Task<ProductDetailsDto> GetProductDetailsAsync(int productId)
+        public async Task<ProductDetailsResponse> GetProductDetailsAsync(int productId)
         {
             var product = await _context.Products
                 .AsNoTracking()
                 .Where(p => p.Id == productId)
-                .ProjectTo<ProductDetailsDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<ProductDetailsResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");
             return product;

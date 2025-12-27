@@ -17,7 +17,9 @@ namespace ECommerce.Data.Seeders.Fakers
                 .RuleFor(a => a.District, (f, a) => $"District of {a.City}")
                 .RuleFor(a => a.Governorate, (f, a) => a.City)
                 .RuleFor(a => a.Country, f => f.Address.Country())
-                .RuleFor(a => a.ZipCode, f => f.Address.ZipCode());
+                .RuleFor(a => a.ZipCode, f => f.Address.ZipCode())
+                .RuleFor(a => a.Created, f => DateTime.UtcNow)
+                .RuleFor(a => a.Updated, f => DateTime.UtcNow);
 
         }
     }

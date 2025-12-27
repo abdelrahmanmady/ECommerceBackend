@@ -19,16 +19,16 @@ namespace ECommerce.Data.Seeders
 
             var brands = new List<Brand>
             {
-                new() { Name = "Nike", Description = "Just Do It" },
-                new() { Name = "Adidas", Description = "Impossible is Nothing" },
-                new() { Name = "Zara", Description = "Fast Fashion & Trendy" },
-                new() { Name = "H&M", Description = "Sustainable Fashion" },
-                new() { Name = "Levi's", Description = "Quality Denim" },
-                new() { Name = "Puma", Description = "Forever Faster" },
-                new() { Name = "Gucci", Description = "Luxury Fashion" },
-                new() { Name = "Uniqlo", Description = "Modern Essentials" },
-                new() { Name = "Ralph Lauren", Description = "Premium Lifestyle" },
-                new() { Name = "Calvin Klein", Description = "Modern Minimalist" }
+                new() { Name = "Nike", Description = "Just Do It" ,Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() { Name = "Adidas", Description = "Impossible is Nothing" ,Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Zara", Description = "Fast Fashion & Trendy", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "H&M", Description = "Sustainable Fashion", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Levi's", Description = "Quality Denim", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Puma", Description = "Forever Faster", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Gucci", Description = "Luxury Fashion", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Uniqlo", Description = "Modern Essentials", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Ralph Lauren", Description = "Premium Lifestyle", Created = DateTime.UtcNow, Updated = DateTime.UtcNow},
+                new() {Name = "Calvin Klein", Description = "Modern Minimalist", Created = DateTime.UtcNow, Updated = DateTime.UtcNow}
             };
 
             context.Brands.AddRange(brands);
@@ -42,9 +42,9 @@ namespace ECommerce.Data.Seeders
             var categories = new List<Category>();
 
             // Define Roots
-            var men = new Category { Name = "Men", HierarchyPath = "Men" };
-            var women = new Category { Name = "Women", HierarchyPath = "Women" };
-            var kids = new Category { Name = "Kids", HierarchyPath = "Kids" };
+            var men = new Category { Name = "Men", HierarchyPath = "Men", Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
+            var women = new Category { Name = "Women", HierarchyPath = "Women", Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
+            var kids = new Category { Name = "Kids", HierarchyPath = "Kids", Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
 
             categories.AddRange(new[] { men, women, kids });
 
@@ -92,7 +92,9 @@ namespace ECommerce.Data.Seeders
             {
                 Name = name,
                 Parent = parent,
-                HierarchyPath = $"{parent.HierarchyPath}\\{name}"
+                HierarchyPath = $"{parent.HierarchyPath}\\{name}",
+                Created = DateTime.UtcNow,
+                Updated = DateTime.UtcNow
             };
         }
 
@@ -106,9 +108,6 @@ namespace ECommerce.Data.Seeders
 
             var products = new List<Product>();
 
-            // The Blueprint Logic:
-            // Maps a specific "Leaf Category Name" -> to a list of "Realistic Product Names"
-            // This ensures "Dresses" only go into the Dress category, etc.
             var productBlueprints = new Dictionary<string, string[]>
             {
                 // --- MEN ---
@@ -171,7 +170,9 @@ namespace ECommerce.Data.Seeders
                             BrandId = brand.Id,
                             CategoryId = category.Id,
                             IsFeatured = faker.Random.Bool(0.1f), // 10% chance of being featured
-                            Images = productImages
+                            Images = productImages,
+                            Created = DateTime.UtcNow,
+                            Updated = DateTime.UtcNow,
                         });
                     }
                 }

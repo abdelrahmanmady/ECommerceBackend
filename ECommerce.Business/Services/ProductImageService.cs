@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using ECommerce.Business.DTOs.Products.Admin;
+using ECommerce.Business.DTOs.ProductImages.Responses;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -23,10 +23,13 @@ namespace ECommerce.Business.Services
 
 
 
-        public async Task<AdminProductDetailsDto> AddImagesAsync(int productId, List<IFormFile> files)
+        public async Task<IEnumerable<ProductImageDto>> AddImagesAsync(int productId, List<IFormFile> files)
         {
-            var product = await _context.Products.FindAsync(productId)
-                ?? throw new NotFoundException("Product does not exist.");
+            var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
+            if (!productExists)
+            {
+                throw new NotFoundException("Product does not exist.");
+            }
 
 
             if (_logger.IsEnabled(LogLevel.Information))
@@ -81,7 +84,7 @@ namespace ECommerce.Business.Services
                     string.Join(", ", uploadedFileNames));
             }
 
-            return _mapper.Map<AdminProductDetailsDto>(product);
+            return _mapper.Map<IEnumerable<ProductImageDto>>(uploadedImages);
 
         }
 

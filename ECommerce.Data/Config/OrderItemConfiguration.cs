@@ -8,16 +8,13 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<OrderItem> builder)
         {
-
+            builder.Property(oi => oi.Total).HasPrecision(18, 2);
             builder.OwnsOne(oi => oi.OrderedProduct, p =>
             {
                 p.WithOwner();
-                p.Property(p => p.Name)
-                .HasMaxLength(200);
-                p.Property(p => p.Description)
-                .HasMaxLength(1000);
-                p.Property(p => p.Price)
-                .HasPrecision(18, 2);
+                p.Property(p => p.Name).HasMaxLength(200);
+                p.Property(p => p.Description).HasMaxLength(1000);
+                p.Property(p => p.Price).HasPrecision(18, 2);
 
             });
         }

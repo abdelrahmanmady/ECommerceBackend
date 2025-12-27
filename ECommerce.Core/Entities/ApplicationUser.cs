@@ -8,8 +8,8 @@ namespace ECommerce.Core.Entities
     {
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime Created { get; set; }
+        public DateTime Updated { get; set; }
         //one to many relation with Orders
         public virtual ICollection<Order> Orders { get; set; } = [];
 

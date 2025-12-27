@@ -1,6 +1,6 @@
 ﻿using ECommerce.Business.DTOs.Errors;
-using ECommerce.Business.DTOs.ProductImages;
-using ECommerce.Business.DTOs.Products.Admin;
+using ECommerce.Business.DTOs.ProductImages.Requests;
+using ECommerce.Business.DTOs.Products.Responses;
 using ECommerce.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +19,15 @@ namespace ECommerce.API.Controllers
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Upload product images.")]
         [Consumes("multipart/form-data")]
-        [ProducesResponseType(typeof(AdminProductDetailsDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Add([FromRoute] int productId, [FromForm] AddProductImagesDto dto)
+        [ProducesResponseType(typeof(AdminProductDetailsResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Add([FromRoute] int productId, [FromForm] AddProductImagesRequest dto)
         {
-            var product = await _productImages.AddImagesAsync(productId, dto.Files);
-            return StatusCode(StatusCodes.Status201Created, product);
+            var productImages = await _productImages.AddImagesAsync(productId, dto.Files);
+            return StatusCode(StatusCodes.Status201Created, productImages);
         }
 
 
@@ -38,10 +38,10 @@ namespace ECommerce.API.Controllers
         [EndpointSummary("Set main image")]
         [EndpointDescription("Updates the product's main thumbnail image.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SetMainImage([FromRoute] int productId, [FromRoute] int imageId)
         {
             await _productImages.SetMainImageAsync(productId, imageId);
@@ -53,10 +53,10 @@ namespace ECommerce.API.Controllers
         [EndpointSummary("Delete image")]
         [EndpointDescription("Removes an image. Cannot delete the Main image.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> DeleteImage([FromRoute] int productId, [FromRoute] int imageId)
         {
             await _productImages.DeleteImageAsync(productId, imageId);

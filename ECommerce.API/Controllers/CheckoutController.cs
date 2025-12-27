@@ -1,6 +1,7 @@
-﻿using ECommerce.Business.DTOs.Checkout;
+﻿using ECommerce.Business.DTOs.Checkout.Requests;
+using ECommerce.Business.DTOs.Checkout.Responses;
 using ECommerce.Business.DTOs.Errors;
-using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.Orders.Responses;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -17,9 +18,11 @@ namespace ECommerce.API.Controllers
 
         [HttpGet("preview")]
         [EndpointSummary("Returns an order summary before checkout.")]
-        [ProducesResponseType(typeof(CheckoutPreviewDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(CheckoutPreviewResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+
         public async Task<IActionResult> GetCheckoutPreview([FromQuery] ShippingMethod shippingMethod)
         {
             var result = await _checkout.GetCheckoutPreviewAsync(shippingMethod);
@@ -28,14 +31,14 @@ namespace ECommerce.API.Controllers
 
         [HttpPost]
         [EndpointSummary("Checkout order.")]
-        [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> CheckoutOrder([FromBody] CheckoutDto dto)
+        [ProducesResponseType(typeof(OrderSummaryDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> CheckoutOrder([FromBody] CheckoutRequest checkoutRequest)
         {
-            var orderCreated = await _checkout.CheckoutAsync(dto);
+            var orderCreated = await _checkout.CheckoutAsync(checkoutRequest);
             return Ok(orderCreated);
         }
 

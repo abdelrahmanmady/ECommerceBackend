@@ -19,8 +19,8 @@
         public string Country { get; set; } = null!;
         public string? ZipCode { get; set; } = null!;
         public string? Hints { get; set; }
-        public DateTime Created { get; set; } = DateTime.UtcNow;
-        public DateTime Updated { get; set; } = DateTime.UtcNow;
+        public DateTime Created { get; set; }
+        public DateTime Updated { get; set; }
 
         //many to one relation with user
         public string UserId { get; set; } = null!;

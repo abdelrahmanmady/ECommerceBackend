@@ -8,17 +8,13 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<Product> builder)
         {
-            builder.Property(p => p.Name)
-                .HasMaxLength(200);
+            builder.Property(p => p.Name).HasMaxLength(200);
 
-            builder.Property(p => p.Description)
-                .HasMaxLength(1000);
+            builder.Property(p => p.Description).HasMaxLength(1000);
 
-            builder.Property(p => p.Price)
-                .HasPrecision(18, 2);
+            builder.Property(p => p.Price).HasPrecision(18, 2);
 
-            builder.Property(p => p.Version)
-                .IsRowVersion();
+            builder.Property(p => p.Version).IsRowVersion();
 
             builder.HasQueryFilter(p => !p.IsDeleted);
 

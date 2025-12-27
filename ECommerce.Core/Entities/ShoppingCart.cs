@@ -3,7 +3,7 @@
     public class ShoppingCart
     {
         public int Id { get; set; }
-        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+        public DateTime Updated { get; set; }
 
         //one to one relation with user
         public string UserId { get; set; } = null!;

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using ECommerce.Business.DTOs.Brands.Admin;
-using ECommerce.Business.DTOs.Brands.Store;
+using ECommerce.Business.DTOs.Brands.Requests;
+using ECommerce.Business.DTOs.Brands.Responses;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
@@ -19,7 +19,7 @@ namespace ECommerce.Business.Services
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<BrandService> _logger = logger;
 
-        public async Task<PagedResponseDto<AdminBrandDto>> GetAllBrandsAdminAsync(AdminBrandSpecParams specParams)
+        public async Task<PagedResponse<AdminBrandSummaryDto>> GetAllBrandsAdminAsync(AdminBrandSpecParams specParams)
         {
             var query = _context.Brands.AsNoTracking().AsQueryable();
 
@@ -39,10 +39,10 @@ namespace ECommerce.Business.Services
             var items = await query
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)
                 .Take(specParams.PageSize)
-                .ProjectTo<AdminBrandDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<AdminBrandSummaryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
-            return new PagedResponseDto<AdminBrandDto>
+            return new PagedResponse<AdminBrandSummaryDto>
             {
                 PageIndex = specParams.PageIndex,
                 PageSize = specParams.PageSize,
@@ -52,41 +52,41 @@ namespace ECommerce.Business.Services
 
         }
 
-        public async Task<AdminBrandDetailsDto> GetBrandDetailsAdminAsync(int brandId)
+        public async Task<BrandDetailsResponse> GetBrandDetailsAdminAsync(int brandId)
         {
             var brand = await _context.Brands
                 .AsNoTracking()
                 .Where(b => b.Id == brandId)
-                .ProjectTo<AdminBrandDetailsDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<BrandDetailsResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Brand does not exist.");
             return brand;
         }
 
-        public async Task<AdminBrandDetailsDto> CreateBrandAdminAsync(AdminCreateBrandDto dto)
+        public async Task<BrandDetailsResponse> CreateBrandAdminAsync(CreateBrandRequest createBrandRequest)
         {
-            var brandToCreate = _mapper.Map<Brand>(dto);
+            var brandToCreate = _mapper.Map<Brand>(createBrandRequest);
             _context.Brands.Add(brandToCreate);
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Brand added with id = {id}.", brandToCreate.Id);
 
-            return _mapper.Map<AdminBrandDetailsDto>(brandToCreate);
+            return _mapper.Map<BrandDetailsResponse>(brandToCreate);
         }
 
-        public async Task<AdminBrandDetailsDto> UpdateBrandAdminAsync(int brandId, AdminUpdateBrandDto dto)
+        public async Task<BrandDetailsResponse> UpdateBrandAdminAsync(int brandId, UpdateBrandRequest updateBrandRequest)
         {
             var brandToUpdate = await _context.Brands.FindAsync(brandId)
                 ?? throw new NotFoundException("Brand does not exist");
 
-            _mapper.Map(dto, brandToUpdate);
+            _mapper.Map(updateBrandRequest, brandToUpdate);
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Brand updated with id = {id}.", brandId);
 
-            return _mapper.Map<AdminBrandDetailsDto>(brandToUpdate);
+            return _mapper.Map<BrandDetailsResponse>(brandToUpdate);
         }
 
         public async Task DeleteBrandAdminAsync(int brandId)
@@ -106,11 +106,11 @@ namespace ECommerce.Business.Services
 
         }
 
-        public async Task<IEnumerable<BrandDto>> GetAllBrandsAsync()
+        public async Task<IEnumerable<BrandSummaryDto>> GetAllBrandsAsync()
         {
             var brands = await _context.Brands
                 .AsNoTracking()
-                .ProjectTo<BrandDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<BrandSummaryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
             return brands;
         }

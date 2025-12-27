@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using ECommerce.Business.DTOs.Orders.Admin;
-using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.Orders.Requests;
+using ECommerce.Business.DTOs.Orders.Responses;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
@@ -27,7 +27,7 @@ namespace ECommerce.Business.Services
         private readonly ILogger<OrderService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-        public async Task<PagedResponseDto<AdminOrderDto>> GetAllOrdersAdminAsync(AdminOrderSpecParams specParams)
+        public async Task<PagedResponse<AdminOrderSummaryDto>> GetAllOrdersAdminAsync(AdminOrderSpecParams specParams)
         {
             var query = _context.Orders.AsNoTracking().Include(o => o.User).AsQueryable();
 
@@ -52,9 +52,10 @@ namespace ECommerce.Business.Services
             //Sort
             query = specParams.Sort switch
             {
+                "newest" => query.OrderByDescending(o => o.Created),
                 "oldest" => query.OrderBy(o => o.Created),
-                "highestTotal" => query.OrderByDescending(o => o.TotalAmount),
-                "lowestTotal" => query.OrderBy(o => o.TotalAmount),
+                "totalAsc" => query.OrderBy(o => o.TotalAmount),
+                "totalDesc" => query.OrderByDescending(o => o.TotalAmount),
                 _ => query.OrderByDescending(o => o.Created)
             };
 
@@ -63,10 +64,10 @@ namespace ECommerce.Business.Services
             var items = await query
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)
                 .Take(specParams.PageSize)
-                .ProjectTo<AdminOrderDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<AdminOrderSummaryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
-            return new PagedResponseDto<AdminOrderDto>
+            return new PagedResponse<AdminOrderSummaryDto>
             {
                 PageIndex = specParams.PageIndex,
                 PageSize = specParams.PageSize,
@@ -75,18 +76,18 @@ namespace ECommerce.Business.Services
             };
         }
 
-        public async Task<AdminOrderDetailsDto> GetOrderDetailsAdminAsync(int orderId)
+        public async Task<OrderDetailsResponse> GetOrderDetailsAdminAsync(int orderId)
         {
             var order = await _context.Orders
                 .AsNoTracking()
                 .Where(o => o.Id == orderId)
-                .ProjectTo<AdminOrderDetailsDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Order does not exist.");
             return order;
         }
 
-        public async Task<AdminOrderDetailsDto> UpdateOrderAdminAsync(int orderId, AdminUpdateOrderDto dto)
+        public async Task<OrderDetailsResponse> UpdateOrderAdminAsync(int orderId, UpdateOrderRequest updateOrderRequest)
         {
 
 
@@ -100,28 +101,28 @@ namespace ECommerce.Business.Services
             var oldStatus = orderToUpdate.Status;
 
             //FastExit if status is same and no addressId sent
-            if (orderToUpdate.Status == dto.Status && dto.ShippingAddressId is null)
+            if (orderToUpdate.Status == updateOrderRequest.Status && updateOrderRequest.ShippingAddressId is null)
             {
-                return _mapper.Map<AdminOrderDetailsDto>(orderToUpdate);
+                return _mapper.Map<OrderDetailsResponse>(orderToUpdate);
             }
 
             //update status if not same
-            if (orderToUpdate.Status != dto.Status)
+            if (orderToUpdate.Status != updateOrderRequest.Status)
             {
                 //block terminal status updates
                 if (orderToUpdate.Status == OrderStatus.Delivered || orderToUpdate.Status == OrderStatus.Cancelled)
                     throw new BadRequestException($"Order is {orderToUpdate.Status}. No further changes allowed.");
 
                 //Shipped Orders can only be updated to Delivered
-                if (orderToUpdate.Status == OrderStatus.Shipped && dto.Status != OrderStatus.Delivered)
+                if (orderToUpdate.Status == OrderStatus.Shipped && updateOrderRequest.Status != OrderStatus.Delivered)
                     throw new BadRequestException($"Order is {orderToUpdate.Status}. Can only be updated to delivered.");
 
                 // Prevent Teleporting: Must be Shipped before Delivered
-                if (dto.Status == OrderStatus.Delivered && orderToUpdate.Status != OrderStatus.Shipped)
+                if (updateOrderRequest.Status == OrderStatus.Delivered && orderToUpdate.Status != OrderStatus.Shipped)
                     throw new BadRequestException("Order must be marked as Shipped before it can be Delivered.");
 
                 //if order is pending or processing and new status is canceled => retrieve stock
-                if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.Status == OrderStatus.Cancelled)
+                if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && updateOrderRequest.Status == OrderStatus.Cancelled)
                 {
                     var productsIds = orderToUpdate.Items.Select(i => i.OrderedProduct.Id).Distinct().ToList();
                     var productsDict = await _context.Products.Where(p => productsIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
@@ -135,28 +136,29 @@ namespace ECommerce.Business.Services
                     changes.Add("Inventory restocked");
                 }
 
-                orderToUpdate.Status = dto.Status;
+                orderToUpdate.Status = updateOrderRequest.Status;
                 //add milestone
                 orderToUpdate.OrderTrackingMilestones.Add(new OrderTrackingMilestone
                 {
-                    Status = dto.Status
+                    Status = updateOrderRequest.Status,
+                    TimeStamp = DateTime.UtcNow
                 });
-                changes.Add($"Status: {oldStatus} -> {dto.Status}");
+                changes.Add($"Status: {oldStatus} -> {updateOrderRequest.Status}");
             }
 
             //update address if order status is pending or processing & new addressid is not null
-            if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && dto.ShippingAddressId is not null)
+            if ((orderToUpdate.Status == OrderStatus.Pending || orderToUpdate.Status == OrderStatus.Processing) && updateOrderRequest.ShippingAddressId is not null)
             {
                 var shippingAddress = await _context.Addresses
                 .AsNoTracking()
-                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == orderToUpdate.UserId)
+                .Where(a => a.Id == updateOrderRequest.ShippingAddressId && a.UserId == orderToUpdate.UserId)
                 .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Shipping Address not found or belongs to another user.");
 
                 orderToUpdate.ShippingAddress = shippingAddress;
 
-                changes.Add($"Shipping Address updated (Source ID: {dto.ShippingAddressId})");
+                changes.Add($"Shipping Address updated (Source ID: {updateOrderRequest.ShippingAddressId})");
             }
             var changesWrittenToDB = await _context.SaveChangesAsync();
             if (_logger.IsEnabled(LogLevel.Information) && changes.Count > 0 && changesWrittenToDB > 0)
@@ -164,7 +166,7 @@ namespace ECommerce.Business.Services
                 var changeSummary = string.Join(", ", changes);
                 _logger.LogInformation("Order {OrderId} updated by Admin. Changes: {ChangeSummary}", orderToUpdate.Id, changeSummary);
             }
-            return _mapper.Map<AdminOrderDetailsDto>(orderToUpdate);
+            return _mapper.Map<OrderDetailsResponse>(orderToUpdate);
 
         }
 
@@ -181,7 +183,7 @@ namespace ECommerce.Business.Services
                 _logger.LogInformation("Order deleted with id = {orderId}.", orderToDelete.Id);
         }
 
-        public async Task<PagedResponseDto<OrderDto>> GetAllOrdersAsync(OrderSpecParams specParams)
+        public async Task<PagedResponse<OrderSummaryDto>> GetAllOrdersAsync(OrderSpecParams specParams)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -196,6 +198,7 @@ namespace ECommerce.Business.Services
             //Sort (oldest,totalAsc,totalDesc)
             query = specParams.Sort switch
             {
+                "newest" => query.OrderByDescending(o => o.Created),
                 "oldest" => query.OrderBy(o => o.Created),
                 "totalAsc" => query.OrderBy(o => o.TotalAmount),
                 "totalDesc" => query.OrderByDescending(o => o.TotalAmount),
@@ -207,11 +210,11 @@ namespace ECommerce.Business.Services
             var items = await query
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)
                 .Take(specParams.PageSize)
-                .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<OrderSummaryDto>(_mapper.ConfigurationProvider)
                 .AsSplitQuery()
                 .ToListAsync();
 
-            return new PagedResponseDto<OrderDto>
+            return new PagedResponse<OrderSummaryDto>
             {
                 PageIndex = specParams.PageIndex,
                 PageSize = specParams.PageSize,

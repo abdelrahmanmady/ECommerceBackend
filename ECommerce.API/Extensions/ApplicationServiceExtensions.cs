@@ -92,7 +92,7 @@ namespace ECommerce.API.Extensions
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                         logger.LogWarning("400 Validation Error: {Error}", errors);
 
-                        var errorResponse = new ApiErrorResponseDto
+                        var errorResponse = new ApiErrorResponse
                         {
                             StatusCode = 400,
                             Message = "Validation failed",

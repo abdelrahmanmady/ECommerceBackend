@@ -1,6 +1,6 @@
-﻿using ECommerce.Business.DTOs.Auth;
+﻿using ECommerce.Business.DTOs.Auth.Requests;
+using ECommerce.Business.DTOs.Auth.Responses;
 using ECommerce.Business.DTOs.Errors;
-using ECommerce.Business.DTOs.Users.Auth;
 using ECommerce.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,77 +18,74 @@ namespace ECommerce.API.Controllers
         [HttpPost("[action]")]
         [EndpointName("RegisterUser")]
         [EndpointSummary("Register a new user")]
-        [EndpointDescription("Creates a new user account with the default 'Customer' role. Requires a unique email and username.")]
-        [ProducesResponseType(typeof(UserSessionDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        [EndpointDescription("Creates a new user account with the default 'Customer' role. Requires a unique email and username, login automatically.")]
+        [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequestDto)
         {
-            var userCreated = await _authService.RegisterAsync(dto);
-            return StatusCode(StatusCodes.Status201Created, userCreated);
+            var (authResponseDto, refreshToken, refreshTokenExpiration) = await _authService.RegisterAsync(registerRequestDto);
+            SetRefreshTokenCookie(refreshToken, refreshTokenExpiration);
+            return StatusCode(StatusCodes.Status201Created, authResponseDto);
         }
 
         [HttpPost("[action]")]
         [EndpointName("LoginUser")]
         [EndpointSummary("Authenticate user")]
         [EndpointDescription("Validates credentials (username/email + password) and returns a JWT Access Token.")]
-        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), statusCode: StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
-            var authResponse = await _authService.LoginAsync(dto);
-            SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);
-            return Ok(new LoginResponseDto
-            {
-                AccessToken = authResponse.AccessToken,
-                User = authResponse.User
-            });
+            var (authResponseDto, refreshToken, refreshTokenExpiration) = await _authService.LoginAsync(dto);
+            SetRefreshTokenCookie(refreshToken, refreshTokenExpiration);
+            return Ok(authResponseDto);
         }
 
         [HttpPost("refresh-token")]
         [EndpointSummary("Refresh Access Token")]
         [EndpointDescription("Exchanges a valid Refresh Token for a new pair of Access/Refresh tokens.")]
-        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), statusCode: StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RefreshToken()
         {
-            var refreshToken = Request.Cookies["refreshToken"];
+            var existigRefreshToken = Request.Cookies["refreshToken"];
 
-            if (string.IsNullOrEmpty(refreshToken))
+            if (string.IsNullOrEmpty(existigRefreshToken))
             {
                 _logger.LogWarning("Refresh Token Attempt Failed: No token provided in cookies.");
 
-                return Unauthorized(new ApiErrorResponseDto
+                return Unauthorized(new ApiErrorResponse
                 {
                     StatusCode = 401,
                     Message = "No refresh token provided."
                 });
             }
-            var authResponse = await _authService.RefreshTokenAsync(refreshToken);
+            var (authResponseDto, refreshToken, refreshTokenExpiration) = await _authService.RefreshTokenAsync(existigRefreshToken);
 
-            SetRefreshTokenCookie(authResponse.RefreshToken, authResponse.RefreshTokenExpiration);
+            SetRefreshTokenCookie(refreshToken, refreshTokenExpiration);
 
-            return Ok(new LoginResponseDto
-            {
-                AccessToken = authResponse.AccessToken,
-                User = authResponse.User
-            });
+            return Ok(authResponseDto);
         }
 
         [HttpPost("revoke-token")]
         [Authorize]
         [EndpointSummary("Revoke Token (Logout)")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RevokeToken()
         {
             var token = Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(token))
-                return BadRequest(new ApiErrorResponseDto { StatusCode = 400, Message = "Token is required" });
+                return BadRequest(new ApiErrorResponse { StatusCode = 400, Message = "Token is required" });
 
             // 1. Revoke in DB
             await _authService.RevokeTokenAsync(token);

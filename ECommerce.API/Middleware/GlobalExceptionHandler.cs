@@ -56,7 +56,7 @@ namespace ECommerce.API.Middleware
 
             response.StatusCode = statusCode;
 
-            var errorResponse = new ApiErrorResponseDto
+            var errorResponse = new ApiErrorResponse
             {
                 StatusCode = statusCode,
                 Message = message,

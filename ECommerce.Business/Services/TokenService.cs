@@ -68,7 +68,7 @@ namespace ECommerce.Business.Services
             {
                 Token = Convert.ToBase64String(randomNumber),
                 ExpiresOn = DateTime.UtcNow.AddDays(daysToExpire),
-                CreatedOn = DateTime.UtcNow,
+                Created = DateTime.UtcNow,
                 UserId = userId
             };
         }

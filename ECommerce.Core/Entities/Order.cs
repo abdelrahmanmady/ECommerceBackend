@@ -5,8 +5,8 @@ namespace ECommerce.Core.Entities
     public class Order
     {
         public int Id { get; set; }
-        public DateTime Created { get; set; } = DateTime.UtcNow;
-        public DateTime Updated { get; set; } = DateTime.UtcNow;
+        public DateTime Created { get; set; }
+        public DateTime Updated { get; set; }
         public OrderStatus Status { get; set; }
         public decimal Subtotal { get; set; }
         public decimal ShippingFees { get; set; }

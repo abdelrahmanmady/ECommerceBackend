@@ -87,7 +87,7 @@ namespace ECommerce.API.Extensions
                         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                         context.Response.ContentType = "application/json";
 
-                        var errorResponse = new ApiErrorResponseDto
+                        var errorResponse = new ApiErrorResponse
                         {
                             StatusCode = (int)HttpStatusCode.Unauthorized,
                             Message = "You are not authorized.",
@@ -103,7 +103,7 @@ namespace ECommerce.API.Extensions
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         context.Response.ContentType = "application/json";
 
-                        var errorResponse = new ApiErrorResponseDto
+                        var errorResponse = new ApiErrorResponse
                         {
                             StatusCode = 403,
                             Message = "You are not authorized to access this resource.",

@@ -1,6 +1,6 @@
 ﻿using ECommerce.Business.DTOs.Errors;
-using ECommerce.Business.DTOs.Orders.Admin;
-using ECommerce.Business.DTOs.Orders.Profile;
+using ECommerce.Business.DTOs.Orders.Requests;
+using ECommerce.Business.DTOs.Orders.Responses;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Specifications.Orders;
@@ -21,9 +21,9 @@ namespace ECommerce.API.Controllers
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Get all orders for admin dashboard.")]
-        [ProducesResponseType(typeof(PagedResponseDto<AdminOrderDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(PagedResponse<AdminOrderSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllOrdersAdmin([FromQuery] AdminOrderSpecParams specParams)
             => Ok(await _orders.GetAllOrdersAdminAsync(specParams));
 
@@ -32,10 +32,10 @@ namespace ECommerce.API.Controllers
         [HttpGet("admin/{orderId:int}")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Get order details for an order.")]
-        [ProducesResponseType(typeof(AdminOrderDetailsDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(OrderDetailsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrderDetailsAdmin([FromRoute] int orderId)
             => Ok(await _orders.GetOrderDetailsAdminAsync(orderId));
 
@@ -43,12 +43,12 @@ namespace ECommerce.API.Controllers
         [HttpPut("admin/{orderId:int}")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Update order status , shipping address (if applicable).")]
-        [ProducesResponseType(typeof(AdminOrderDetailsDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateOrderAdmin([FromRoute] int orderId, [FromBody] AdminUpdateOrderDto dto)
+        [ProducesResponseType(typeof(OrderDetailsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateOrderAdmin([FromRoute] int orderId, [FromBody] UpdateOrderRequest dto)
         {
             var updatedOrder = await _orders.UpdateOrderAdminAsync(orderId, dto);
             return Ok(updatedOrder);
@@ -58,9 +58,9 @@ namespace ECommerce.API.Controllers
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Delete an order.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrderAdmin([FromRoute] int orderId)
         {
             await _orders.DeleteOrderAdminAsync(orderId);
@@ -69,8 +69,8 @@ namespace ECommerce.API.Controllers
 
         [HttpGet]
         [EndpointSummary("Get all orders of logged in user.")]
-        [ProducesResponseType(typeof(PagedResponseDto<OrderDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(PagedResponse<OrderSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetAllOrders([FromQuery] OrderSpecParams specParams)
             => Ok(await _orders.GetAllOrdersAsync(specParams));
 

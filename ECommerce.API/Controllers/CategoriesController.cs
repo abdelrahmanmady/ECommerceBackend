@@ -1,5 +1,5 @@
-﻿using ECommerce.Business.DTOs.Categories.Admin;
-using ECommerce.Business.DTOs.Categories.Store;
+﻿using ECommerce.Business.DTOs.Categories.Requests;
+using ECommerce.Business.DTOs.Categories.Responses;
 using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.Interfaces;
@@ -20,10 +20,10 @@ namespace ECommerce.API.Controllers
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Get all categories with paging and search support.")]
-        [ProducesResponseType(typeof(PagedResponseDto<AdminCategoryDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(PagedResponse<AdminCategorySummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllCategoriesAdmin([FromQuery] AdminCategorySpecParams specParams)
         {
             var result = await _categories.GetAllCategoriesAdminAsync(specParams);
@@ -33,10 +33,10 @@ namespace ECommerce.API.Controllers
         [HttpGet("admin/{categoryId:int}")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Get category details.")]
-        [ProducesResponseType(typeof(AdminCategoryDetailsDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CategoryDetailsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCategoryDetailsAdmin([FromRoute] int categoryId)
         {
             var category = await _categories.GetCategoryAdminAsync(categoryId);
@@ -46,14 +46,14 @@ namespace ECommerce.API.Controllers
         [HttpPost("admin")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Create new category.")]
-        [ProducesResponseType(typeof(AdminCategoryDetailsDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CreateCategoryAdmin([FromBody] AdminCreateCategoryDto dto)
+        [ProducesResponseType(typeof(CategoryDetailsResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateCategoryAdmin([FromBody] CreateCategoryRequest createCategoryRequest)
         {
-            var categoryCreated = await _categories.CreateCategoryAdminAsync(dto);
+            var categoryCreated = await _categories.CreateCategoryAdminAsync(createCategoryRequest);
             return CreatedAtAction(nameof(GetCategoryDetailsAdmin), new { categoryCreated.Id }, categoryCreated);
         }
 
@@ -61,14 +61,14 @@ namespace ECommerce.API.Controllers
         [HttpPut("admin/{categoryId:int}")]
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Update existing cateogry with its children.")]
-        [ProducesResponseType(typeof(AdminCategoryDetailsDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateCategoryAdmin([FromRoute] int categoryId, [FromBody] AdminUpdateCategoryDto dto)
+        [ProducesResponseType(typeof(CategoryDetailsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateCategoryAdmin([FromRoute] int categoryId, [FromBody] UpdateCategoryRequest updateCategoryRequest)
         {
-            var categoryUpdated = await _categories.UpdateCategoryAdminAsync(categoryId, dto);
+            var categoryUpdated = await _categories.UpdateCategoryAdminAsync(categoryId, updateCategoryRequest);
             return Ok(categoryUpdated);
         }
 
@@ -76,10 +76,10 @@ namespace ECommerce.API.Controllers
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Deletes a category if no product nor subcategories are referencing it.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> DeleteCategoryAdmin([FromRoute] int categoryId)
         {
             await _categories.DeleteCategoryAdminAsync(categoryId);
@@ -88,10 +88,10 @@ namespace ECommerce.API.Controllers
 
         [HttpGet]
         [EndpointSummary("Get all categories nested tree hierarchy.")]
-        [ProducesResponseType(typeof(List<CategoryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<CategorySummaryDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllCateories()
         {
-            var categoriesTree = await _categories.GetAllCategories();
+            var categoriesTree = await _categories.GetAllCategoriesAsync();
             return Ok(categoriesTree);
         }
     }

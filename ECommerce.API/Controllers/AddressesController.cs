@@ -1,4 +1,5 @@
-﻿using ECommerce.Business.DTOs.Addresses;
+﻿using ECommerce.Business.DTOs.Addresses.Requests;
+using ECommerce.Business.DTOs.Addresses.Responses;
 using ECommerce.Business.DTOs.Errors;
 using ECommerce.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -16,8 +17,8 @@ namespace ECommerce.API.Controllers
 
         [HttpGet]
         [EndpointSummary("Get all saved addresses of current logged in user.")]
-        [ProducesResponseType(typeof(IEnumerable<AddressDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(IEnumerable<AddressSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetAllAddresses()
         {
             var addresses = await _addresses.GetAllAddressesAsync();
@@ -26,32 +27,32 @@ namespace ECommerce.API.Controllers
 
         [HttpPost]
         [EndpointSummary("Adds a new saved address.")]
-        [ProducesResponseType(typeof(AddressDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> CreateAddress([FromBody] CreateAddressDto dto)
+        [ProducesResponseType(typeof(AddressSummaryDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> CreateAddress([FromBody] CreateAddressRequest createAddressRequest)
         {
-            var addressCreated = await _addresses.CreateAddressAsync(dto);
+            var addressCreated = await _addresses.CreateAddressAsync(createAddressRequest);
             return StatusCode(StatusCodes.Status201Created, addressCreated);
         }
 
         [HttpPut("{addressId:int}")]
         [EndpointSummary("Updates an existing address details.")]
-        [ProducesResponseType(typeof(AddressDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAddress([FromRoute] int addressId, [FromBody] UpdateAddressDto dto)
+        [ProducesResponseType(typeof(AddressSummaryDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateAddress([FromRoute] int addressId, [FromBody] UpdateAddressRequest updateAddressRequest)
         {
-            var addressUpdated = await _addresses.UpdateAddressAsync(addressId, dto);
+            var addressUpdated = await _addresses.UpdateAddressAsync(addressId, updateAddressRequest);
             return Ok(addressUpdated);
         }
 
         [HttpPut("{addressId:int}/set-default")]
         [EndpointSummary("Sets new address as default one.")]
-        [ProducesResponseType(typeof(IEnumerable<AddressDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(IEnumerable<AddressSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SetDefault([FromRoute] int addressId)
         {
             var addresses = await _addresses.SetDefaultAsync(addressId);
@@ -61,9 +62,9 @@ namespace ECommerce.API.Controllers
         [HttpDelete("{addressId:int}")]
         [EndpointSummary("Deletes existing address if not set as default.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> DeleteAddress([FromRoute] int addressId)
         {
             await _addresses.DeleteAddressAsync(addressId);

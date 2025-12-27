@@ -7,7 +7,8 @@
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
-        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public DateTime Created { get; set; }
+        public DateTime Updated { get; set; }
         public bool IsFeatured { get; set; }
         public bool IsDeleted { get; set; } = false;
         public byte[] Version { get; set; } = [];

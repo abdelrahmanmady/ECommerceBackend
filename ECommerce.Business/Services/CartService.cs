@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using ECommerce.Business.DTOs.ShoppingCart;
+using ECommerce.Business.DTOs.ShoppingCart.Requests;
+using ECommerce.Business.DTOs.ShoppingCart.Responses;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -22,16 +23,14 @@ namespace ECommerce.Business.Services
         private readonly IHttpContextAccessor _httpContext = httpContext;
         private readonly ILogger<CartService> _logger = logger;
 
-        public async Task<ShoppingCartDto> GetAsync()
-           => _mapper.Map<ShoppingCartDto>(await GetCartEntityAsync());
+        public async Task<CartResponse> GetCartAsync() => _mapper.Map<CartResponse>(await GetCartEntityAsync());
 
-
-        public async Task<ShoppingCartDto> UpdateAsync(UpdateShoppingCartDto dto)
+        public async Task<CartResponse> UpdateCartAsync(UpdateCartRequest updateCartRequest)
         {
             var cart = await GetCartEntityAsync();
 
             // 1. Get IDs of products in the incoming DTO
-            var incomingProductIds = dto.Items
+            var incomingProductIds = updateCartRequest.Items
                 .Select(i => i.ProductId)
                 .Distinct()
                 .ToList();
@@ -53,7 +52,7 @@ namespace ECommerce.Business.Services
                 .ToDictionaryAsync(p => p.Id);
 
             // 3. UPDATE/ADD Logic
-            foreach (var itemDto in dto.Items)
+            foreach (var itemDto in updateCartRequest.Items)
             {
                 if (!productsDict.TryGetValue(itemDto.ProductId, out var product))
                     throw new NotFoundException($"Product {itemDto.ProductId} does not exist.");
@@ -83,28 +82,26 @@ namespace ECommerce.Business.Services
                 }
             }
 
-            cart.LastUpdated = DateTime.UtcNow;
+            cart.Updated = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // Refresh cart from DB to get full navigation properties (Images, Brands) for the return DTO
-            // Or simpler: map the entity you just modified if EF tracking is up to date.
-            return _mapper.Map<ShoppingCartDto>(cart);
+            return _mapper.Map<CartResponse>(cart);
         }
 
-
-
-        public async Task ClearAsync()
+        public async Task ClearCartAsync()
         {
-            var cart = await GetCartEntityAsync();
+            var currentUserId = GetCurrentUserId();
 
-            if (cart.Items.Count != 0)
-            {
-                _context.CartItems.RemoveRange(cart.Items);
-                cart.LastUpdated = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-            }
+            await _context.CartItems
+                .Where(i => i.ShoppingCart.UserId == currentUserId)
+                .ExecuteDeleteAsync();
+
+            await _context.ShoppingCarts
+                .Where(sc => sc.UserId == currentUserId)
+                .ExecuteUpdateAsync(x => x.SetProperty(sc => sc.Updated, DateTime.UtcNow));
         }
 
+        //Helper Methods
         private string GetCurrentUserId()
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -114,7 +111,6 @@ namespace ECommerce.Business.Services
 
             return userId;
         }
-
         private async Task<ShoppingCart> GetCartEntityAsync()
         {
             var currentUserId = GetCurrentUserId();
@@ -125,9 +121,14 @@ namespace ECommerce.Business.Services
                 .IgnoreQueryFilters()
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
+
             if (cart == null)
             {
-                cart = new ShoppingCart { UserId = currentUserId };
+                cart = new ShoppingCart
+                {
+                    UserId = currentUserId,
+                    Updated = DateTime.UtcNow
+                };
                 _context.ShoppingCarts.Add(cart);
             }
 

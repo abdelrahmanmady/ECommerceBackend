@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using ECommerce.Business.DTOs.Checkout;
+using ECommerce.Business.DTOs.Checkout.Requests;
+using ECommerce.Business.DTOs.Checkout.Responses;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Enums;
@@ -24,15 +25,44 @@ namespace ECommerce.Business.Services
         private readonly ILogger<CheckoutService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-        public async Task<CheckoutPreviewDto> GetCheckoutPreviewAsync(ShippingMethod shippingMethod)
+        public async Task<CheckoutPreviewResponse> GetCheckoutPreviewAsync(ShippingMethod shippingMethod)
         {
             var currentUserId = GetCurrentUserId();
-            var cart = await GetCartEntityAsync(currentUserId);
+
+            var cart = await _context.ShoppingCarts
+                .Include(sc => sc.Items)
+                    .ThenInclude(i => i.Product)
+                        .ThenInclude(p => p.Images)
+                .IgnoreQueryFilters()
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(sc => sc.UserId == currentUserId)
+                ?? throw new NotFoundException("Shopping Cart does not exist for current user.");
+
             if (cart.Items.Count == 0)
                 throw new BadRequestException("Cannot checkout. Your cart is empty.");
+
+            var invalidItems = cart.Items
+                .Where(i => i.Product.IsDeleted)
+                .ToList();
+
+
+            if (invalidItems.Count > 0)
+            {
+                _context.CartItems.RemoveRange(invalidItems);
+
+                foreach (var item in invalidItems)
+                {
+                    cart.Items.Remove(item);
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Cleaned up {Count} deleted products from user cart.", invalidItems.Count);
+            }
+
             var calculations = ProcessShoppingCart(cart, shippingMethod);
 
-            var checkoutPreviewDto = _mapper.Map<CheckoutPreviewDto>(cart);
+            var checkoutPreviewDto = _mapper.Map<CheckoutPreviewResponse>(cart);
 
             checkoutPreviewDto.Subtotal = calculations.Subtotal;
             checkoutPreviewDto.ShippingFees = calculations.ShippingFees;
@@ -40,25 +70,48 @@ namespace ECommerce.Business.Services
             checkoutPreviewDto.Total = calculations.Total;
             checkoutPreviewDto.EstimatedDeliveryDateStart = DateTime.UtcNow.AddDays(shippingMethod == ShippingMethod.Express ? 2 : 5);
             checkoutPreviewDto.EstimatedDeliveryDateEnd = DateTime.UtcNow.AddDays(shippingMethod == ShippingMethod.Express ? 3 : 7);
+
             return checkoutPreviewDto;
         }
 
-        public async Task<OrderConfirmationDto> CheckoutAsync(CheckoutDto dto)
+        public async Task<OrderConfirmationResponse> CheckoutAsync(CheckoutRequest checkoutRequest)
         {
             var currentUserId = GetCurrentUserId();
-            var cart = await GetCartEntityAsync(currentUserId);
+
+            var cart = await _context.ShoppingCarts
+                .Include(sc => sc.Items)
+                    .ThenInclude(i => i.Product)
+                        .ThenInclude(p => p.Images)
+                .Include(sc => sc.User)
+                .IgnoreQueryFilters()
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(sc => sc.UserId == currentUserId)
+                ?? throw new NotFoundException("Shopping Cart does not exist for current user.");
 
             if (cart.Items.Count == 0)
                 throw new BadRequestException("Cannot checkout. Your cart is empty.");
 
+            var invalidItems = cart.Items
+                .Where(i => i.Product.IsDeleted)
+                .ToList();
+
+
+            if (invalidItems.Count > 0)
+            {
+                _context.CartItems.RemoveRange(invalidItems);
+                await _context.SaveChangesAsync();
+
+                throw new ConflictException("Some items in your cart are no longer available. Your cart has been updated. Please review before paying.");
+            }
+
             var shippingAddress = await _context.Addresses
                 .AsNoTracking()
-                .Where(a => a.Id == dto.ShippingAddressId && a.UserId == currentUserId)
+                .Where(a => a.Id == checkoutRequest.ShippingAddressId && a.UserId == currentUserId)
                 .ProjectTo<OrderAddress>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Shipping Address not found.");
 
-            var calculations = ProcessShoppingCart(cart, dto.ShippingMethod);
+            var calculations = ProcessShoppingCart(cart, checkoutRequest.ShippingMethod);
 
             //create order
             var orderToCreate = new Order
@@ -68,19 +121,20 @@ namespace ECommerce.Business.Services
                 ShippingFees = calculations.ShippingFees,
                 Taxes = calculations.Taxes,
                 TotalAmount = calculations.Total,
-                ShippingMethod = dto.ShippingMethod,
-                PaymentMethod = dto.PaymentMethod,
+                ShippingMethod = checkoutRequest.ShippingMethod,
+                PaymentMethod = checkoutRequest.PaymentMethod,
                 ShippingAddress = shippingAddress,
                 Items = [],
                 UserId = currentUserId,
                 User = cart.User,
-                OrderTrackingMilestones = []
+                OrderTrackingMilestones = [],
+                Created = DateTime.UtcNow,
+                Updated = DateTime.UtcNow
+
             };
 
-            //Loop over the cart items => validate stock => add them to order
             foreach (var cartItem in cart.Items)
             {
-                //product stock check
                 if (cartItem.Quantity > cartItem.Product.StockQuantity)
                     throw new BadRequestException($"Not enough stock for {cartItem.Product.Name}. Available: {cartItem.Product.StockQuantity}");
                 cartItem.Product.StockQuantity -= cartItem.Quantity;
@@ -91,11 +145,12 @@ namespace ECommerce.Business.Services
             orderToCreate.OrderTrackingMilestones.Add(new OrderTrackingMilestone
             {
                 Status = OrderStatus.Pending,
+                TimeStamp = DateTime.UtcNow,
             });
 
             _context.Orders.Add(orderToCreate);
             _context.CartItems.RemoveRange(cart.Items);
-            cart.LastUpdated = DateTime.UtcNow;
+            cart.Updated = DateTime.UtcNow;
 
             try
             {
@@ -108,7 +163,7 @@ namespace ECommerce.Business.Services
                 throw new ConflictException("Stock changed during checkout. Please try again.");
             }
 
-            return _mapper.Map<OrderConfirmationDto>(orderToCreate);
+            return _mapper.Map<OrderConfirmationResponse>(orderToCreate);
         }
 
         //Helper Methods
@@ -120,48 +175,6 @@ namespace ECommerce.Business.Services
                 throw new UnauthorizedException("User is not authenticated.");
 
             return userId;
-        }
-
-        private async Task<ShoppingCart> GetCartEntityAsync(string userId)
-        {
-
-            var cart = await _context.ShoppingCarts
-                .Include(sc => sc.Items)
-                    .ThenInclude(i => i.Product)
-                        .ThenInclude(p => p.Images)
-                .Include(sc => sc.User)
-                .IgnoreQueryFilters()
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(sc => sc.UserId == userId);
-            if (cart == null)
-            {
-                cart = new ShoppingCart { UserId = userId };
-                _context.ShoppingCarts.Add(cart);
-            }
-
-
-            // 1. Identify items where the product is archived/deleted
-            var invalidItems = cart.Items
-                .Where(i => i.Product.IsDeleted)
-                .ToList();
-
-            // 2. Remove them from DB
-            if (invalidItems.Count > 0)
-            {
-                _context.CartItems.RemoveRange(invalidItems);
-
-                // Remove from memory so the mapped DTO is clean
-                foreach (var item in invalidItems)
-                {
-                    cart.Items.Remove(item);
-                }
-
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Cleaned up {Count} deleted products from user cart.", invalidItems.Count);
-            }
-
-            return cart;
         }
 
         private static OrderCalculations ProcessShoppingCart(ShoppingCart cart, ShippingMethod shippingMethod)

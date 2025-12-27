@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public OrderedProduct OrderedProduct { get; set; } = null!;
         public int Quantity { get; set; }
-        public decimal Total => OrderedProduct.Price * Quantity;
+        public decimal Total { get; set; }
 
         //many to one relation with Order
         public int OrderId { get; set; }

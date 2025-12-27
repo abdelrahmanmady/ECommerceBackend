@@ -14,7 +14,7 @@ namespace ECommerce.Data.Seeders
             // 1. Seed Admin Manually
             if (await userManager.FindByEmailAsync("admin@myapp.com") == null)
             {
-                var admin = new ApplicationUser { FirstName = "Admin", LastName = "User", UserName = "admin", Email = "admin@myapp.com", EmailConfirmed = true };
+                var admin = new ApplicationUser { FirstName = "Admin", LastName = "User", UserName = "admin", Email = "admin@myapp.com", EmailConfirmed = true, Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
                 await userManager.CreateAsync(admin, "Admin@123");
                 await userManager.AddToRoleAsync(admin, "Admin");
             }

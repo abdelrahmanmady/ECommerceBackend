@@ -6,7 +6,7 @@ namespace ECommerce.Core.Entities
     {
         public int Id { get; set; }
         public OrderStatus Status { get; set; }
-        public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
+        public DateTime TimeStamp { get; set; }
 
         //many to one relation with order
         public int OrderId { get; set; }

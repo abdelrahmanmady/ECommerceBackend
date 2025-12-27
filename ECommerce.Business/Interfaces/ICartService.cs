@@ -1,11 +1,12 @@
-﻿using ECommerce.Business.DTOs.ShoppingCart;
+﻿using ECommerce.Business.DTOs.ShoppingCart.Requests;
+using ECommerce.Business.DTOs.ShoppingCart.Responses;
 
 namespace ECommerce.Business.Interfaces
 {
     public interface ICartService
     {
-        Task<ShoppingCartDto> GetAsync();
-        Task<ShoppingCartDto> UpdateAsync(UpdateShoppingCartDto dto);
-        Task ClearAsync();
+        Task<CartResponse> GetCartAsync();
+        Task<CartResponse> UpdateCartAsync(UpdateCartRequest updateShoppingCartRequest);
+        Task ClearCartAsync();
     }
 }

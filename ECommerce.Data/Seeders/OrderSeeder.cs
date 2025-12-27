@@ -74,7 +74,7 @@ namespace ECommerce.Data.Seeders
             var orderItems = new List<OrderItem>();
             foreach (var p in products)
             {
-                orderItems.Add(new OrderItem
+                var orderItem = new OrderItem
                 {
                     OrderedProduct = new OrderedProduct
                     {
@@ -84,8 +84,11 @@ namespace ECommerce.Data.Seeders
                         Price = p.Price,
                         ThumbnailUrl = p.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).First()
                     },
-                    Quantity = faker.Random.Int(1, 3)
-                });
+                    Quantity = faker.Random.Int(1, 3),
+
+                };
+                orderItem.Total = orderItem.Quantity * orderItem.OrderedProduct.Price;
+                orderItems.Add(orderItem);
             }
 
             var subtotal = orderItems.Sum(i => i.Total);

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using ECommerce.Business.DTOs.Addresses;
+using ECommerce.Business.DTOs.Addresses.Requests;
+using ECommerce.Business.DTOs.Addresses.Responses;
 using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
@@ -22,7 +23,7 @@ namespace ECommerce.Business.Services
         private readonly ILogger<BrandService> _logger = logger;
         private readonly IHttpContextAccessor _httpContext = httpContext;
 
-        public async Task<IEnumerable<AddressDto>> GetAllAddressesAsync()
+        public async Task<IEnumerable<AddressSummaryDto>> GetAllAddressesAsync()
         {
             var currentUserId = GetCurrentUserId();
 
@@ -30,12 +31,12 @@ namespace ECommerce.Business.Services
                 .AsNoTracking()
                 .Where(a => a.UserId == currentUserId)
                 .OrderByDescending(a => a.Updated)
-                .ProjectTo<AddressDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<AddressSummaryDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
             return addresses;
         }
 
-        public async Task<AddressDto> CreateAddressAsync(CreateAddressDto dto)
+        public async Task<AddressSummaryDto> CreateAddressAsync(CreateAddressRequest dto)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -44,8 +45,6 @@ namespace ECommerce.Business.Services
             addressToCreate.District ??= addressToCreate.City;
             addressToCreate.Governorate ??= addressToCreate.City;
             addressToCreate.Label ??= "No Label";
-            addressToCreate.Created = DateTime.UtcNow;
-            addressToCreate.Updated = DateTime.UtcNow;
 
             if (!await _context.Addresses.AnyAsync(a => a.UserId == currentUserId)) //addresses is empty for the logged in user
                 addressToCreate.IsDefault = true;
@@ -56,11 +55,11 @@ namespace ECommerce.Business.Services
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {currentUserId} added new address with id = {adddressToCreateId}", currentUserId, addressToCreate.Id);
 
-            return _mapper.Map<AddressDto>(addressToCreate);
+            return _mapper.Map<AddressSummaryDto>(addressToCreate);
 
         }
 
-        public async Task<AddressDto> UpdateAddressAsync(int addressId, UpdateAddressDto dto)
+        public async Task<AddressSummaryDto> UpdateAddressAsync(int addressId, UpdateAddressRequest dto)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -73,17 +72,16 @@ namespace ECommerce.Business.Services
             addressToUpdate.District ??= addressToUpdate.City;
             addressToUpdate.Governorate ??= addressToUpdate.City;
             addressToUpdate.Label ??= "No Label";
-            addressToUpdate.Updated = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {currentUserId} updated his existing address with id = {adddressToCreateId}", currentUserId, addressToUpdate.Id);
 
-            return _mapper.Map<AddressDto>(addressToUpdate);
+            return _mapper.Map<AddressSummaryDto>(addressToUpdate);
         }
 
-        public async Task<IEnumerable<AddressDto>> SetDefaultAsync(int addressId)
+        public async Task<IEnumerable<AddressSummaryDto>> SetDefaultAsync(int addressId)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -110,7 +108,7 @@ namespace ECommerce.Business.Services
                     _logger.LogInformation("User {currentUserId} changed his default address from address : {currentDefaultAddressId} to address : {addressToMarkDefaultId}", currentUserId, currentDefaultAddress?.Id, addressToMarkDefault.Id);
             }
 
-            return _mapper.Map<IEnumerable<AddressDto>>(savedAddresses);
+            return _mapper.Map<IEnumerable<AddressSummaryDto>>(savedAddresses);
 
         }
 
