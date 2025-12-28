@@ -66,7 +66,7 @@ namespace ECommerce.API.Controllers
 
         [HttpDelete("admin/{productId:int}")]
         [Authorize(Roles = "Admin")]
-        [EndpointSummary("Delete product with its images.")]
+        [EndpointSummary("Soft Delete a product, Images still stored in database and on disk to allow re activation of the product.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]

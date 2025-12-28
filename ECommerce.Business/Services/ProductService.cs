@@ -155,9 +155,13 @@ namespace ECommerce.Business.Services
 
         public async Task DeleteProductAdminAsync(int productId)
         {
-            var productToDelete = await _context.Products.FindAsync(productId)
+            var productToDelete = await _context.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == productId)
                 ?? throw new NotFoundException("Product does not exist.");
+            //soft delete a product
             productToDelete.IsDeleted = true;
+
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))

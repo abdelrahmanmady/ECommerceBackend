@@ -10,6 +10,6 @@
         public virtual ApplicationUser User { get; set; } = null!;
 
         //one to many relation with cartItems
-        public virtual ICollection<CartItem> Items { get; set; } = [];
+        public virtual List<CartItem> Items { get; set; } = [];
     }
 }

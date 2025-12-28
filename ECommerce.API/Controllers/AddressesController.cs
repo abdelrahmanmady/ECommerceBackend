@@ -64,7 +64,7 @@ namespace ECommerce.API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        //[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> DeleteAddress([FromRoute] int addressId)
         {
             await _addresses.DeleteAddressAsync(addressId);
