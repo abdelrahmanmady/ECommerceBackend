@@ -80,7 +80,7 @@ namespace ECommerce.Data.Seeders
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Description = p.Description,
+                        Description = p.OverviewDescription,
                         Price = p.Price,
                         ThumbnailUrl = p.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).First()
                     },

@@ -10,9 +10,13 @@ namespace ECommerce.Data.Config
         {
             builder.Property(p => p.Name).HasMaxLength(200);
 
-            builder.Property(p => p.Description).HasMaxLength(1000);
-
             builder.Property(p => p.Price).HasPrecision(18, 2);
+
+            builder.Property(p => p.OverviewHeadline).HasMaxLength(100);
+
+            builder.Property(p => p.OverviewDescription).HasMaxLength(1000);
+
+            builder.Property(p => p.CompositionText).HasMaxLength(100);
 
             builder.Property(p => p.Version).IsRowVersion();
 
@@ -35,6 +39,25 @@ namespace ECommerce.Data.Config
                 .WithOne(wi => wi.Product)
                 .HasForeignKey(wi => wi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //One To Many Relation with ProductCareInstruction ( Product (1) -> (N) ProductCareInstruction )
+            builder.HasMany(p => p.CareInstructions)
+                .WithOne(ci => ci.Product)
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //One To Many Relation with ProductFeature ( Product (1) -> (N) ProductFeature )
+            builder.HasMany(p => p.Features)
+                .WithOne(f => f.Product)
+                .HasForeignKey(f => f.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //One To Many Relation with ProductAttribute ( Product (1) -> (N) ProductAttribute )
+            builder.HasMany(p => p.Attributes)
+                .WithOne(a => a.Product)
+                .HasForeignKey(a => a.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Bogus;
 using ECommerce.Core.Entities;
+using ECommerce.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Data.Seeders
@@ -103,83 +104,132 @@ namespace ECommerce.Data.Seeders
             if (await context.Products.AnyAsync()) return;
 
             var brands = await context.Brands.ToListAsync();
+            // Load categories. 
+            // If you have a 'Children' navigation property, .Include(c => c.Children) would be better,
+            // but this logic works purely on the flat list of IDs.
             var categories = await context.Categories.ToListAsync();
-            var faker = new Faker();
 
+            var faker = new Faker();
             var products = new List<Product>();
 
-            var productBlueprints = new Dictionary<string, string[]>
+            // 1. Identify Parent Categories (Nodes that are NOT terminal)
+            // Any category that is listed as a 'Parent' for someone else is NOT a leaf.
+            // We assume your Category entity has a 'ParentId' property. 
+            // If it only has a 'Parent' navigation object, let me know.
+            var parentCategoryIds = categories
+                .Where(c => c.ParentId.HasValue)
+                .Select(c => c.ParentId!.Value)
+                .Distinct()
+                .ToHashSet();
+
+            // 2. Helper to generate relevant attributes dynamically
+            List<string> GetAttributeKeys(string categoryName)
             {
-                // --- MEN ---
-                { "T-Shirts", new[] { "Essential Crew Neck", "Graphic Print Tee", "Oversized Cotton T-Shirt", "Vintage Logo Tee", "Performance Polo" } },
-                { "Jeans", new[] { "Slim Fit Denim", "Straight Leg Jeans", "Ripped Wash Jeans", "Tapered Cargo Pants", "Classic Blue Jeans" } },
-                { "Sneakers", new[] { "Air Runner 500", "Court Vision Low", "Ultralight Jogger", "Retro High-Top", "Streetwear Skate Shoe" } },
-                { "Formal Shoes", new[] { "Leather Oxford", "Classic Brogues", "Suede Loafers", "Derby Shoes" } },
-                { "Watches", new[] { "Chronograph Steel", "Minimalist Leather Watch", "Digital Sport Watch", "Automatic Diver" } },
+                var name = categoryName.ToLower();
+                if (name.Contains("shoe") || name.Contains("sneaker") || name.Contains("boot"))
+                    return new List<string> { "Size", "Sole Material", "Upper Material" };
 
-                // --- WOMEN ---
-                { "Dresses", new[] { "Floral Summer Dress", "Elegant Evening Gown", "Casual Midi Dress", "Wrap Dress", "Knitted Sweater Dress" } },
-                { "Tops", new[] { "Silk Blouse", "Crop Top", "Linen Button-Up", "Chiffon Tunic" } },
-                { "Heels", new[] { "Classic Stilettos", "Block Heel Sandals", "Pointed Toe Pumps", "Ankle Strap Heels" } },
-                { "Handbags", new[] { "Leather Tote", "Quilted Crossbody", "Clutch Bag", "Designer Shoulder Bag" } },
+                if (name.Contains("watch") || name.Contains("jewelry"))
+                    return new List<string> { "Strap Material", "Water Resistance", "Dial Color" };
 
-                // --- KIDS ---
-                { "Baby Wear", new[] { "Cotton Onesie", "Soft Knit Set", "Animal Print Romper", "Cozy Sleepsuit" } },
-                { "School Shoes", new[] { "Durable Leather Shoes", "Velcro Strap Sneakers", "Black Formal Shoes" } }
-            };
+                if (name.Contains("bag") || name.Contains("tote"))
+                    return new List<string> { "Dimensions", "Number of Pockets", "Strap Length" };
 
-            // Loop through our defined blueprints and create products for matching categories
-            foreach (var blueprint in productBlueprints)
+                return new List<string> { "Size", "Fit", "Fabric Weight" };
+            }
+
+            // 3. Loop through ALL categories
+            foreach (var category in categories)
             {
-                // Find category in DB by Name (e.g. "Sneakers" might be under Men or Kids)
-                // We use ToList() to handle potential duplicates if names are reused across trees
-                var targetCategories = categories.Where(c => c.Name == blueprint.Key).ToList();
+                // FILTER: Skip if this category is a Parent (i.e., NOT terminal)
+                if (parentCategoryIds.Contains(category.Id))
+                    continue;
 
-                foreach (var category in targetCategories)
+                // Generate 3 to 6 products per terminal category
+                int productCount = faker.Random.Int(3, 6);
+
+                for (int i = 0; i < productCount; i++)
                 {
-                    // Generate between 5 and 8 products for THIS specific category
-                    int productCount = faker.Random.Int(5, 8);
+                    var brand = faker.PickRandom(brands);
+                    var fullName = $"{brand.Name} {category.Name} {faker.Commerce.Color()}";
+                    var seedKey = $"{category.Id}-{i}";
 
-                    for (int i = 0; i < productCount; i++)
+                    var product = new Product
                     {
-                        var brand = faker.PickRandom(brands);
-                        var baseName = faker.PickRandom(blueprint.Value);
+                        Name = fullName,
+                        Price = decimal.Parse(faker.Commerce.Price(20, 500)),
+                        StockQuantity = faker.Random.Int(5, 100),
+                        BrandId = brand.Id,
+                        CategoryId = category.Id,
 
-                        // Construct a realistic name: "Brand + Item + Color"
-                        // Ex: "Nike Air Runner 500 Red"
-                        var fullName = $"{brand.Name} {baseName} {faker.Commerce.Color()}";
+                        // Details
+                        OverviewHeadline = $"{faker.Commerce.ProductAdjective()} Design, {faker.Commerce.ProductAdjective()} Feel",
+                        OverviewDescription = faker.Lorem.Paragraphs(2),
+                        CompositionText = faker.PickRandom(new[] { "100% Cotton", "95% Polyester, 5% Elastane", "Genuine Leather", "Recycled Wool" }),
 
-                        // Unique seed logic: 
-                        // Using "CategoryId-Index" ensures images are consistent but distinct per product
-                        var seedKey = $"{category.Id}-{i}";
+                        // Badges
+                        IsSustainable = faker.Random.Bool(0.3f),
+                        IsFeatured = faker.Random.Bool(0.1f),
+                        IsDeleted = false,
 
-                        var productImages = new List<ProductImage>
+                        Created = DateTime.UtcNow,
+                        Updated = DateTime.UtcNow,
+
+                        // Images
+                        Images = new List<ProductImage>
+                {
+                    new() { IsMain = true, ImageUrl = $"https://picsum.photos/seed/{seedKey}-main/400/400" },
+                    new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-side/400/400" },
+                    new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-detail/400/400" }
+                }
+                    };
+
+                    // Features (Bullet points)
+                    int featureCount = faker.Random.Int(2, 4);
+                    for (int f = 0; f < featureCount; f++)
+                    {
+                        product.Features.Add(new ProductFeature
                         {
-                            new() { IsMain = true, ImageUrl = $"https://picsum.photos/seed/{seedKey}-main/300/300" },
-                            new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-side/300/300" },
-                            new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-back/300/300" },
-                            new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-detail/300/300" }
-                        };
-
-                        products.Add(new Product
-                        {
-                            Name = fullName,
-                            Description = faker.Commerce.ProductDescription(),
-                            Price = decimal.Parse(faker.Commerce.Price(30, 800)),
-                            StockQuantity = faker.Random.Int(10, 100),
-                            BrandId = brand.Id,
-                            CategoryId = category.Id,
-                            IsFeatured = faker.Random.Bool(0.1f), // 10% chance of being featured
-                            Images = productImages,
-                            Created = DateTime.UtcNow,
-                            Updated = DateTime.UtcNow,
+                            Feature = $"{faker.Commerce.ProductAdjective()} {faker.Commerce.ProductMaterial()}"
                         });
                     }
+
+                    // Care Instructions (Enum)
+                    var instructions = GetRandomCareInstructions(faker);
+                    foreach (var instr in instructions)
+                    {
+                        product.CareInstructions.Add(new ProductCareInstruction
+                        {
+                            Instruction = instr,
+                        });
+                    }
+
+                    // Attributes
+                    var attrKeys = GetAttributeKeys(category.Name);
+                    foreach (var key in attrKeys)
+                    {
+                        product.Attributes.Add(new ProductAttribute
+                        {
+                            Key = key,
+                            Value = key == "Size" ? faker.PickRandom("S", "M", "L", "XL") : faker.Commerce.ProductAdjective()
+                        });
+                    }
+
+                    products.Add(product);
                 }
             }
 
             context.Products.AddRange(products);
             await context.SaveChangesAsync();
+        }
+
+        // Helper: Pick 3 random Enum values
+        private static List<CareInstructionType> GetRandomCareInstructions(Faker faker)
+        {
+            var values = Enum.GetValues<CareInstructionType>()
+                                .Cast<CareInstructionType>()
+                                .ToList();
+            return [.. faker.PickRandom(values, 3)];
         }
     }
 }

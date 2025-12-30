@@ -10,6 +10,7 @@ using ECommerce.Business.DTOs.Checkout.Responses;
 using ECommerce.Business.DTOs.OrderItems;
 using ECommerce.Business.DTOs.Orders.Responses;
 using ECommerce.Business.DTOs.OrderTrackingMilestones;
+using ECommerce.Business.DTOs.ProductAttribute;
 using ECommerce.Business.DTOs.ProductImages.Responses;
 using ECommerce.Business.DTOs.Products.Requests;
 using ECommerce.Business.DTOs.Products.Responses;
@@ -82,7 +83,12 @@ namespace ECommerce.Business.Mappings
 
             CreateMap<Product, ProductDetailsResponse>()
                 .ForMember(d => d.BrandName, o => o.MapFrom(s => s.Brand.Name))
-                .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.Name));
+                .ForMember(d => d.CareInstructions, o => o.MapFrom(s => s.CareInstructions.Select(ci => ci.Instruction).ToList()))
+                .ForMember(d => d.Features, o => o.MapFrom(s => s.Features.Select(f => f.Feature).ToList()));
+
+            //ProductAttribut Mapping
+            CreateMap<ProductAttribute, ProductAttributeDto>();
+
 
             //ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
@@ -148,7 +154,7 @@ namespace ECommerce.Business.Mappings
                 {
                     Id = s.Product.Id,
                     Name = s.Product.Name,
-                    Description = s.Product.Description,
+                    Description = s.Product.OverviewDescription,
                     Price = s.Product.Price,
                     ThumbnailUrl = s.Product.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).First()
                 }));

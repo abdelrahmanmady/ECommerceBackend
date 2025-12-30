@@ -1,4 +1,6 @@
-﻿namespace ECommerce.Business.DTOs.Products.Responses
+﻿using ECommerce.Business.DTOs.Breadcrumb;
+
+namespace ECommerce.Business.DTOs.Products.Responses
 {
     public class ProductSummaryDto // Output
     {

@@ -4,9 +4,14 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
-        public string? Description { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+
+        //ProductDetails
+        public string? OverviewHeadline { get; set; }
+        public string OverviewDescription { get; set; } = null!;
+        public string CompositionText { get; set; } = null!;
+        public bool IsSustainable { get; set; }
         public DateTime Created { get; set; }
         public DateTime Updated { get; set; }
         public bool IsFeatured { get; set; }
@@ -34,5 +39,13 @@
         //One To Many Relation with WishlistItem ( Product (1) -> (N) WishListItem )
         public virtual ICollection<WishlistItem> WishlistItems { get; set; } = [];
 
+        //One To Many Relation with ProductCareInstruction ( Product (1) -> (N) ProductCareInstruction )
+        public virtual ICollection<ProductCareInstruction> CareInstructions { get; set; } = [];
+
+        //One To Many Relation with ProductFeature ( Product (1) -> (N) ProductFeature )
+        public virtual ICollection<ProductFeature> Features { get; set; } = [];
+
+        //One To Many Relation with ProductAttribute ( Product (1) -> (N) ProductAttribute )
+        public virtual ICollection<ProductAttribute> Attributes { get; set; } = [];
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace ECommerce.Business.DTOs.Products
+﻿namespace ECommerce.Business.DTOs.Breadcrumb
 {
-    public class BreadcrumbLink // Output
+    public class BreadcrumbLink
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

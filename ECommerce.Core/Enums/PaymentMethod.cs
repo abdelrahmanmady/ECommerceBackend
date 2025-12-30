@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Core.Enums
 {
-    public enum PaymentMethod
+    public enum PaymentMethod : byte
     {
         CashOnDelivery,
         Stripe,

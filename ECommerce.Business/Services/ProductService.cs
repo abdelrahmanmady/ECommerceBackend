@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using ECommerce.Business.DTOs.Breadcrumb;
 using ECommerce.Business.DTOs.Pagination;
-using ECommerce.Business.DTOs.Products;
 using ECommerce.Business.DTOs.Products.Requests;
 using ECommerce.Business.DTOs.Products.Responses;
 using ECommerce.Business.Interfaces;
@@ -42,9 +42,9 @@ namespace ECommerce.Business.Services
 
                 query = query.Where(p =>
                     (isNumeric && p.Id == searchId) ||
-                    p.Name.ToLower().Contains(term) ||
-                    (p.Description != null && p.Description.ToLower().Contains(term)) ||
-                    p.Category.Name.ToLower().Contains(term)
+                    p.Name.Contains(term) ||
+                    (p.OverviewDescription != null && p.OverviewDescription.Contains(term)) ||
+                    p.Category.Name.Contains(term)
                 );
             }
 
@@ -275,6 +275,7 @@ namespace ECommerce.Business.Services
                 .AsNoTracking()
                 .Where(p => p.Id == productId)
                 .ProjectTo<ProductDetailsResponse>(_mapper.ConfigurationProvider)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");
             return product;

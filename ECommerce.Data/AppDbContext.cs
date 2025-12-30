@@ -9,6 +9,9 @@ namespace ECommerce.Data
     {
         //Products Inventory
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductCareInstruction> ProductCareInstructions { get; set; }
+        public DbSet<ProductFeature> ProductFeatures { get; set; }
+        public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Brand> Brands { get; set; }
