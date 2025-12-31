@@ -14,6 +14,7 @@ using ECommerce.Business.DTOs.ProductAttribute;
 using ECommerce.Business.DTOs.ProductImages.Responses;
 using ECommerce.Business.DTOs.Products.Requests;
 using ECommerce.Business.DTOs.Products.Responses;
+using ECommerce.Business.DTOs.Reviews.Responses;
 using ECommerce.Business.DTOs.ShoppingCart.Responses;
 using ECommerce.Business.DTOs.WishlistItem;
 using ECommerce.Core.Entities;
@@ -85,6 +86,7 @@ namespace ECommerce.Business.Mappings
                 .ForMember(d => d.BrandName, o => o.MapFrom(s => s.Brand.Name))
                 .ForMember(d => d.CareInstructions, o => o.MapFrom(s => s.CareInstructions.Select(ci => ci.Instruction).ToList()))
                 .ForMember(d => d.Features, o => o.MapFrom(s => s.Features.Select(f => f.Feature).ToList()));
+
 
             //ProductAttribut Mapping
             CreateMap<ProductAttribute, ProductAttributeDto>();
@@ -165,7 +167,14 @@ namespace ECommerce.Business.Mappings
                 .ForMember(d => d.UserEmail, o => o.MapFrom(s => s.User.Email))
                 .ForMember(d => d.ItemsCount, o => o.MapFrom(s => s.Items.Count));
 
+            //Reviews Mapping
+            CreateMap<Review, ReviewSummaryDto>()
+                .ForMember(d => d.ProductThumbnailUrl, o => o.MapFrom(s => s.Product.Images.Where(i => i.IsMain).Select(i => i.ImageUrl).FirstOrDefault()))
+                .ForMember(d => d.ProductName, o => o.MapFrom(s => s.Product.Name));
 
+            CreateMap<Review, ReviewProductSummaryDto>()
+                .ForMember(d => d.UserAvatarUrl, o => o.MapFrom(s => s.User.AvatarUrl))
+                .ForMember(d => d.UserName, o => o.MapFrom(s => $"{s.User.FirstName} {s.User.LastName}"));
         }
     }
 }

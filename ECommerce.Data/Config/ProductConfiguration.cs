@@ -20,6 +20,8 @@ namespace ECommerce.Data.Config
 
             builder.Property(p => p.Version).IsRowVersion();
 
+            builder.Property(p => p.AverageRating).HasPrecision(2, 1);
+
             builder.HasQueryFilter(p => !p.IsDeleted);
 
             //One to Many Relationship with ProductImage ( Product (1) -> (N) ProductImage )
@@ -56,6 +58,12 @@ namespace ECommerce.Data.Config
             builder.HasMany(p => p.Attributes)
                 .WithOne(a => a.Product)
                 .HasForeignKey(a => a.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //One to Many Relation with Review ( Product (1) -> (N) Review )
+            builder.HasMany(p => p.Reviews)
+                .WithOne(r => r.Product)
+                .HasForeignKey(r => r.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 

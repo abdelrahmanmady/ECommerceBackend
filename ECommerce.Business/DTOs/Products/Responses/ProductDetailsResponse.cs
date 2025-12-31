@@ -11,6 +11,9 @@ namespace ECommerce.Business.DTOs.Products.Responses
         public string Name { get; set; } = string.Empty;
         public int BrandId { get; set; }
         public string BrandName { get; set; } = string.Empty;
+        public decimal AverageRating { get; set; }
+        public int ReviewsCount { get; set; }
+        public Dictionary<int, int> RatingDistribution { get; set; } = [];
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
         public string? OverviewHeadline { get; set; }

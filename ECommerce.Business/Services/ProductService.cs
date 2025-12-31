@@ -278,6 +278,33 @@ namespace ECommerce.Business.Services
                 .AsSplitQuery()
                 .FirstOrDefaultAsync()
                 ?? throw new NotFoundException("Product does not exist.");
+
+            var stats = await _context.Reviews
+                .AsNoTracking()
+                .Where(r => r.ProductId == productId)
+                .GroupBy(r => r.Rating)
+                .Select(g => new { Star = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var distribution = new Dictionary<int, int>
+            {
+                { 5, 0 },
+                { 4, 0 },
+                { 3, 0 },
+                { 2, 0 },
+                { 1, 0 }
+            };
+
+            foreach (var item in stats)
+            {
+                if (distribution.ContainsKey(item.Star))
+                {
+                    distribution[item.Star] = item.Count;
+                }
+            }
+
+            product.RatingDistribution = distribution;
+
             return product;
         }
 

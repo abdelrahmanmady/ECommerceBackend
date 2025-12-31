@@ -8,6 +8,7 @@ namespace ECommerce.Data.Config
     {
         public void Configure(EntityTypeBuilder<ApplicationUser> builder)
         {
+            builder.Property(u => u.AvatarUrl).HasMaxLength(2000);
             builder.Property(u => u.FirstName).HasMaxLength(50);
             builder.Property(u => u.LastName).HasMaxLength(50);
             builder.Property(u => u.UserName).HasMaxLength(30).IsRequired();
@@ -41,6 +42,12 @@ namespace ECommerce.Data.Config
             builder.HasMany(u => u.RefreshTokens)
                 .WithOne(rt => rt.User)
                 .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //One to Many Relation with Review ( ApplicationUser (1) -> (N) Review )
+            builder.HasMany(u => u.Reviews)
+                .WithOne(r => r.User)
+                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 

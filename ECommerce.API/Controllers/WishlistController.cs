@@ -31,7 +31,7 @@ namespace ECommerce.API.Controllers
         public async Task<IActionResult> AddToWishlist([FromRoute] int productId)
         {
             var wishlistedProductId = await _wishlist.AddToWishlistAsync(productId);
-            return CreatedAtAction(nameof(GetWishlist), wishlistedProductId);
+            return StatusCode(StatusCodes.Status201Created, new { wishlistedProductId });
         }
 
         [HttpDelete("{productId:int}")]

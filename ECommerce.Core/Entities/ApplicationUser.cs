@@ -6,6 +6,7 @@ namespace ECommerce.Core.Entities
 {
     public class ApplicationUser : IdentityUser
     {
+        public string? AvatarUrl { get; set; }
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public DateTime Created { get; set; }
@@ -27,6 +28,9 @@ namespace ECommerce.Core.Entities
 
         //One to Many Relation with RefreshToken ( ApplicationUser (1) -> (N) RefreshToken)
         public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+
+        //One to Many Relation with Review ( ApplicationUser (1) -> (N) Review )
+        public virtual ICollection<Review> Reviews { get; set; } = [];
 
     }
 }

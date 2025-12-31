@@ -17,14 +17,16 @@
         public bool IsFeatured { get; set; }
         public bool IsDeleted { get; set; } = false;
         public byte[] Version { get; set; } = [];
+        public decimal AverageRating { get; set; }
+        public int ReviewsCount { get; set; }
 
         //Parent -> Product(Child)
 
-        //One to Many relation with Category ( Category (1) -> (N) Porduct ) 
+        //One to Many Relation with Category ( Category (1) -> (N) Porduct ) 
         public int CategoryId { get; set; }
         public virtual Category Category { get; set; } = null!;
 
-        //One to Many relation with Brand ( Brand (1) -> (N) Porduct ) 
+        //One to Many Relation with Brand ( Brand (1) -> (N) Porduct ) 
         public int BrandId { get; set; }
         public virtual Brand Brand { get; set; } = null!;
 
@@ -33,19 +35,22 @@
         //One to Many Relationship with ProductImage ( Product (1) -> (N) ProductImage ) 
         public virtual ICollection<ProductImage> Images { get; set; } = [];
 
-        //One to Many relation with CartItems ( Product (1) -> (N) CartItem ) 
+        //One to Many Relation with CartItems ( Product (1) -> (N) CartItem ) 
         public virtual ICollection<CartItem> CartItems { get; set; } = [];
 
-        //One To Many Relation with WishlistItem ( Product (1) -> (N) WishListItem )
+        //One to Many Relation with WishlistItem ( Product (1) -> (N) WishListItem )
         public virtual ICollection<WishlistItem> WishlistItems { get; set; } = [];
 
-        //One To Many Relation with ProductCareInstruction ( Product (1) -> (N) ProductCareInstruction )
+        //One to Many Relation with ProductCareInstruction ( Product (1) -> (N) ProductCareInstruction )
         public virtual ICollection<ProductCareInstruction> CareInstructions { get; set; } = [];
 
-        //One To Many Relation with ProductFeature ( Product (1) -> (N) ProductFeature )
+        //One to Many Relation with ProductFeature ( Product (1) -> (N) ProductFeature )
         public virtual ICollection<ProductFeature> Features { get; set; } = [];
 
-        //One To Many Relation with ProductAttribute ( Product (1) -> (N) ProductAttribute )
+        //One to Many Relation with ProductAttribute ( Product (1) -> (N) ProductAttribute )
         public virtual ICollection<ProductAttribute> Attributes { get; set; } = [];
+
+        //One to Many Relation with Review ( Product (1) -> (N) Review )
+        public virtual ICollection<Review> Reviews { get; set; } = [];
     }
 }

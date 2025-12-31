@@ -7,6 +7,8 @@ namespace ECommerce.Business.DTOs.Products.Responses
         public int Id { get; set; }
         public string ThumbnailUrl { get; set; } = string.Empty;
         public string BrandedName { get; set; } = string.Empty;
+        public decimal AverageRating { get; set; }
+        public int ReviewsCount { get; set; }
         public decimal Price { get; set; }
         public int CategoryId { get; set; }
         public List<BreadcrumbLink> CategoryBreadcrumbLinks { get; set; } = [];
