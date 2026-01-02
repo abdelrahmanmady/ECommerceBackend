@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251231194123_Initial")]
+    [Migration("20260102025958_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -140,6 +140,9 @@ namespace ECommerce.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -174,7 +177,7 @@ namespace ECommerce.Data.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("Updated")
+                    b.Property<DateTime?>("Updated")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")

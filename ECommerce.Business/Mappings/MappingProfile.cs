@@ -16,6 +16,7 @@ using ECommerce.Business.DTOs.Products.Requests;
 using ECommerce.Business.DTOs.Products.Responses;
 using ECommerce.Business.DTOs.Reviews.Responses;
 using ECommerce.Business.DTOs.ShoppingCart.Responses;
+using ECommerce.Business.DTOs.Users.Responses;
 using ECommerce.Business.DTOs.WishlistItem;
 using ECommerce.Core.Entities;
 
