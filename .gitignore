@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /ECommerce.API/appsettings.Development.json
 #Ignore User Uploads
 /ECommerce.API/wwwroot/images/
+/migration.sql

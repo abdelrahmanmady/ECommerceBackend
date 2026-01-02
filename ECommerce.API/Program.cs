@@ -32,14 +32,15 @@ namespace ECommerce.API
                 app.UseExceptionHandler();
 
 
-
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
+                if (app.Environment.IsDevelopment())
                 {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ECommerce API v1");
-                });
+                    app.UseSwagger();
+                    app.UseSwaggerUI(c =>
+                    {
+                        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ECommerce API v1");
+                    });
 
-
+                }
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();
