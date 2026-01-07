@@ -46,7 +46,7 @@ namespace ECommerce.API.Controllers
         public async Task<IActionResult> CreateProductAdmin([FromBody] CreateProductRequest createProductRequest)
         {
             var createdProductId = await _products.CreateProductAdminAsync(createProductRequest);
-            return StatusCode(StatusCodes.Status201Created, new { createdProductId });
+            return StatusCode(StatusCodes.Status201Created, createdProductId);
         }
 
         [HttpPut("admin/{productId:int}")]
