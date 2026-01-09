@@ -4,7 +4,7 @@ using ECommerce.Core.Enums;
 
 namespace ECommerce.Business.DTOs.Products.Responses
 {
-    public class ProductDetailsResponse // Output
+    public class ProductDetailsResponse
     {
         public int Id { get; set; }
         public IEnumerable<ProductImageDto> Images { get; set; } = [];

@@ -143,6 +143,7 @@ namespace ECommerce.Business.Services
                     Status = updateOrderRequest.Status,
                     TimeStamp = DateTime.UtcNow
                 });
+                orderToUpdate.Updated = DateTime.UtcNow;
                 changes.Add($"Status: {oldStatus} -> {updateOrderRequest.Status}");
             }
 
@@ -157,7 +158,7 @@ namespace ECommerce.Business.Services
                 ?? throw new NotFoundException("Shipping Address not found or belongs to another user.");
 
                 orderToUpdate.ShippingAddress = shippingAddress;
-
+                orderToUpdate.Updated = DateTime.UtcNow;
                 changes.Add($"Shipping Address updated (Source ID: {updateOrderRequest.ShippingAddressId})");
             }
             var changesWrittenToDB = await _context.SaveChangesAsync();

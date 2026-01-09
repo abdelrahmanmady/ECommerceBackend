@@ -72,11 +72,10 @@ namespace ECommerce.Business.Mappings
             CreateMap<Product, AdminProductDetailsResponse>();
 
             CreateMap<CreateProductRequest, Product>()
-                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
-                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
+                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow));
 
             CreateMap<UpdateProductRequest, Product>()
-                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow)); ;
+                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
 
             CreateMap<Product, ProductSummaryDto>()
                 .ForMember(d => d.ThumbnailUrl, o => o.MapFrom(s => s.Images.Where(pi => pi.IsMain).Select(pi => pi.ImageUrl).FirstOrDefault()))
@@ -88,7 +87,7 @@ namespace ECommerce.Business.Mappings
                 .ForMember(d => d.Features, o => o.MapFrom(s => s.Features.Select(f => f.Feature).ToList()));
 
 
-            //ProductAttribut Mapping
+            //ProductAttribute Mapping
             CreateMap<ProductAttribute, ProductAttributeDto>();
 
 
@@ -115,8 +114,7 @@ namespace ECommerce.Business.Mappings
 
             //Order Mapping
             CreateMap<Order, AdminOrderSummaryDto>()
-                .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.FirstName + " " + s.User.LastName))
-                .ForMember(d => d.ItemsCount, o => o.MapFrom(s => s.Items.Count));
+                .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.FirstName + " " + s.User.LastName));
 
             CreateMap<Order, OrderDetailsResponse>()
                 .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.FirstName + " " + s.User.LastName));

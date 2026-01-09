@@ -242,7 +242,7 @@ namespace ECommerce.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Subtotal = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
                     ShippingFees = table.Column<decimal>(type: "DECIMAL(18,2)", nullable: false),
@@ -352,7 +352,7 @@ namespace ECommerce.Data.Migrations
                     CompositionText = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     IsSustainable = table.Column<bool>(type: "bit", nullable: false),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),

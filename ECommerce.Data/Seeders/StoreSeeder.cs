@@ -172,17 +172,17 @@ namespace ECommerce.Data.Seeders
                         IsFeatured = faker.Random.Bool(0.1f),
                         IsDeleted = false,
 
-                        Created = DateTime.UtcNow,
-                        Updated = DateTime.UtcNow,
+                        Created = faker.Date.Between(DateTime.UtcNow.AddDays(-60), DateTime.UtcNow),
 
                         // Images
                         Images = new List<ProductImage>
-                {
-                    new() { IsMain = true, ImageUrl = $"https://picsum.photos/seed/{seedKey}-main/400/400" },
-                    new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-side/400/400" },
-                    new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-detail/400/400" }
-                }
+                        {
+                            new() { IsMain = true, ImageUrl = $"https://picsum.photos/seed/{seedKey}-main/400/400" },
+                            new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-side/400/400" },
+                            new() { IsMain = false, ImageUrl = $"https://picsum.photos/seed/{seedKey}-detail/400/400" }
+                        }
                     };
+                    product.Updated = faker.Date.Between(product.Created, DateTime.UtcNow);
 
                     // Features (Bullet points)
                     int featureCount = faker.Random.Int(2, 4);

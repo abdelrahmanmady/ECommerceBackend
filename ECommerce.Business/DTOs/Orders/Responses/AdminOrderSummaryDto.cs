@@ -8,7 +8,8 @@ namespace ECommerce.Business.DTOs.Orders.Responses
         public string UserName { get; set; } = string.Empty;
         public OrderStatus Status { get; set; }
         public decimal TotalAmount { get; set; }
-        public int ItemsCount { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
         public DateTime Created { get; set; }
+        public DateTime? Updated { get; set; }
     }
 }

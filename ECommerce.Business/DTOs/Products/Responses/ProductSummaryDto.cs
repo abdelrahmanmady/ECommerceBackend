@@ -2,7 +2,7 @@
 
 namespace ECommerce.Business.DTOs.Products.Responses
 {
-    public class ProductSummaryDto // Output
+    public class ProductSummaryDto
     {
         public int Id { get; set; }
         public string ThumbnailUrl { get; set; } = string.Empty;

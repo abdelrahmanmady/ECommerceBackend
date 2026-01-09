@@ -128,8 +128,7 @@ namespace ECommerce.Business.Services
                 UserId = currentUserId,
                 User = cart.User,
                 OrderTrackingMilestones = [],
-                Created = DateTime.UtcNow,
-                Updated = DateTime.UtcNow
+                Created = DateTime.UtcNow
 
             };
 

@@ -44,7 +44,7 @@ namespace ECommerce.Data.Seeders
                 new[] { 0.1f, 0.15f, 0.2f, 0.45f, 0.1f }
             );
 
-            var createdDate = faker.Date.Past(3);
+            var createdDate = faker.Date.Between(DateTime.UtcNow.AddDays(-60), DateTime.UtcNow);
 
             var shippingMethod = faker.PickRandom<ShippingMethod>();
 
@@ -99,7 +99,6 @@ namespace ECommerce.Data.Seeders
             {
                 UserId = user.Id,
                 Created = createdDate,
-                Updated = createdDate,
                 Status = status,
                 ShippingMethod = shippingMethod,
                 PaymentMethod = paymentMethod,

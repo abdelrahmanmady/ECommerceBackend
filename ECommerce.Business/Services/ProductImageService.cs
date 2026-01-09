@@ -25,12 +25,8 @@ namespace ECommerce.Business.Services
 
         public async Task<IEnumerable<ProductImageDto>> AddImagesAsync(int productId, List<IFormFile> files)
         {
-            var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
-            if (!productExists)
-            {
-                throw new NotFoundException("Product does not exist.");
-            }
-
+            var product = await _context.Products.FindAsync(productId)
+                ?? throw new NotFoundException("Product does not exist.");
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
@@ -62,6 +58,7 @@ namespace ECommerce.Business.Services
                 }
 
                 _context.ProductImages.AddRange(uploadedImages);
+                product.Updated = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
             }
@@ -96,7 +93,7 @@ namespace ECommerce.Business.Services
             if (image.ProductId != productId)
                 throw new BadRequestException("Image does not belong to this product.");
 
-            var product = await _context.Products.FindAsync(image.ProductId)
+            var product = await _context.Products.FindAsync(productId)
                 ?? throw new NotFoundException("Product does not exist.");
 
             var currentMainImage = await _context.ProductImages
@@ -112,6 +109,7 @@ namespace ECommerce.Business.Services
                 await _context.SaveChangesAsync();
             }
             image.IsMain = true;
+            product.Updated = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
@@ -128,7 +126,7 @@ namespace ECommerce.Business.Services
             if (image.ProductId != productId)
                 throw new BadRequestException("Image does not belong to this product.");
 
-            var product = await _context.Products.FindAsync(image.ProductId)
+            var product = await _context.Products.FindAsync(productId)
                 ?? throw new NotFoundException("Product does not exist.");
 
             //Throw ConflictException
@@ -136,6 +134,7 @@ namespace ECommerce.Business.Services
                 throw new ConflictException("Cannot delete the main image. Set another image as main first.");
 
             _context.ProductImages.Remove(image);
+            product.Updated = DateTime.UtcNow;
             //await _fileStorageService.DeleteFileAsync(image.ImageUrl);
             await _context.SaveChangesAsync();
 

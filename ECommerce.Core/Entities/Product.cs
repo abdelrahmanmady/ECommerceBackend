@@ -13,7 +13,7 @@
         public string CompositionText { get; set; } = null!;
         public bool IsSustainable { get; set; }
         public DateTime Created { get; set; }
-        public DateTime Updated { get; set; }
+        public DateTime? Updated { get; set; }
         public bool IsFeatured { get; set; }
         public bool IsDeleted { get; set; } = false;
         public byte[] Version { get; set; } = [];
