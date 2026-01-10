@@ -43,6 +43,7 @@ namespace ECommerce.Business.Services
                 throw new NotFoundException("Product does not exist");
 
             var wishlist = await _context.Wishlists
+                .IgnoreQueryFilters()
                 .Include(w => w.Items)
                 .FirstOrDefaultAsync(w => w.UserId == currentUserId);
 
@@ -72,8 +73,8 @@ namespace ECommerce.Business.Services
         {
             var currentUserId = GetCurrentUserId();
             var wishlist = await _context.Wishlists
-                .Include(w => w.Items)
                 .IgnoreQueryFilters()
+                .Include(w => w.Items)
                 .FirstOrDefaultAsync(w => w.UserId == currentUserId);
 
             if (wishlist == null)
@@ -111,8 +112,10 @@ namespace ECommerce.Business.Services
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedException("User is not authenticated.");
 
+            else if (_context.Users.IgnoreQueryFilters().Any(u => u.Id == userId && u.IsDeleted))
+                throw new UnauthorizedException("User is no longer active.");
+
             return userId;
         }
-
     }
 }

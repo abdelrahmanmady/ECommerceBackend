@@ -20,6 +20,7 @@ namespace ECommerce.Business.Interfaces
         Task<AdminUserDetailsResponse> GetUserDetailsAdminAsync(string userId);
         Task<AdminUserDetailsResponse> UpdateUserRoleAdminAsync(string userId, string role);
         Task DeleteUserAdminAsync(string userId);
+        Task RestoreDeletedUserAdminAsync(string userId);
 
 
     }

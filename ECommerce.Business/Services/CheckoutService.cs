@@ -173,9 +173,11 @@ namespace ECommerce.Business.Services
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedException("User is not authenticated.");
 
+            else if (_context.Users.IgnoreQueryFilters().Any(u => u.Id == userId && u.IsDeleted))
+                throw new UnauthorizedException("User is no longer active.");
+
             return userId;
         }
-
         private static OrderCalculations ProcessShoppingCart(ShoppingCart cart, ShippingMethod shippingMethod)
         {
             var subtotal = cart.Items.Sum(ci => ci.Product.Price * ci.Quantity);

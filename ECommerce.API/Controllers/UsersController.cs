@@ -89,10 +89,39 @@ namespace ECommerce.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+
         public async Task<IActionResult> GetAllUsersAdmin([FromQuery] AdminUserSpecParams specParams)
         {
             var response = await _users.GetAllUsersAdminAsync(specParams);
             return Ok(response);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("admin/{userId:guid}")]
+        [EndpointSummary("Admin soft deletes a user account.")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteUserAdmin([FromRoute] string userId)
+        {
+            await _users.DeleteUserAdminAsync(userId);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("admin/{userId:guid}/restore")]
+        [EndpointSummary("Admin restores a deleted user account.")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RestoreDeletedUserAdmin([FromRoute] string userId)
+        {
+            await _users.RestoreDeletedUserAdminAsync(userId);
+            return Ok();
         }
 
         private void SetRefreshTokenCookie(string token, DateTime expires)

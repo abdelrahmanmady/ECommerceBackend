@@ -25,24 +25,22 @@ namespace ECommerce.Business.Services
 
         public async Task<CartResponse> GetCartAsync()
         {
-            //fetch current user cart.
             var currentUserId = GetCurrentUserId();
 
             var cart = await _context.ShoppingCarts
+                .IgnoreQueryFilters()
+                .Where(sc => sc.UserId == currentUserId)
                 .Include(sc => sc.Items)
                     .ThenInclude(i => i.Product)
                         .ThenInclude(p => p.Images)
-                .IgnoreQueryFilters()
                 .AsSplitQuery()
-                .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
+                .FirstOrDefaultAsync();
 
-            //initialize cart for new users.
             if (cart == null)
             {
                 return new CartResponse();
             }
 
-            //check soft deleted products.
             var invalidItems = cart.Items
                 .Where(i => i.Product.IsDeleted || i.Product.StockQuantity == 0)
                 .ToList();
@@ -51,10 +49,8 @@ namespace ECommerce.Business.Services
 
             if (invalidItems.Count > 0)
             {
-                //remove from Database
                 _context.CartItems.RemoveRange(invalidItems);
 
-                // Remove from memory so the mapped DTO is clean
                 foreach (var item in invalidItems)
                 {
                     cart.Items.Remove(item);
@@ -80,24 +76,24 @@ namespace ECommerce.Business.Services
 
             try
             {
-                //Get current user cart
                 var currentUserId = GetCurrentUserId();
+
                 var cart = await _context.ShoppingCarts
-                    .Include(c => c.Items)
                     .IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(sc => sc.UserId == currentUserId);
-                //initialize cart for new users
+                    .Where(sc => sc.UserId == currentUserId)
+                    .Include(c => c.Items)
+                    .FirstOrDefaultAsync();
+
                 if (cart == null)
                 {
                     cart = new ShoppingCart { UserId = currentUserId };
                     _context.ShoppingCarts.Add(cart);
                 }
-                //delete items from Database not included in the update request 
+
                 var incomingProductIds = updateCartRequest.Items.Select(i => i.ProductId).Distinct().ToList();
 
                 cart.Items.RemoveAll(i => !incomingProductIds.Contains(i.ProductId));
 
-                //update cart
                 var productsDict = await _context.Products
                     .Include(p => p.Images)
                     .Where(p => incomingProductIds.Contains(p.Id))
@@ -108,13 +104,11 @@ namespace ECommerce.Business.Services
 
                 foreach (var itemDto in updateCartRequest.Items)
                 {
-                    //product does not exist or hard deleted(redundant as the database restricts deleting products with cart items)
                     if (!productsDict.TryGetValue(itemDto.ProductId, out var product))
                     {
                         warnings.Add($"Item {itemDto.ProductId} not added because it is no longer exists.");
                         continue;
                     }
-                    //soft deleted product
                     if (product.IsDeleted)
                     {
                         warnings.Add($"Item '{product.Name}' not added because it is no longer available.");
@@ -125,13 +119,12 @@ namespace ECommerce.Business.Services
                         warnings.Add($"Item '{product.Name}' not added because it is out of stock.");
                         continue;
                     }
-                    //quantity of item in request exceeds the available product stock
                     if (product.StockQuantity < itemDto.Quantity)
                     {
                         itemDto.Quantity = product.StockQuantity;
                         warnings.Add($"Quantity for '{product.Name}' adjusted to {product.StockQuantity} due to stock limits.");
                     }
-                    //update item if existing in cart or initialize it if not.
+
                     var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == itemDto.ProductId);
 
                     if (existingItem != null)
@@ -149,7 +142,7 @@ namespace ECommerce.Business.Services
                         });
                     }
                 }
-                //update cart metadata
+
                 cart.Updated = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -170,7 +163,7 @@ namespace ECommerce.Business.Services
             var currentUserId = GetCurrentUserId();
 
             await _context.CartItems
-                .Where(i => i.ShoppingCart.UserId == currentUserId)
+                .Where(ci => ci.ShoppingCart.UserId == currentUserId)
                 .ExecuteDeleteAsync();
 
             await _context.ShoppingCarts
@@ -185,6 +178,9 @@ namespace ECommerce.Business.Services
 
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedException("User is not authenticated.");
+
+            else if (_context.Users.IgnoreQueryFilters().Any(u => u.Id == userId && u.IsDeleted))
+                throw new UnauthorizedException("User is no longer active.");
 
             return userId;
         }

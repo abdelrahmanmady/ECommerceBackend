@@ -296,9 +296,46 @@ namespace ECommerce.Business.Services
             throw new NotImplementedException();
         }
 
-        public Task DeleteUserAdminAsync(string userId)
+        public async Task DeleteUserAdminAsync(string userId)
         {
-            throw new NotImplementedException();
+            var userToDelete = await _context.Users.FindAsync(userId)
+                ?? throw new NotFoundException("User does not exist.");
+
+            userToDelete.IsDeleted = true;
+            userToDelete.Updated = DateTime.UtcNow;
+
+            userToDelete.SecurityStamp = Guid.NewGuid().ToString();
+
+            //remove user's all refresh tokens
+            var userTokens = await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId)
+                .ToListAsync();
+            _context.RefreshTokens.RemoveRange(userTokens);
+
+            await _context.SaveChangesAsync();
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("User {userId} is soft deleted.", userId);
+        }
+
+        public async Task RestoreDeletedUserAdminAsync(string userId)
+        {
+            var userToRestore = await _context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new NotFoundException("User does not exist.");
+
+            if (!userToRestore.IsDeleted) return;
+
+            userToRestore.IsDeleted = false;
+            userToRestore.Updated = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("User {userId} is restored to active.", userId);
         }
 
         //Helper Methods
@@ -308,6 +345,9 @@ namespace ECommerce.Business.Services
 
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedException("User is not authenticated.");
+
+            else if (_context.Users.IgnoreQueryFilters().Any(u => u.Id == userId && u.IsDeleted))
+                throw new UnauthorizedException("User is no longer active.");
 
             return userId;
         }
