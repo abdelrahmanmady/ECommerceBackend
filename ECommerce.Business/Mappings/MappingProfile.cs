@@ -177,6 +177,10 @@ namespace ECommerce.Business.Mappings
             //Users Mapping
             CreateMap<ApplicationUser, UserDetailsResponse>();
 
+            CreateMap<ApplicationUser, AdminUserSummaryDto>()
+                .ForMember(d => d.FullName, o => o.MapFrom(s => $"{s.FirstName} {s.LastName}"))
+                .ForMember(d => d.OrdersCount, o => o.MapFrom(s => s.Orders.Count));
+
         }
     }
 }

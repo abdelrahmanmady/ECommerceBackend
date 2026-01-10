@@ -23,7 +23,7 @@ namespace ECommerce.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllBrandsAsmin([FromQuery] AdminBrandSpecParams specParams)
+        public async Task<IActionResult> GetAllBrandsAdmin([FromQuery] AdminBrandSpecParams specParams)
         {
             var brands = await _brands.GetAllBrandsAdminAsync(specParams);
             return Ok(brands);

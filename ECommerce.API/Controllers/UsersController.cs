@@ -1,8 +1,10 @@
 ﻿using ECommerce.Business.DTOs.Auth.Responses;
 using ECommerce.Business.DTOs.Errors;
+using ECommerce.Business.DTOs.Pagination;
 using ECommerce.Business.DTOs.Users.Requests;
 using ECommerce.Business.DTOs.Users.Responses;
 using ECommerce.Business.Interfaces;
+using ECommerce.Core.Specifications.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -80,6 +82,18 @@ namespace ECommerce.API.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin")]
+        [EndpointSummary("Admin lists all users with filter,search,sort and pagination support.")]
+        [ProducesResponseType(typeof(PagedResponse<AdminUserSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllUsersAdmin([FromQuery] AdminUserSpecParams specParams)
+        {
+            var response = await _users.GetAllUsersAdminAsync(specParams);
+            return Ok(response);
+        }
 
         private void SetRefreshTokenCookie(string token, DateTime expires)
         {

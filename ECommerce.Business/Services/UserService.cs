@@ -62,6 +62,7 @@ namespace ECommerce.Business.Services
             //upload new image
             var relativePath = await _fileStorageService.SaveFileAsync(uploadImageRequest.File, "users");
             user.AvatarUrl = relativePath;
+            user.Updated = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             var fileName = Path.GetFileName(relativePath);
@@ -90,6 +91,7 @@ namespace ECommerce.Business.Services
             var fileName = Path.GetFileName(filePath);
             user.AvatarUrl = null;
             await _fileStorageService.DeleteFileAsync(filePath);
+            user.Updated = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             if (_logger.IsEnabled(LogLevel.Information))
@@ -132,6 +134,7 @@ namespace ECommerce.Business.Services
             }
 
             var result = await _userManager.UpdateAsync(user);
+            user.Updated = DateTime.UtcNow;
 
             if (!result.Succeeded)
             {
@@ -161,7 +164,7 @@ namespace ECommerce.Business.Services
                 ?? throw new NotFoundException("User does not exist.");
 
             var result = await _userManager.ChangePasswordAsync(user, updatePasswordRequest.OldPassword, updatePasswordRequest.NewPassword);
-
+            user.Updated = DateTime.UtcNow;
             if (!result.Succeeded)
             {
                 var errors = string.Join("; ", result.Errors.Select(e => $"{e.Code}:{e.Description}"));
@@ -209,9 +212,78 @@ namespace ECommerce.Business.Services
 
         //Admin
 
-        public Task<PagedResponse<AdminUserSummaryDto>> GetAllUsersAdminAsync(AdminUserSpecParams specParams)
+        public async Task<PagedResponse<AdminUserSummaryDto>> GetAllUsersAdminAsync(AdminUserSpecParams specParams)
         {
-            throw new NotImplementedException();
+            var query = _context.Users.IgnoreQueryFilters().AsNoTracking().Include(u => u.Orders).AsQueryable();
+
+            //Filter
+            query = specParams.Status switch
+            {
+                "active" => query.Where(u => !u.IsDeleted),
+                "deleted" => query.Where(u => u.IsDeleted),
+                _ => query,
+            };
+
+            if (!string.IsNullOrEmpty(specParams.Role))
+            {
+                query = query.Where(u => _context.Set<IdentityUserRole<string>>()
+                .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur, r })
+                .Any(x => x.ur.UserId == u.Id && x.r.Name == specParams.Role));
+            }
+
+            //Search
+            if (!string.IsNullOrEmpty(specParams.Search))
+            {
+                query = query.Where(u => u.FirstName.Contains(specParams.Search)
+                || u.LastName.Contains(specParams.Search)
+                || u.Email!.Contains(specParams.Search)
+                || (u.PhoneNumber != null && u.PhoneNumber.Contains(specParams.Search)));
+            }
+
+            //Sort
+            query = specParams.Sort switch
+            {
+                "createdAsc" => query.OrderBy(u => u.Created),
+                "createdDesc" => query.OrderByDescending(u => u.Created),
+                "updatedDesc" => query.OrderByDescending(u => u.Updated).ThenByDescending(u => u.Created),
+                "ordersDesc" => query.OrderByDescending(u => u.Orders.Count()),
+                "nameAsc" => query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName),
+                "emailAsc" => query.OrderBy(u => u.Email),
+                _ => query.OrderByDescending(u => u.Created)
+            };
+
+            var totalCount = await query.CountAsync();
+            var rawitems = await query
+                .Skip((specParams.PageIndex - 1) * specParams.PageSize)
+                .Take(specParams.PageSize)
+                .Select(u => new
+                {
+                    User = u,
+                    Role = _context.Set<IdentityUserRole<string>>()
+                    .Where(ur => ur.UserId == u.Id)
+                    .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                    .OrderBy(n => n)
+                    .FirstOrDefault() ?? "Unknown"
+
+                })
+                .ToListAsync();
+
+            var items = rawitems.Select(item =>
+            {
+                var userDto = _mapper.Map<AdminUserSummaryDto>(item.User);
+                userDto.Role = item.Role;
+                return userDto;
+            })
+                .ToList();
+
+            return new PagedResponse<AdminUserSummaryDto>
+            {
+                PageIndex = specParams.PageIndex,
+                PageSize = specParams.PageSize,
+                TotalCount = totalCount,
+                Items = items
+            };
+
         }
 
         public Task<AdminUserDetailsResponse> GetUserDetailsAdminAsync(string userId)
