@@ -14,18 +14,30 @@ namespace ECommerce.Data.Seeders
             // 1. Seed Admin Manually
             if (await userManager.FindByEmailAsync("admin@myapp.com") == null)
             {
-                var admin = new ApplicationUser { FirstName = "Abdelrhman", LastName = "Mady", UserName = "admin", Email = "admin@myapp.com", EmailConfirmed = true, Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
+                var admin = new ApplicationUser { FirstName = "Abdelrhman", LastName = "Mady", UserName = "admin", Email = "admin@myapp.com", EmailConfirmed = true, Created = DateTime.UtcNow };
                 await userManager.CreateAsync(admin, "Admin@123");
-                await userManager.AddToRoleAsync(admin, "Admin");
+                await userManager.AddToRoleAsync(admin, "SuperAdmin");
             }
 
             // 2. Seed 20 Random Customers using Bogus
             if (await userManager.Users.CountAsync() < 5)
             {
                 // Generate 20 fake users in memory
-                var fakeUsers = UserFaker.GetUser().Generate(20);
+                var fakeAdmins = UserFaker.GetUser().Generate(3);
+                var fakeSellers = UserFaker.GetUser().Generate(5);
+                var fakeCustomers = UserFaker.GetUser().Generate(20);
 
-                foreach (var user in fakeUsers)
+                foreach (var admin in fakeAdmins)
+                {
+                    await userManager.CreateAsync(admin, "Pa$$w0rd");
+                    await userManager.AddToRoleAsync(admin, "Admin");
+                }
+                foreach (var seller in fakeSellers)
+                {
+                    await userManager.CreateAsync(seller, "Pa$$w0rd");
+                    await userManager.AddToRoleAsync(seller, "Seller");
+                }
+                foreach (var user in fakeCustomers)
                 {
                     user.Addresses.FirstOrDefault()!.IsDefault = true;
                     await userManager.CreateAsync(user, "Pa$$w0rd");
@@ -36,7 +48,7 @@ namespace ECommerce.Data.Seeders
 
         private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
         {
-            string[] roleNames = { "Admin", "Customer", "Seller" };
+            string[] roleNames = { "SuperAdmin", "Admin", "Seller", "Customer" };
             foreach (var roleName in roleNames)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))

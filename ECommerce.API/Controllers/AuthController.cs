@@ -15,8 +15,7 @@ namespace ECommerce.API.Controllers
         private readonly IAuthService _authService = authService;
         private readonly ILogger<AuthController> _logger = logger;
 
-        [HttpPost("[action]")]
-        [EndpointName("RegisterUser")]
+        [HttpPost("Register")]
         [EndpointSummary("Register a new user")]
         [EndpointDescription("Creates a new user account with the default 'Customer' role. Requires a unique email and username, login automatically.")]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
@@ -30,8 +29,7 @@ namespace ECommerce.API.Controllers
             return StatusCode(StatusCodes.Status201Created, authResponse);
         }
 
-        [HttpPost("[action]")]
-        [EndpointName("LoginUser")]
+        [HttpPost("Login")]
         [EndpointSummary("Authenticate user")]
         [EndpointDescription("Validates credentials (username/email + password) and returns a JWT Access Token.")]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
@@ -73,8 +71,8 @@ namespace ECommerce.API.Controllers
             return Ok(authResponse);
         }
 
-        [HttpPost("revoke-token")]
         [Authorize]
+        [HttpPost("revoke-token")]
         [EndpointSummary("Revoke Token (Logout)")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

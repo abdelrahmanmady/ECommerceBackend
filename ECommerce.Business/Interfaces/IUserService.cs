@@ -18,9 +18,10 @@ namespace ECommerce.Business.Interfaces
         //Admin
         Task<PagedResponse<AdminUserSummaryDto>> GetAllUsersAdminAsync(AdminUserSpecParams specParams);
         Task<AdminUserDetailsResponse> GetUserDetailsAdminAsync(string userId);
-        Task<AdminUserDetailsResponse> UpdateUserRoleAdminAsync(string userId, string role);
+        Task UpdateUserRoleAdminAsync(string userId, AdminUpdateRoleRequest adminUpdateRoleRequest);
         Task DeleteUserAdminAsync(string userId);
         Task RestoreDeletedUserAdminAsync(string userId);
+        Task UnlockUserAdminAsync(string userId);
 
 
     }

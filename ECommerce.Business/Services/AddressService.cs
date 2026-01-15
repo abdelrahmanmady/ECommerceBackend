@@ -101,9 +101,11 @@ namespace ECommerce.Business.Services
                 if (currentDefaultAddress is not null)
                 {
                     currentDefaultAddress.IsDefault = false;
+                    currentDefaultAddress.Updated = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                 }
                 addressToMarkDefault.IsDefault = true;
+                addressToMarkDefault.Updated = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
@@ -121,9 +123,6 @@ namespace ECommerce.Business.Services
             var addressToDelete = await _context.Addresses
                 .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == currentUserId)
                 ?? throw new NotFoundException("Address does not exist or does not belong to current user.");
-
-            //if (addressToDelete.IsDefault)
-            //    throw new ConflictException("Cannot delete the default address, set another to default first.");
 
             _context.Addresses.Remove(addressToDelete);
 

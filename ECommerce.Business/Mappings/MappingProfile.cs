@@ -14,6 +14,7 @@ using ECommerce.Business.DTOs.ProductAttribute;
 using ECommerce.Business.DTOs.ProductImages.Responses;
 using ECommerce.Business.DTOs.Products.Requests;
 using ECommerce.Business.DTOs.Products.Responses;
+using ECommerce.Business.DTOs.RefreshTokens.Responses;
 using ECommerce.Business.DTOs.Reviews.Responses;
 using ECommerce.Business.DTOs.ShoppingCart.Responses;
 using ECommerce.Business.DTOs.Users.Responses;
@@ -136,8 +137,7 @@ namespace ECommerce.Business.Mappings
             CreateMap<Address, AddressSummaryDto>();
 
             CreateMap<CreateAddressRequest, Address>()
-                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
-                .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
+                .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow));
 
             CreateMap<UpdateAddressRequest, Address>()
                 .ForMember(d => d.Updated, o => o.MapFrom(s => DateTime.UtcNow));
@@ -180,6 +180,20 @@ namespace ECommerce.Business.Mappings
             CreateMap<ApplicationUser, AdminUserSummaryDto>()
                 .ForMember(d => d.FullName, o => o.MapFrom(s => $"{s.FirstName} {s.LastName}"))
                 .ForMember(d => d.OrdersCount, o => o.MapFrom(s => s.Orders.Count));
+
+            CreateMap<ApplicationUser, AdminUserDetailsResponse>()
+                .ForMember(d => d.FullName, o => o.MapFrom(s => $"{s.FirstName} {s.LastName}"))
+                .ForMember(d => d.AccountStatus, o => o.MapFrom(s => s.IsDeleted ? "Deleted" : (s.LockoutEnd.HasValue && s.LockoutEnd.Value > DateTime.UtcNow) ? "Locked" : "Active"))
+                .ForMember(d => d.AddressesCount, o => o.MapFrom(s => s.Addresses.Count()))
+                .ForMember(d => d.ReviewsCount, o => o.MapFrom(s => s.Reviews.Count()))
+                .ForMember(d => d.OrdersCount, o => o.MapFrom(s => s.Orders.Count()))
+                .ForMember(d => d.TotalSpent, o => o.MapFrom(s => s.Orders.Sum(o => o.TotalAmount)))
+                .ForMember(d => d.LoginSessions, o => o.MapFrom(s => s.RefreshTokens)) //RefreshToken -> LoginSessionDto
+                .ForMember(d => d.SavedAddresses, o => o.MapFrom(s => s.Addresses)) //Address -> AddressSummaryDto
+                .ForMember(d => d.RecentOrders, o => o.MapFrom(s => s.Orders.OrderByDescending(o => o.Created).Take(5))); //Order -> AdminOrderSummaryDto
+
+            //RefreshTokens
+            CreateMap<RefreshToken, LoginSessionDto>();
 
         }
     }

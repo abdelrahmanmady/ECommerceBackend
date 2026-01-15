@@ -16,8 +16,8 @@ namespace ECommerce.API.Controllers
     {
         private readonly IBrandService _brands = brands;
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Get all brands with paging and search support.")]
         [ProducesResponseType(typeof(PagedResponse<AdminBrandSummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -29,8 +29,8 @@ namespace ECommerce.API.Controllers
             return Ok(brands);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin/{brandId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Get brand details.")]
         [ProducesResponseType(typeof(BrandDetailsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -42,8 +42,8 @@ namespace ECommerce.API.Controllers
             return Ok(brand);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Create a new brand.")]
         [ProducesResponseType(typeof(BrandDetailsResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -56,8 +56,8 @@ namespace ECommerce.API.Controllers
         }
 
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("admin/{brandId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Update existing brand.")]
         [ProducesResponseType(typeof(BrandDetailsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -70,8 +70,8 @@ namespace ECommerce.API.Controllers
             return Ok(brandUpdated);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpDelete("admin/{brandId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Delete existing brand if no products are referencing it.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

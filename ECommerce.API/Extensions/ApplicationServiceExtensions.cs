@@ -57,6 +57,7 @@ namespace ECommerce.API.Extensions
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IPermissionService, PermissionService>();
 
             // Add CORS
             services.AddCors(options =>
@@ -146,78 +147,6 @@ namespace ECommerce.API.Extensions
 
                 c.OperationFilter<SecurityRequirementsOperationFilter>();
             });
-
-            //OpenApi
-            //services.AddOpenApi(options =>
-            //{
-            //    //Configuring Openapi for swagger ui to work with jwt authentication
-            //    options.AddDocumentTransformer((document, context, cancellationToken) =>
-            //    {
-            //        document.Info = new OpenApiInfo
-            //        {
-            //            Title = "ECommerce API",
-            //            Version = "v1",
-            //            Description = "API for E-Commerce Backend with JWT Authentication"
-            //        };
-
-            //        document.Components ??= new OpenApiComponents();
-            //        document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
-            //        {
-            //            Type = SecuritySchemeType.Http,
-            //            Scheme = "bearer",
-            //            BearerFormat = "JWT",
-            //            In = ParameterLocation.Header,
-            //            Description = "Enter your valid token."
-            //        });
-
-            //        return Task.CompletedTask;
-            //    });
-
-            //    //Configuring Openapi to add support for enum inputs
-            //    options.AddSchemaTransformer((schema, context, cancellationToken) =>
-            //    {
-            //        if (context.JsonTypeInfo.Type.IsEnum)
-            //        {
-            //            schema.Type = "string";
-            //            schema.Format = null;
-            //            schema.Enum = Enum.GetNames(context.JsonTypeInfo.Type)
-            //                .Select(name => new OpenApiString(JsonNamingPolicy.CamelCase.ConvertName(name)))
-            //                .Cast<IOpenApiAny>()
-            //                .ToList();
-            //        }
-            //        return Task.CompletedTask;
-            //    });
-            //    //Configuring Openapi to work with jwt authentication and fixing products query param "brands" from int to string like this 1,3,6
-            //    options.AddOperationTransformer((operation, context, cancellationToken) =>
-            //    {
-            //        var metadata = context.Description.ActionDescriptor.EndpointMetadata;
-
-            //        bool hasAuthorize = metadata.Any(m => m is Microsoft.AspNetCore.Authorization.AuthorizeAttribute);
-            //        bool hasAnonymous = metadata.Any(m => m is Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute);
-
-            //        if (hasAuthorize && !hasAnonymous)
-            //        {
-            //            operation.Security = new List<OpenApiSecurityRequirement>
-            //            {
-            //                new()
-            //                {
-            //                    {
-            //                        new OpenApiSecurityScheme
-            //                        {
-            //                            Reference = new OpenApiReference
-            //                            {
-            //                                Type = ReferenceType.SecurityScheme,
-            //                                Id = "Bearer"
-            //                            }
-            //                        },
-            //                        Array.Empty<string>()
-            //                    }
-            //                }
-            //            };
-            //        }
-            //        return Task.CompletedTask;
-            //    });
-            //});
 
             return services;
         }

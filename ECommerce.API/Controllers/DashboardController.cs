@@ -12,8 +12,8 @@ namespace ECommerce.API.Controllers
     {
         private readonly IDashboardService _dashboard = dashboard;
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Retrieves Summary insights for the dashboard home page.")]
         [ProducesResponseType(typeof(AdminDashboardStatsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

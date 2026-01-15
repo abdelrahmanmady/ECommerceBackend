@@ -15,8 +15,8 @@ namespace ECommerce.API.Controllers
         private readonly IProductImageService _productImages = productImages;
 
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Upload product images.")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(AdminProductDetailsResponse), StatusCodes.Status201Created)]
@@ -33,8 +33,8 @@ namespace ECommerce.API.Controllers
 
 
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPut("{imageId:int}/setmain")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Set main image")]
         [EndpointDescription("Updates the product's main thumbnail image.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -48,8 +48,8 @@ namespace ECommerce.API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpDelete("{imageId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Delete image")]
         [EndpointDescription("Removes an image. Cannot delete the Main image.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

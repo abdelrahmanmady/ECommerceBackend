@@ -211,7 +211,6 @@ namespace ECommerce.Business.Services
         }
 
         //Admin
-
         public async Task<PagedResponse<AdminUserSummaryDto>> GetAllUsersAdminAsync(AdminUserSpecParams specParams)
         {
             var query = _context.Users.IgnoreQueryFilters().AsNoTracking().Include(u => u.Orders).AsQueryable();
@@ -286,14 +285,74 @@ namespace ECommerce.Business.Services
 
         }
 
-        public Task<AdminUserDetailsResponse> GetUserDetailsAdminAsync(string userId)
+        public async Task<AdminUserDetailsResponse> GetUserDetailsAdminAsync(string userId)
         {
-            throw new NotImplementedException();
+
+            var userDto = await _context.Users
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(u => u.Id == userId)
+                .ProjectTo<AdminUserDetailsResponse>(_mapper.ConfigurationProvider)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("User does not exist.");
+
+            userDto.Role = await _context.Set<IdentityUserRole<string>>()
+                .IgnoreQueryFilters()
+                .Where(ur => ur.UserId == userId)
+                .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                .FirstOrDefaultAsync() ?? "Unknown";
+
+            return userDto;
         }
 
-        public Task<AdminUserDetailsResponse> UpdateUserRoleAdminAsync(string userId, string role)
+        public async Task UpdateUserRoleAdminAsync(string userId, AdminUpdateRoleRequest adminUpdateRoleRequest)
         {
-            throw new NotImplementedException();
+            var userToUpdate = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new NotFoundException("User does not exist.");
+
+            if (!_context.Roles.Any(r => r.Name == adminUpdateRoleRequest.Role))
+                throw new BadRequestException("Role does not exist.");
+
+            var currentRoles = await _userManager.GetRolesAsync(userToUpdate);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                if (currentRoles.Any())
+                {
+                    var removeResult = await _userManager.RemoveFromRolesAsync(userToUpdate, currentRoles);
+                    if (!removeResult.Succeeded)
+                        throw new BadRequestException("Failed to remove roles.");
+                }
+
+                var addResult = await _userManager.AddToRoleAsync(userToUpdate, adminUpdateRoleRequest.Role);
+                if (!addResult.Succeeded)
+                    throw new BadRequestException($"Failed to add user to this role, Errors : {addResult.Errors}");
+
+                await _userManager.UpdateSecurityStampAsync(userToUpdate);
+
+                await _context.RefreshTokens
+                    .Where(rt => rt.UserId == userId)
+                    .ExecuteDeleteAsync();
+
+                if (await _userManager.IsLockedOutAsync(userToUpdate))
+                {
+                    await _userManager.SetLockoutEndDateAsync(userToUpdate, null);
+                }
+                userToUpdate.Updated = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
         }
 
         public async Task DeleteUserAdminAsync(string userId)
@@ -336,6 +395,20 @@ namespace ECommerce.Business.Services
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("User {userId} is restored to active.", userId);
+        }
+
+        public async Task UnlockUserAdminAsync(string userId)
+        {
+            var userToUnlock = await _context.Users.FindAsync(userId)
+                ?? throw new NotFoundException("User does not exist.");
+
+            if (!await _userManager.IsLockedOutAsync(userToUnlock))
+            {
+                return;
+            }
+
+            await _userManager.SetLockoutEndDateAsync(userToUnlock, null);
+
         }
 
         //Helper Methods

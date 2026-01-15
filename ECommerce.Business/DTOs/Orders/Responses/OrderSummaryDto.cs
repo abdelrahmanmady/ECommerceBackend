@@ -5,7 +5,7 @@ using ECommerce.Core.Enums;
 
 namespace ECommerce.Business.DTOs.Orders.Responses
 {
-    public class OrderSummaryDto //Output
+    public class OrderSummaryDto
     {
         public int Id { get; set; }
         public DateTime Created { get; set; }

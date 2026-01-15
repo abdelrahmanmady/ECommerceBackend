@@ -7,6 +7,8 @@
         public DateTime Created { get; set; }
         public DateTime ExpiresOn { get; set; }
         public DateTime? RevokedOn { get; set; }
+        public string? IpAddress { get; set; }
+        public string? UserAgent { get; set; }
 
         public bool IsExpired => DateTime.UtcNow >= ExpiresOn;
         public bool IsActive => RevokedOn is null && !IsExpired;

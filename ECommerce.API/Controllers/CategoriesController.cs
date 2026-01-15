@@ -17,8 +17,8 @@ namespace ECommerce.API.Controllers
         private readonly ICategoryService _categories = categories;
 
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Get all categories with paging and search support.")]
         [ProducesResponseType(typeof(PagedResponse<AdminCategorySummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -30,8 +30,8 @@ namespace ECommerce.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin/{categoryId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Get category details.")]
         [ProducesResponseType(typeof(CategoryDetailsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -43,8 +43,8 @@ namespace ECommerce.API.Controllers
             return Ok(category);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Create new category.")]
         [ProducesResponseType(typeof(CategoryDetailsResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -58,8 +58,8 @@ namespace ECommerce.API.Controllers
         }
 
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPut("admin/{categoryId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Update existing cateogry with its children.")]
         [ProducesResponseType(typeof(CategoryDetailsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -72,8 +72,8 @@ namespace ECommerce.API.Controllers
             return Ok(categoryUpdated);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpDelete("admin/{categoryId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Deletes a category if no product nor subcategories are referencing it.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

@@ -17,8 +17,8 @@ namespace ECommerce.API.Controllers
         private readonly IProductService _products = products;
 
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Get all products for admin dashboard")]
         [ProducesResponseType(typeof(PagedResponse<AdminProductSummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -26,8 +26,8 @@ namespace ECommerce.API.Controllers
         public async Task<IActionResult> GetAllProductsAdmin([FromQuery] AdminProductSpecParams specParams)
             => Ok(await _products.GetAllProductsAdminAsync(specParams));
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet("admin/{productId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Get product details")]
         [ProducesResponseType(typeof(AdminProductDetailsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -36,8 +36,8 @@ namespace ECommerce.API.Controllers
         public async Task<IActionResult> GetProductDetailsAdmin([FromRoute] int productId)
             => Ok(await _products.GetProductDetailsAdminAsync(productId));
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("admin")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Create a new product.")]
         [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -49,8 +49,8 @@ namespace ECommerce.API.Controllers
             return StatusCode(StatusCodes.Status201Created, createdProductId);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPut("admin/{productId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Updates product details.")]
         [ProducesResponseType(typeof(AdminProductDetailsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -64,8 +64,8 @@ namespace ECommerce.API.Controllers
             return Ok(updatedProduct);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpDelete("admin/{productId:int}")]
-        [Authorize(Roles = "Admin")]
         [EndpointSummary("Soft Delete a product, Images still stored in database and on disk to allow re activation of the product.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

@@ -20,7 +20,7 @@
         public string? ZipCode { get; set; } = null!;
         public string? Hints { get; set; }
         public DateTime Created { get; set; }
-        public DateTime Updated { get; set; }
+        public DateTime? Updated { get; set; }
 
         //Parent -> Child(Address)
 

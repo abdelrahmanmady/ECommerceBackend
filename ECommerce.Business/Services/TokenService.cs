@@ -1,6 +1,7 @@
 ﻿using ECommerce.Business.Interfaces;
 using ECommerce.Core.Entities;
 using ECommerce.Core.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,9 +11,11 @@ using System.Text;
 
 namespace ECommerce.Business.Services
 {
-    public class TokenService(IConfiguration config) : ITokenService
+    public class TokenService(IConfiguration config,
+        IHttpContextAccessor httpContext) : ITokenService
     {
         private readonly IConfiguration _config = config;
+        private readonly IHttpContextAccessor _httpContext = httpContext;
         public string CreateAccessToken(ApplicationUser user, ICollection<string> roles)
         {
             //Retrieve Secretkey from configuration and Check its length
@@ -63,12 +66,16 @@ namespace ECommerce.Business.Services
             rng.GetBytes(randomNumber);
 
             var daysToExpire = rememberMe ? 30 : 1;
+            var ipAddress = _httpContext.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = _httpContext.HttpContext.Request.Headers["User-Agent"].ToString();
 
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(randomNumber),
-                ExpiresOn = DateTime.UtcNow.AddDays(daysToExpire),
                 Created = DateTime.UtcNow,
+                ExpiresOn = DateTime.UtcNow.AddDays(daysToExpire),
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
                 UserId = userId
             };
         }
