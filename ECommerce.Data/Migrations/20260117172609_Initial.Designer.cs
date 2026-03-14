@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260115095153_Initial")]
+    [Migration("20260117172609_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -265,7 +265,6 @@ namespace ECommerce.Data.Migrations
                         .HasColumnType("NVARCHAR(1000)");
 
                     b.Property<string>("HierarchyPath")
-                        .IsRequired()
                         .HasColumnType("NVARCHAR(500)");
 
                     b.Property<string>("Name")
@@ -275,7 +274,7 @@ namespace ECommerce.Data.Migrations
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Updated")
+                    b.Property<DateTime?>("Updated")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");

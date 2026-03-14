@@ -19,7 +19,7 @@ namespace ECommerce.Data.Config
                 .HasColumnType("NVARCHAR(500)");
 
             //One To Many Relation With Category ( Category (1) -> (N) Category )
-            builder.HasMany(c => c.SubCategories)
+            builder.HasMany(c => c.Subcategories)
                 .WithOne(c => c.Parent)
                 .HasForeignKey(c => c.ParentId)
                 .IsRequired(false)

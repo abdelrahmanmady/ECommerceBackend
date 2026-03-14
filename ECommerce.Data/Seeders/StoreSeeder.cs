@@ -43,9 +43,9 @@ namespace ECommerce.Data.Seeders
             var categories = new List<Category>();
 
             // Define Roots
-            var men = new Category { Name = "Men", HierarchyPath = "Men", Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
-            var women = new Category { Name = "Women", HierarchyPath = "Women", Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
-            var kids = new Category { Name = "Kids", HierarchyPath = "Kids", Created = DateTime.UtcNow, Updated = DateTime.UtcNow };
+            var men = new Category { Name = "Men", Created = DateTime.UtcNow };
+            var women = new Category { Name = "Women", Created = DateTime.UtcNow };
+            var kids = new Category { Name = "Kids", Created = DateTime.UtcNow };
 
             categories.AddRange(new[] { men, women, kids });
 
@@ -93,9 +93,8 @@ namespace ECommerce.Data.Seeders
             {
                 Name = name,
                 Parent = parent,
-                HierarchyPath = $"{parent.HierarchyPath}\\{name}",
-                Created = DateTime.UtcNow,
-                Updated = DateTime.UtcNow
+                HierarchyPath = $"{parent.HierarchyPath}/{parent.Name}",
+                Created = DateTime.UtcNow
             };
         }
 

@@ -216,12 +216,13 @@ namespace ECommerce.Business.Services
             var query = _context.Users.IgnoreQueryFilters().AsNoTracking().Include(u => u.Orders).AsQueryable();
 
             //Filter
-            query = specParams.Status switch
+            if (!string.IsNullOrEmpty(specParams.Status))
             {
-                "active" => query.Where(u => !u.IsDeleted),
-                "deleted" => query.Where(u => u.IsDeleted),
-                _ => query,
-            };
+                if (specParams.Status == "active")
+                    query = query.Where(u => !u.IsDeleted);
+                else if (specParams.Status == "deleted")
+                    query = query.Where(u => u.IsDeleted);
+            }
 
             if (!string.IsNullOrEmpty(specParams.Role))
             {
@@ -251,6 +252,7 @@ namespace ECommerce.Business.Services
                 _ => query.OrderByDescending(u => u.Created)
             };
 
+            //Pagination
             var totalCount = await query.CountAsync();
             var rawitems = await query
                 .Skip((specParams.PageIndex - 1) * specParams.PageSize)

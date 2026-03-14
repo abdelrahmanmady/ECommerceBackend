@@ -262,7 +262,6 @@ namespace ECommerce.Data.Migrations
                         .HasColumnType("NVARCHAR(1000)");
 
                     b.Property<string>("HierarchyPath")
-                        .IsRequired()
                         .HasColumnType("NVARCHAR(500)");
 
                     b.Property<string>("Name")
@@ -272,7 +271,7 @@ namespace ECommerce.Data.Migrations
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Updated")
+                    b.Property<DateTime?>("Updated")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");

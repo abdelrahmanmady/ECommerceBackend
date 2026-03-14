@@ -5,9 +5,9 @@
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string ParentCategoryName { get; set; } = string.Empty;
+        public string? HierarchyPath { get; set; }
+        public bool IsLeaf { get; set; }
+        public int ChildrenCount { get; set; }
         public DateTime Created { get; set; }
-        public DateTime Updated { get; set; }
-        public string PathFromRoot { get; set; } = string.Empty;
     }
 }

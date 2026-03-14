@@ -5,9 +5,9 @@
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
-        public string HierarchyPath { get; set; } = null!;
+        public string? HierarchyPath { get; set; } = null!;
         public DateTime Created { get; set; }
-        public DateTime Updated { get; set; }
+        public DateTime? Updated { get; set; }
 
         //Parent -> Child(Category)
 
@@ -18,7 +18,7 @@
         //Parent(Category) -> Child
 
         //One To Many Relation With Category ( Category (1) -> (N) Category )
-        public virtual ICollection<Category> SubCategories { get; set; } = [];
+        public virtual ICollection<Category> Subcategories { get; set; } = [];
 
         //One to Many Relation With Product ( Category (1) -> (N) Product )
         public virtual ICollection<Product> Products { get; set; } = [];

@@ -80,9 +80,9 @@ namespace ECommerce.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "NVARCHAR(50)", nullable: false),
                     Description = table.Column<string>(type: "NVARCHAR(1000)", nullable: true),
-                    HierarchyPath = table.Column<string>(type: "NVARCHAR(500)", nullable: false),
+                    HierarchyPath = table.Column<string>(type: "NVARCHAR(500)", nullable: true),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ParentId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>

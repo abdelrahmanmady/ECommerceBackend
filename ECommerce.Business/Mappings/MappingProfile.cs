@@ -46,12 +46,15 @@ namespace ECommerce.Business.Mappings
 
             //Category Mapping
             CreateMap<Category, AdminCategorySummaryDto>()
-                .ForMember(d => d.ParentCategoryName, o => o.MapFrom(s => s.Parent == null ? "Root Category" : s.Parent.Name))
-                .ForMember(d => d.PathFromRoot, o => o.MapFrom(s => $"Root\\{s.HierarchyPath}"));
+                .ForMember(d => d.IsLeaf, o => o.MapFrom(s => s.Subcategories.Count == 0))
+                .ForMember(d => d.ChildrenCount, o => o.MapFrom(s => s.Subcategories.Count == 0 ? s.Products.Count : s.Subcategories.Count));
 
-            CreateMap<Category, CategoryDetailsResponse>()
-                .ForMember(d => d.SubcategoriesNames, o => o.MapFrom(s => s.SubCategories.Select(c => c.Name)))
-                .ForMember(d => d.PathFromRoot, o => o.MapFrom(s => $"Root\\{s.HierarchyPath}"));
+
+            CreateMap<Category, AdminCategoryDetailsResponse>()
+                .ForMember(d => d.IsLeaf, o => o.MapFrom(s => s.Subcategories.Count == 0))
+                .ForMember(d => d.ParentName, o => o.MapFrom(s => s.Parent == null ? "Root" : s.Parent.Name))
+                .ForMember(d => d.ProductsCount, o => o.MapFrom(s => s.Products.Count))
+                .ForMember(d => d.RecentProducts, o => o.MapFrom(s => s.Products.OrderByDescending(p => p.Created).Take(5)));
 
             CreateMap<CreateCategoryRequest, Category>()
                 .ForMember(d => d.Created, o => o.MapFrom(s => DateTime.UtcNow))
@@ -67,8 +70,7 @@ namespace ECommerce.Business.Mappings
             CreateMap<Product, AdminProductSummaryDto>()
                 .ForMember(d => d.ThumbnailUrl, o => o.MapFrom(s => s.Images.Where(pi => pi.IsMain).Select(pi => pi.ImageUrl).FirstOrDefault()))
                 .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.Name))
-                .ForMember(d => d.BrandName, o => o.MapFrom(s => s.Brand.Name))
-                .ForMember(d => d.InStock, o => o.MapFrom(s => s.StockQuantity > 0));
+                .ForMember(d => d.BrandName, o => o.MapFrom(s => s.Brand.Name));
 
             CreateMap<Product, AdminProductDetailsResponse>();
 

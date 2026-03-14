@@ -2,6 +2,9 @@
 {
     public class AdminCategorySpecParams
     {
+        //Filter Params
+        public string? Type { get; set; }
+
         //Search Params
         public string? Search { get; set; }
 

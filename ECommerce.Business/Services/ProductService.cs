@@ -193,7 +193,7 @@ namespace ECommerce.Business.Services
                     .FirstOrDefaultAsync()
                     ?? throw new NotFoundException("Category does not exist.");
 
-                query = query.Where(p => p.Category.HierarchyPath.StartsWith(filterCategory.HierarchyPath));
+                query = query.Where(p => (p.Category.HierarchyPath + '/' + p.Category.Name).StartsWith(filterCategory.HierarchyPath + '/' + filterCategory.Name));
             }
 
             //Filter with MinPrice
